@@ -56,9 +56,8 @@ context. These are lifecycle rules, not new cryptography.
 
 The complete result is in `formal/FORMAL_ASSUMPTION_REVALIDATION.md`. Exact
 claim states are machine-readable in `formal/FORMAL_CLAIM_STATUS.json`. The
-original historical formal source remains byte-preserved under
-`formal/historical-source-7f685d35/`; updated formal documents are under
-`formal/documents/`.
+original historical formal source is retained in the verified text snapshot;
+current lifecycle theorem source is under `formal/current-source/`.
 
 ## Current evidence
 
@@ -68,7 +67,7 @@ Run:
 python tools/run_assurance_checks.py --output evidence/local-test-report.json
 ```
 
-Current local result: 72 tests passed, including negative controls for
+Current local result: 77 tests passed, including negative controls for
 conjunctive dual-target identity, canonical public-state encoding, stale evidence,
 production-obligation separation, target binding, lifecycle revival, formal
 claim drift, and documentation overclaiming.
@@ -96,3 +95,11 @@ kernel run, production integration, or target leakage evidence.
 
 No item is complete because this README says so. Status and exact local evidence
 hashes live in `ASSUMPTION_REGISTER.json`.
+
+## Current lifecycle formalization
+
+The new `formal/current-source/CausalDagCgka/AuthorizationLifecycle.lean` module
+turns the removal/rejoin finding into explicit candidate theorems without adding
+cryptography. Its source and executable finite oracle are checked locally, but
+it remains **kernel-pending** until the exact Lean 4.32.2 package builds and the
+existing axiom audit passes on that exact tree.
