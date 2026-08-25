@@ -1,0 +1,150 @@
+(*
+  Revalidates the newly explicit membership/capability lifecycle boundary.
+
+  Expected contrasts:
+  - membership-only removal followed by same-identity rejoin revives an old,
+    still-live role assertion: the revival canary is attacker-reachable;
+  - binding authorization to a post-revocation state prevents the old assertion
+    from authorizing, while a fresh assertion still exercises the honest path;
+  - a fresh incarnation identity does not inherit the old identity's assertion,
+    while a fresh assertion for that incarnation still exercises the honest path.
+
+  Role assertions are abstract authenticated credentials, matching the existing
+  symbolic model's boundary. Signature and credential unforgeability remain
+  computational assumptions rather than claims proved here.
+*)
+
+free network : channel.
+
+type member.
+type capability.
+type contextid.
+type incarnation.
+type roleassertion.
+type checkresult.
+type route.
+
+free alice : member.
+free aliceFreshIncarnation : member.
+free manageMembers : capability.
+free preRemovalContext : contextid.
+free postCoupledRemovalContext : contextid.
+free oldIncarnation : incarnation.
+free newIncarnation : incarnation.
+
+const removalOnlyRoute : route.
+const coupledRemovalRoute : route.
+const freshIncarnationRoute : route.
+const ok : checkresult.
+
+free removalOnlyRevivalCanary : bitstring [private].
+free coupledOldCredentialCanary : bitstring [private].
+free coupledHonestCanary : bitstring [private].
+free freshIncarnationOldCredentialCanary : bitstring [private].
+free freshIncarnationHonestCanary : bitstring [private].
+
+fun issueRole(member, capability, contextid, incarnation) : roleassertion [private].
+fun verifyRole(roleassertion, member, capability, contextid, incarnation) : checkresult
+reduc forall author : member, required : capability,
+             context : contextid, identityIncarnation : incarnation;
+  verifyRole(
+    issueRole(author, required, context, identityIncarnation),
+    author, required, context, identityIncarnation) = ok.
+
+event HistoricalRoleGranted(member, capability, contextid, incarnation).
+event RoleRevoked(member, capability, contextid, incarnation).
+event CoupledRoleGranted(member, capability, contextid, incarnation).
+event FreshIncarnationRoleGranted(member, capability, contextid, incarnation).
+event RemovalOnlyAcceptedOldCredential(member, capability, contextid, incarnation).
+event CoupledAccepted(member, capability, contextid, incarnation).
+event FreshIncarnationAccepted(member, capability, contextid, incarnation).
+
+query author : member, required : capability,
+      context : contextid, identityIncarnation : incarnation;
+  event(CoupledAccepted(author, required, context, identityIncarnation)) ==>
+  event(CoupledRoleGranted(author, required, context, identityIncarnation)).
+
+query author : member, required : capability,
+      context : contextid, identityIncarnation : incarnation;
+  event(FreshIncarnationAccepted(
+    author, required, context, identityIncarnation)) ==>
+  event(FreshIncarnationRoleGranted(
+    author, required, context, identityIncarnation)).
+
+query attacker(removalOnlyRevivalCanary).
+query attacker(coupledOldCredentialCanary).
+query attacker(coupledHonestCanary).
+query attacker(freshIncarnationOldCredentialCanary).
+query attacker(freshIncarnationHonestCanary).
+
+let Issuer =
+  event HistoricalRoleGranted(
+    alice, manageMembers, preRemovalContext, oldIncarnation);
+  event RoleRevoked(
+    alice, manageMembers, postCoupledRemovalContext, oldIncarnation);
+  event CoupledRoleGranted(
+    alice, manageMembers, postCoupledRemovalContext, oldIncarnation);
+  event FreshIncarnationRoleGranted(
+    aliceFreshIncarnation, manageMembers,
+    postCoupledRemovalContext, newIncarnation);
+
+  out(network,
+    (removalOnlyRoute,
+      issueRole(alice, manageMembers, preRemovalContext, oldIncarnation)));
+  out(network,
+    (coupledRemovalRoute,
+      issueRole(alice, manageMembers, preRemovalContext, oldIncarnation)));
+  out(network,
+    (coupledRemovalRoute,
+      issueRole(
+        alice, manageMembers, postCoupledRemovalContext, oldIncarnation)));
+  out(network,
+    (freshIncarnationRoute,
+      issueRole(alice, manageMembers, preRemovalContext, oldIncarnation)));
+  out(network,
+    (freshIncarnationRoute,
+      issueRole(
+        aliceFreshIncarnation, manageMembers,
+        postCoupledRemovalContext, newIncarnation)));
+  0.
+
+let Validator =
+  in(network, (selectedRoute : route, proof : roleassertion));
+  if selectedRoute = removalOnlyRoute then
+    let result = verifyRole(
+      proof, alice, manageMembers, preRemovalContext, oldIncarnation) in
+    if result = ok then
+      event RemovalOnlyAcceptedOldCredential(
+        alice, manageMembers, preRemovalContext, oldIncarnation);
+      out(network, removalOnlyRevivalCanary)
+    else 0
+  else if selectedRoute = coupledRemovalRoute then
+    let result = verifyRole(
+      proof, alice, manageMembers,
+      postCoupledRemovalContext, oldIncarnation) in
+    if result = ok then
+      event CoupledAccepted(
+        alice, manageMembers, postCoupledRemovalContext, oldIncarnation);
+      if proof = issueRole(
+          alice, manageMembers, preRemovalContext, oldIncarnation) then
+        out(network, coupledOldCredentialCanary)
+      else
+        out(network, coupledHonestCanary)
+    else 0
+  else if selectedRoute = freshIncarnationRoute then
+    let result = verifyRole(
+      proof, aliceFreshIncarnation, manageMembers,
+      postCoupledRemovalContext, newIncarnation) in
+    if result = ok then
+      event FreshIncarnationAccepted(
+        aliceFreshIncarnation, manageMembers,
+        postCoupledRemovalContext, newIncarnation);
+      if proof = issueRole(
+          alice, manageMembers, preRemovalContext, oldIncarnation) then
+        out(network, freshIncarnationOldCredentialCanary)
+      else
+        out(network, freshIncarnationHonestCanary)
+    else 0
+  else 0.
+
+process Issuer | !Validator
