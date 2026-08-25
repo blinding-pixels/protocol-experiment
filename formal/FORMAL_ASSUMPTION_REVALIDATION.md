@@ -92,7 +92,7 @@ Still conditional:
 - finite-`kappa` cross-fork live-key security under the imported theorem;
 - exact bounded retrospective access for bounded segment-prefix unions;
 - post-erasure security under actual secure erasure;
-- receipt equivocation evidence after both views are observed together.
+- receipt equivocation evidence after both views are observed.
 
 Restricted or false:
 
@@ -125,3 +125,21 @@ Open:
 A claim changes status only when a machine-readable validator derives the change
 from underlying artifacts and a negative control fails for the intended reason.
 This document cannot close a claim by stating that it is closed.
+
+## Current Lean lifecycle source
+
+`formal/current-source/CausalDagCgka/AuthorizationLifecycle.lean` now encodes:
+
+- operation use remains blocked while membership is inactive even when a
+  capability tag survives;
+- same-identity rejoin revives that surviving capability;
+- coupled visible capability-tag tombstoning prevents the old tag from
+  reviving; and
+- a fresh incarnation identity does not inherit the old identity's capability.
+
+The source imports only the existing authorization layer and contains no
+`sorry`, `admit`, `sorryAx`, new axiom, opaque primitive, or cryptographic
+construction. It is not yet promoted to kernel-checked evidence: the exact Lean
+4.32.2 kernel artifact could not be retrieved in this execution environment and
+CI is intentionally disabled. The executable finite model and its negative
+controls remain the currently executed evidence.
