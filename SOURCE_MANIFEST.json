@@ -1,38 +1,37 @@
 {
-  "ci": {
-    "automatic_triggering_disabled": true,
-    "facets_research_workflows_archived": true,
-    "standalone_ci_present": false
-  },
-  "crypto_scope_rule": "No new primitive, construction, or protocol layer.",
-  "extraction": {
-    "full_origin_tree_authoritative_at_commit": "5b5d50e6d03bc5a8691fed8449e10afb9cd9fe0f",
-    "live_origin_tree_complete": false,
-    "mode": "focused live continuation plus preserved historical sources and archives",
-    "reason": "The exact frozen origin remains authoritative; the temporary remote carries the current assumption-removal work, preserved historical formal source, and archives while exact live-source reconstruction remains explicit open work."
-  },
-  "formal_revalidation": {
-    "abstract_protocol_result": "conditional-holds-with-narrowed-lifecycle-claim",
-    "current_kernel_rerun": false,
-    "local_validator_tests": 72,
-    "membership_removal_only_non_revival": "false-counterexample-observed"
-  },
-  "origin": {
-    "branch": "formal/causal-dag-cgka",
-    "frozen_source_commit": "5b5d50e6d03bc5a8691fed8449e10afb9cd9fe0f",
-    "path": "research/causal-dag-cgka/",
-    "preservation_checkpoint_commit": "976783a330e4f5f5991b65824741bc30bb025f97",
-    "pull_request": 268,
-    "repository": "blinding-pixels/Facets",
-    "tree": "6a18759db34f15fc6f06e80b108d1ee14da36a54"
-  },
-  "schema": "causal-dag-assurance.source-migration.v1",
-  "scope_rule": "No subsequent assurance implementation belongs in Facets.",
+  "schema": "causal-dag-assurance.source-migration.v2",
   "remote": {
     "repository": "blinding-pixels/protocol-experiment",
     "branch": "main",
     "path": "/",
-    "organizational_only": true,
+    "canonical_for_continuation": true,
     "ci_workflows_present": false
+  },
+  "origin": {
+    "repository": "blinding-pixels/Facets",
+    "branch": "formal/causal-dag-cgka",
+    "path": "research/causal-dag-cgka/",
+    "frozen_source_commit": "5b5d50e6d03bc5a8691fed8449e10afb9cd9fe0f",
+    "tree": "6a18759db34f15fc6f06e80b108d1ee14da36a54",
+    "preservation_checkpoint_commit": "976783a330e4f5f5991b65824741bc30bb025f97"
+  },
+  "migration": {
+    "live_assumption_reduction_source_complete": true,
+    "live_formal_lifecycle_oracle_complete": true,
+    "live_current_lean_lifecycle_source_present": true,
+    "historical_text_snapshot_present": true,
+    "historical_binary_evidence_present": true,
+    "exact_frozen_origin_rust_and_full_formal_tree_live_browsable": false,
+    "exact_frozen_origin_boundary": "Preserved by the verified text snapshot; live reconstruction remains open and must not be inferred from the current validators."
+  },
+  "scope": {
+    "no_new_cryptography": true,
+    "work_class": [
+      "assumption removal",
+      "evidence integrity",
+      "negative controls",
+      "formal claim correction",
+      "reproducibility"
+    ]
   }
 }

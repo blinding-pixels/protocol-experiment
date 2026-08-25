@@ -1,0 +1,21 @@
+{
+  "capabilities": [
+    {
+      "code": 1,
+      "member_hex": "0101010101010101010101010101010101010101010101010101010101010101"
+    },
+    {
+      "code": 2,
+      "member_hex": "0202020202020202020202020202020202020202020202020202020202020202"
+    }
+  ],
+  "context_id_sha256": "f9d5a4c8eb4c157627b0ca8ca2db9235450791817136bd369580b86849aa2446",
+  "cross_language_status": "pending Rust executable vector comparison",
+  "members_hex": [
+    "0101010101010101010101010101010101010101010101010101010101010101",
+    "0202020202020202020202020202020202020202020202020202020202020202"
+  ],
+  "origin_source_commit": "5b5d50e6d03bc5a8691fed8449e10afb9cd9fe0f",
+  "policy_version": 1,
+  "schema": "causal-dag-assurance.canonical-state-vector.v1"
+}

@@ -1,0 +1,17 @@
+{
+  "schema": "causal-dag-assurance.authorization-lifecycle-finding.v1",
+  "finding": "membership-only removal does not imply permanent capability non-revival across same-identity rejoin",
+  "counterexample": [
+    "add membership tag m1 for alice",
+    "add capability tag c1 for alice/admin",
+    "tombstone m1 only",
+    "add fresh membership tag m2 for the same alice identity",
+    "c1 is live again because membership and capability tags are independent"
+  ],
+  "repairs": [
+    "tombstone every visible capability tag during authority-revoking removal",
+    "use a fresh incarnation-scoped member identity on rejoin"
+  ],
+  "new_cryptography": false,
+  "evidence_layer": "finite executable lifecycle model plus kernel-pending Lean source"
+}

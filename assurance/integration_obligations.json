@@ -1,0 +1,12 @@
+{
+  "schema": "causal-dag-assurance.integration-obligations.v1",
+  "obligations": [
+    {"id":"retention","scope":"production-integration","status":"open","evidence":[],"finding":"No production retention adapter or integration trace is present."},
+    {"id":"erasure","scope":"production-integration","status":"open","evidence":[],"finding":"Secret and evidence erasure behavior is not yet exercised through a production lifecycle."},
+    {"id":"audit-persistence","scope":"production-integration","status":"open","evidence":[],"finding":"Prototype receipt evidence does not establish durable application audit persistence."},
+    {"id":"revocation-propagation","scope":"production-integration","status":"open","evidence":[],"finding":"No production propagation path has been measured under delay, restart, or partition."},
+    {"id":"rollback-state","scope":"production-integration","status":"open","evidence":[],"finding":"Rollback and restore semantics remain an explicit integration obligation."},
+    {"id":"capability-grant-active-member","scope":"production-integration","status":"open","evidence":[],"finding":"Production must reject a capability grant whose target is not active in the grant author's signed causal context."},
+    {"id":"removal-rejoin-authority","scope":"production-integration","status":"open","evidence":[],"finding":"Production must select and test coupled visible capability tombstoning or incarnation-scoped identities across removal, offline concurrency, rejoin, restart, and rollback."}
+  ]
+}

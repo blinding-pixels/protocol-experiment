@@ -1,0 +1,142 @@
+{
+  "schema": "causal-dag-assurance.runnerless-ci-finding.v1",
+  "origin_repository": "blinding-pixels/Facets",
+  "origin_branch": "formal/causal-dag-cgka",
+  "source_commit": "5b5d50e6d03bc5a8691fed8449e10afb9cd9fe0f",
+  "observed_at": "2026-08-25",
+  "finding": "The exact-source workflows produced failed job records without executable steps or log URLs. They provide no evidence that any compiler, prover, test, measurement, or packaging command ran.",
+  "classification": "infrastructure-or-runner-configuration-failure",
+  "proof_or_implementation_result": "not-executed",
+  "ci_policy": "disabled-until-manual-runner-bring-up",
+  "workflow_runs": [
+    {
+      "name": "Causal DAG CGKA real dual-target attack laboratory",
+      "run_id": 32824426617,
+      "jobs": [
+        {
+          "job_id": 97729243093,
+          "name": "Real attacks and measurements (x86_64-linux-gnu)",
+          "conclusion": "failure",
+          "steps_present": false,
+          "logs_url_present": false
+        },
+        {
+          "job_id": 97729243313,
+          "name": "Real attacks and measurements (aarch64-linux-gnu)",
+          "conclusion": "failure",
+          "steps_present": false,
+          "logs_url_present": false
+        }
+      ]
+    },
+    {
+      "name": "Causal DAG CGKA formal verification",
+      "run_id": 32824426849,
+      "jobs": [
+        {
+          "job_id": 97729244243,
+          "name": "Z3, SymPy SAT, and exhaustive finite-state checks",
+          "conclusion": "failure",
+          "steps_present": false,
+          "logs_url_present": false
+        },
+        {
+          "job_id": 97729244492,
+          "name": "Reproducible source package",
+          "conclusion": "failure",
+          "steps_present": false,
+          "logs_url_present": false
+        },
+        {
+          "job_id": 97729244528,
+          "name": "ProVerif composition, roles, and negative controls",
+          "conclusion": "failure",
+          "steps_present": false,
+          "logs_url_present": false
+        },
+        {
+          "job_id": 97729244529,
+          "name": "BeeKEM primary-paper extraction",
+          "conclusion": "failure",
+          "steps_present": false,
+          "logs_url_present": false
+        },
+        {
+          "job_id": 97729244566,
+          "name": "Lean kernel, leanchecker, and axiom audit",
+          "conclusion": "failure",
+          "steps_present": false,
+          "logs_url_present": false
+        }
+      ]
+    },
+    {
+      "name": "Causal DAG CGKA Rust and Verus verification",
+      "run_id": 32824426550,
+      "jobs": [
+        {
+          "job_id": 97729244231,
+          "name": "Memory-safe Rust, RustSec, and Verus timing schedule",
+          "conclusion": "failure",
+          "steps_present": false,
+          "logs_url_present": false
+        }
+      ]
+    },
+    {
+      "name": "Causal DAG CGKA EasyCrypt verification",
+      "run_id": 32824426615,
+      "jobs": [
+        {
+          "job_id": 97729243095,
+          "name": "EasyCrypt games, reductions, and non-vacuity",
+          "conclusion": "failure",
+          "steps_present": false,
+          "logs_url_present": false
+        }
+      ]
+    },
+    {
+      "name": "Causal DAG CGKA operational fidelity and residue audit",
+      "run_id": 32824426510,
+      "jobs": [
+        {
+          "job_id": 97729242617,
+          "name": "Host residue report (x86_64-linux)",
+          "conclusion": "failure",
+          "steps_present": false,
+          "logs_url_present": false
+        },
+        {
+          "job_id": 97729242886,
+          "name": "Host residue report (x86_64-macos)",
+          "conclusion": "failure",
+          "steps_present": false,
+          "logs_url_present": false
+        },
+        {
+          "job_id": 97729242891,
+          "name": "Host residue report (aarch64-linux)",
+          "conclusion": "failure",
+          "steps_present": false,
+          "logs_url_present": false
+        },
+        {
+          "job_id": 97729242923,
+          "name": "Repository operational-fidelity ledger",
+          "conclusion": "failure",
+          "steps_present": false,
+          "logs_url_present": false
+        },
+        {
+          "job_id": 97729243031,
+          "name": "Host residue report (aarch64-macos)",
+          "conclusion": "failure",
+          "steps_present": false,
+          "logs_url_present": false
+        }
+      ]
+    }
+  ],
+  "closure_rule": "This finding explains why exact-source execution evidence is absent. It does not satisfy or fail any proof, implementation, timing, residue, or production-integration obligation."
+}

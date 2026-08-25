@@ -1,0 +1,16 @@
+{
+  "schema": "causal-dag-assurance.frozen-source-formal-audit.v1",
+  "frozen_source_commit": "5b5d50e6d03bc5a8691fed8449e10afb9cd9fe0f",
+  "frozen_tree": "6a18759db34f15fc6f06e80b108d1ee14da36a54",
+  "source_inspection": {
+    "canonical_context_schedule_matches_oracle": true,
+    "receipt_evidence_is_set_union_and_arrival_order_independent": true,
+    "membership_and_capability_tombstones_are_independent": true
+  },
+  "limitations": [
+    "source inspection is not exact compiled execution",
+    "current lifecycle Lean source is kernel-pending",
+    "production lifecycle and rollback adapters are not executed",
+    "target side-channel evidence is not current"
+  ]
+}

@@ -1,0 +1,80 @@
+# Apply after the complete frozen origin tree is imported into the standalone repository.
+# This intentionally changes evidence comparison only; it adds no cryptography.
+
+diff --git a/attack-lab/run_all.py b/attack-lab/run_all.py
+--- a/attack-lab/run_all.py
++++ b/attack-lab/run_all.py
+@@
+ from contrast import validate_variant_result
+ from invocation import load_verified_manifest, run_variant_json
++from pair_validation import validate_protocol_pair, validate_timing_pair
+ from timing_analysis import analyze_csv, verify_binary_summary
+@@
+-def shared_attack_input(correct: dict[str, Any], broken: dict[str, Any]) -> bool:
+-    for field in ("attack_input_digest", "transcript_digest"):
+-        if field in correct or field in broken:
+-            return correct.get(field) == broken.get(field)
+-    return False
+-
+-
+@@
+-        same_input = shared_attack_input(correct_result, broken_result)
++        identity = validate_protocol_pair(
++            scenario, broken_variant, correct_result, broken_result
++        )
++        same_input = identity.valid
+@@
+             "same_real_attack_input": same_input,
++            "attack_identity": identity.to_dict(),
+@@
+-    same_timing_input = (
+-        correct_timing.get("attack_input_digest")
+-        == broken_timing.get("attack_input_digest")
+-        and correct_timing.get("public_selector")
+-        == broken_timing.get("public_selector")
++    timing_identity = validate_timing_pair(correct_timing, broken_timing)
++    same_timing_input = (
++        timing_identity.valid
+         and correct_timing.get("public_selector_same_across_classes") is True
+         and broken_timing.get("public_selector_same_across_classes") is True
+     )
+@@
+             "same_real_attack_input": same_timing_input,
++            "attack_identity": timing_identity.to_dict(),
+
+diff --git a/attack-lab/server.py b/attack-lab/server.py
+--- a/attack-lab/server.py
++++ b/attack-lab/server.py
+@@
+ from contrast import validate_variant_result
+ from invocation import load_verified_manifest, run_variant_json
++from pair_validation import validate_protocol_pair, validate_timing_pair
+ from timing_analysis import analyze_csv, verify_binary_summary
+@@
+-    @staticmethod
+-    def same_attack_input(correct: dict[str, Any], broken: dict[str, Any]) -> bool:
+-        for field in ("attack_input_digest", "transcript_digest"):
+-            if field in correct or field in broken:
+-                return correct.get(field) == broken.get(field)
+-        return False
+-
+@@
+-        same_input = self.same_attack_input(correct, broken)
++        identity = validate_protocol_pair(name, broken_variant, correct, broken)
++        same_input = identity.valid
+@@
+             "same_real_attack_input": same_input,
++            "attack_identity": identity.to_dict(),
+@@
+-        same_input = (
+-            correct.get("attack_input_digest") == broken.get("attack_input_digest")
+-            and correct.get("public_selector") == broken.get("public_selector")
++        identity = validate_timing_pair(correct, broken)
++        same_input = (
++            identity.valid
+             and correct.get("public_selector_same_across_classes") is True
+             and broken.get("public_selector_same_across_classes") is True
+         )
+@@
+             "same_real_attack_input": same_input,
++            "attack_identity": identity.to_dict(),

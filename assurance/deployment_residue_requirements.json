@@ -1,0 +1,13 @@
+{
+  "schema": "causal-dag-assurance.residue-requirements.v1",
+  "requirements": [
+    {"id": "swap-and-hibernation", "status": "unresolved", "finding": "No target-specific evidence proves secret pages are excluded from swap or hibernation images.", "enforcement_requirement": "Document and test OS-specific memory-locking and hibernation policy for every supported target.", "evidence": []},
+    {"id": "core-dumps-and-crash-reports", "status": "unresolved", "finding": "The prototype does not verify that crash artifacts exclude process memory and secret buffers.", "enforcement_requirement": "Disable or sanitize core dumps and crash collection, then exercise a crashing negative control.", "evidence": []},
+    {"id": "allocator-reuse", "status": "unresolved", "finding": "Source-level zeroization does not prove allocator pages are not copied, cached, or reused before erasure.", "enforcement_requirement": "Measure target allocator behavior and retain a negative control with zeroization removed.", "evidence": []},
+    {"id": "temporary-files", "status": "unresolved", "finding": "No application integration trace establishes that plaintext or keys never enter temporary files.", "enforcement_requirement": "Trace filesystem writes across success, failure, export, and crash paths.", "evidence": []},
+    {"id": "logs-and-telemetry", "status": "unresolved", "finding": "No production logging boundary has been exercised against secret-bearing error paths.", "enforcement_requirement": "Run structured-log and telemetry leakage tests with seeded canary secrets.", "evidence": []},
+    {"id": "backups-and-snapshots", "status": "unresolved", "finding": "The prototype does not define how local backups, VM snapshots, or filesystem snapshots treat unlocked state.", "enforcement_requirement": "Specify and test backup/snapshot policy per deployment target.", "evidence": []},
+    {"id": "process-memory-access", "status": "unresolved", "finding": "No host policy currently constrains debuggers, same-user processes, memory inspection, or privileged tooling.", "enforcement_requirement": "Define the local attacker boundary and verify target process-hardening controls.", "evidence": []},
+    {"id": "shutdown-and-restart-erasure", "status": "unresolved", "finding": "No lifecycle integration test proves secrets and plaintext projections are removed on lock, logout, shutdown, or restart.", "enforcement_requirement": "Exercise all lifecycle transitions with seeded canaries and durable post-restart scans.", "evidence": []}
+  ]
+}

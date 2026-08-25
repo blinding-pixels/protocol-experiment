@@ -1,0 +1,66 @@
+{
+  "schema": "causal-dag-assurance.historical-artifact-boundary.v1",
+  "frozen_source_commit": "5b5d50e6d03bc5a8691fed8449e10afb9cd9fe0f",
+  "frozen_source_tree": "6a18759db34f15fc6f06e80b108d1ee14da36a54",
+  "required_layer": "compiled-dual-target-attack-lab",
+  "records": [
+    {
+      "kind": "rust-verus-evidence",
+      "run_id": 32781555219,
+      "run_conclusion": "success",
+      "jobs_executed": true,
+      "head_sha": "7e7b19e55ee26fb040de12960eccf76d38277661",
+      "artifact_id": 9540108458,
+      "artifact_path": "evidence/historical/rust-verus-evidence-7e7b19e55ee26fb040de12960eccf76d38277661.zip",
+      "artifact_sha256": "85014eb6df3cf2813cd9b5513e4cafb946200ae6947f2d2ae5244f22fab6b5da",
+      "contains_required_layer": false,
+      "exact_frozen_source": false,
+      "admissible_for_frozen_source": false,
+      "closes_assumptions": []
+    },
+    {
+      "kind": "formal-source",
+      "run_id": 32764131294,
+      "run_conclusion": "success",
+      "jobs_executed": true,
+      "head_sha": "7f685d35a72a463cbcc1052a81710bb02c0c5b80",
+      "artifact_id": 9533790431,
+      "artifact_path": "evidence/historical/formal-source-7f685d35a72a463cbcc1052a81710bb02c0c5b80.zip",
+      "artifact_sha256": "c3bb45967f5fbc58b9df53e925c5dcba630b9b09534fb7d9474aa74ef3c225f4",
+      "contains_required_layer": false,
+      "exact_frozen_source": false,
+      "admissible_for_frozen_source": false,
+      "closes_assumptions": []
+    },
+    {
+      "kind": "first-attack-lab-run",
+      "run_id": 32792790655,
+      "run_conclusion": "failure",
+      "jobs_executed": false,
+      "head_sha": "1582366db2ce1375596c76f1482de862a71bd041",
+      "artifact_id": null,
+      "artifact_path": null,
+      "artifact_sha256": null,
+      "contains_required_layer": true,
+      "exact_frozen_source": false,
+      "admissible_for_frozen_source": false,
+      "closes_assumptions": []
+    },
+    {
+      "kind": "frozen-attack-lab-run",
+      "run_id": 32824426617,
+      "run_conclusion": "failure",
+      "jobs_executed": false,
+      "head_sha": "5b5d50e6d03bc5a8691fed8449e10afb9cd9fe0f",
+      "artifact_id": null,
+      "artifact_path": null,
+      "artifact_sha256": null,
+      "contains_required_layer": true,
+      "exact_frozen_source": true,
+      "admissible_for_frozen_source": false,
+      "closes_assumptions": []
+    }
+  ],
+  "frozen_required_artifact_available": false,
+  "decision": "Historical success is retained as historical evidence only. It cannot substitute for an exact-source compiled attack-lab run and closes no current assumption."
+}

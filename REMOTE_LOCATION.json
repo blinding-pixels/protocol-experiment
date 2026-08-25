@@ -3,10 +3,7 @@
   "repository": "blinding-pixels/protocol-experiment",
   "branch": "main",
   "path": "/",
-  "temporary_host": false,
-  "ci_workflows_added": false,
-  "origin_frozen_commit": "5b5d50e6d03bc5a8691fed8449e10afb9cd9fe0f",
-  "origin_preservation_checkpoint": "976783a330e4f5f5991b65824741bc30bb025f97",
-  "decision": "protocol-experiment is the owner-selected dedicated remote for this research artifact.",
-  "ci_state": "disabled-no-workflows"
+  "canonical_for_continuation": true,
+  "ci_enabled": false,
+  "no_repository_archived_or_deleted_by_migration": true
 }
