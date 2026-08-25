@@ -1,0 +1,398 @@
+name: One-off formal assumption recheck
+
+on:
+  push:
+    branches:
+      - verification/assumption-recheck-20260825
+    paths:
+      - ".github/workflows/assumption-recheck.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  lean-wasm:
+    name: Lean WASM lifecycle revalidation
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore exact text snapshot and current lifecycle source
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/assumption-recheck/snapshot /tmp/assumption-recheck/work
+          bash archives/text-snapshot/RESTORE.sh /tmp/assumption-recheck/source.tar.xz
+          tar -xJf /tmp/assumption-recheck/source.tar.xz -C /tmp/assumption-recheck/snapshot
+
+          logic="$(find /tmp/assumption-recheck/snapshot -type f -path '*/CausalDagCgka/Logic.lean' | sort | head -n 1)"
+          authorization="$(find /tmp/assumption-recheck/snapshot -type f -path '*/CausalDagCgka/Authorization.lean' | sort | head -n 1)"
+          lifecycle="$GITHUB_WORKSPACE/formal/current-source/CausalDagCgka/AuthorizationLifecycle.lean"
+
+          test -n "$logic"
+          test -n "$authorization"
+          test -f "$lifecycle"
+          printf '%s  %s\n' \
+            4752e466de814da45bea15df8aaefe35af1853ea0f1e700fab151f76f90a9730 \
+            "$lifecycle" | sha256sum -c -
+
+          {
+            cat "$logic"
+            sed '/^import CausalDagCgka\.Logic$/d' "$authorization"
+            sed '/^import CausalDagCgka\.Authorization$/d' "$lifecycle"
+            cat <<'LEAN'
+
+#print axioms CausalDagCgka.AuthorizationLifecycle.removal_only_blocks_while_membership_inactive
+#print axioms CausalDagCgka.AuthorizationLifecycle.removal_only_same_identity_rejoin_revives_capability
+#print axioms CausalDagCgka.AuthorizationLifecycle.coupled_removal_prevents_same_identity_capability_revival
+#print axioms CausalDagCgka.AuthorizationLifecycle.fresh_incarnation_does_not_inherit_old_capability
+LEAN
+          } > /tmp/assumption-recheck/work/AuthorizationLifecycleSelfContained.lean
+
+          if grep -nE '\b(sorry|admit)\b|sorryAx' \
+              /tmp/assumption-recheck/work/AuthorizationLifecycleSelfContained.lean; then
+            echo 'proof placeholder found'
+            exit 1
+          fi
+
+          sha256sum \
+            /tmp/assumption-recheck/source.tar.xz \
+            /tmp/assumption-recheck/work/AuthorizationLifecycleSelfContained.lean \
+            > /tmp/assumption-recheck/lean-inputs.sha256
+
+      - name: Fetch and verify the real Lean WASM fixture
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 5 --retry-all-errors \
+            https://github.com/cauli/lean4-wasm-in-browser/releases/download/test-fixtures-4.33/lean-wasm-4.33-testfixture.tar.gz \
+            --output /tmp/assumption-recheck/lean-wasm.tar.gz
+          printf '%s  %s\n' \
+            fb6e0cb754053deb247eea8b2506a89ac7c1e887a976d61b45cbe8012b3a5f34 \
+            /tmp/assumption-recheck/lean-wasm.tar.gz | sha256sum -c -
+          mkdir -p /tmp/assumption-recheck/lean-wasm
+          tar -xzf /tmp/assumption-recheck/lean-wasm.tar.gz \
+            -C /tmp/assumption-recheck/lean-wasm
+
+          curl --fail --location --retry 5 --retry-all-errors \
+            https://raw.githubusercontent.com/cauli/lean4-wasm-in-browser/2655455848091557c8457b6a3b03c291859890e6/scripts/lean-wasm-node.cjs \
+            --output /tmp/assumption-recheck/lean-wasm-node.cjs
+
+          artifact="$(dirname "$(dirname "$(find /tmp/assumption-recheck/lean-wasm -type f -path '*/bin/lean.js' | head -n 1)")")"
+          test -f "$artifact/bin/lean.js"
+          test -f "$artifact/bin/lean.wasm"
+          test -d "$artifact/lib/lean"
+          printf '%s\n' "$artifact" > /tmp/assumption-recheck/lean-wasm-artifact-root.txt
+
+      - name: Elaborate the new lifecycle theorems in the WASM kernel
+        shell: bash
+        env:
+          LEAN_WASM_NODE_MEMORY_MB: "1024"
+        run: |
+          set -euo pipefail
+          artifact="$(cat /tmp/assumption-recheck/lean-wasm-artifact-root.txt)"
+          node --stack-size=8192 \
+            /tmp/assumption-recheck/lean-wasm-node.cjs \
+            "$artifact" /tmp/assumption-recheck/work --version \
+            2>&1 | tee /tmp/assumption-recheck/lean-wasm-version.txt
+
+          node --stack-size=8192 \
+            /tmp/assumption-recheck/lean-wasm-node.cjs \
+            "$artifact" /tmp/assumption-recheck/work \
+            /work/AuthorizationLifecycleSelfContained.lean \
+            2>&1 | tee /tmp/assumption-recheck/lean-wasm-result.txt
+
+          ! grep -Eiq '(^|[^[:alpha:]])error:' \
+            /tmp/assumption-recheck/lean-wasm-result.txt
+          test "$(grep -c '^axioms' /tmp/assumption-recheck/lean-wasm-result.txt || true)" -eq 4
+          ! grep -Fq 'sorryAx' /tmp/assumption-recheck/lean-wasm-result.txt
+
+      - name: Upload Lean WASM evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: assumption-recheck-lean-wasm
+          path: |
+            /tmp/assumption-recheck/lean-inputs.sha256
+            /tmp/assumption-recheck/lean-wasm-version.txt
+            /tmp/assumption-recheck/lean-wasm-result.txt
+            /tmp/assumption-recheck/work/AuthorizationLifecycleSelfContained.lean
+          if-no-files-found: error
+
+  proverif-docker:
+    name: Dockerized ProVerif lifecycle revalidation
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore historical symbolic models
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/assumption-recheck/snapshot /tmp/assumption-recheck/proverif
+          bash archives/text-snapshot/RESTORE.sh /tmp/assumption-recheck/source.tar.xz
+          tar -xJf /tmp/assumption-recheck/source.tar.xz -C /tmp/assumption-recheck/snapshot
+
+          for model in \
+            composition_symbolic.pv \
+            secret_state_union_resurrection.pv \
+            role_authorization_symbolic.pv \
+            role_authorization_bypass.pv \
+            role_context_binding_bypass.pv; do
+            source_path="$(find /tmp/assumption-recheck/snapshot -type f -name "$model" | sort | head -n 1)"
+            test -n "$source_path"
+            cp "$source_path" "/tmp/assumption-recheck/proverif/$model"
+          done
+
+      - name: Write the explicit removal/rejoin lifecycle model
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/assumption-recheck/proverif/authorization_lifecycle_revalidation.pv <<'PV'
+(*
+  Revalidates the newly explicit membership/capability lifecycle boundary.
+
+  Expected contrasts:
+  - membership-only removal followed by same-identity rejoin revives an old,
+    still-live role assertion: the revival canary is attacker-reachable;
+  - binding authorization to a post-revocation state prevents the old assertion
+    from authorizing, while a fresh assertion still exercises the honest path;
+  - a fresh incarnation identity does not inherit the old identity's assertion,
+    while a fresh assertion for that incarnation still exercises the honest path.
+
+  Role assertions are abstract authenticated credentials, matching the existing
+  symbolic model's boundary. Signature and credential unforgeability remain
+  computational assumptions rather than claims proved here.
+*)
+
+free network : channel.
+
+type member.
+type capability.
+type contextid.
+type incarnation.
+type roleassertion.
+type checkresult.
+type route.
+
+free alice : member.
+free aliceFreshIncarnation : member.
+free manageMembers : capability.
+free preRemovalContext : contextid.
+free postCoupledRemovalContext : contextid.
+free oldIncarnation : incarnation.
+free newIncarnation : incarnation.
+
+const removalOnlyRoute : route.
+const coupledRemovalRoute : route.
+const freshIncarnationRoute : route.
+const ok : checkresult.
+
+free removalOnlyRevivalCanary : bitstring [private].
+free coupledOldCredentialCanary : bitstring [private].
+free coupledHonestCanary : bitstring [private].
+free freshIncarnationOldCredentialCanary : bitstring [private].
+free freshIncarnationHonestCanary : bitstring [private].
+
+fun issueRole(member, capability, contextid, incarnation) : roleassertion [private].
+fun verifyRole(roleassertion, member, capability, contextid, incarnation) : checkresult
+reduc forall author : member, required : capability,
+             context : contextid, identityIncarnation : incarnation;
+  verifyRole(
+    issueRole(author, required, context, identityIncarnation),
+    author, required, context, identityIncarnation) = ok.
+
+event HistoricalRoleGranted(member, capability, contextid, incarnation).
+event RoleRevoked(member, capability, contextid, incarnation).
+event CoupledRoleGranted(member, capability, contextid, incarnation).
+event FreshIncarnationRoleGranted(member, capability, contextid, incarnation).
+event RemovalOnlyAcceptedOldCredential(member, capability, contextid, incarnation).
+event CoupledAccepted(member, capability, contextid, incarnation).
+event FreshIncarnationAccepted(member, capability, contextid, incarnation).
+
+query author : member, required : capability,
+      context : contextid, identityIncarnation : incarnation;
+  event(CoupledAccepted(author, required, context, identityIncarnation)) ==>
+  event(CoupledRoleGranted(author, required, context, identityIncarnation)).
+
+query author : member, required : capability,
+      context : contextid, identityIncarnation : incarnation;
+  event(FreshIncarnationAccepted(
+    author, required, context, identityIncarnation)) ==>
+  event(FreshIncarnationRoleGranted(
+    author, required, context, identityIncarnation)).
+
+query attacker(removalOnlyRevivalCanary).
+query attacker(coupledOldCredentialCanary).
+query attacker(coupledHonestCanary).
+query attacker(freshIncarnationOldCredentialCanary).
+query attacker(freshIncarnationHonestCanary).
+
+let Issuer =
+  event HistoricalRoleGranted(
+    alice, manageMembers, preRemovalContext, oldIncarnation);
+  event RoleRevoked(
+    alice, manageMembers, postCoupledRemovalContext, oldIncarnation);
+  event CoupledRoleGranted(
+    alice, manageMembers, postCoupledRemovalContext, oldIncarnation);
+  event FreshIncarnationRoleGranted(
+    aliceFreshIncarnation, manageMembers,
+    postCoupledRemovalContext, newIncarnation);
+
+  out(network,
+    (removalOnlyRoute,
+      issueRole(alice, manageMembers, preRemovalContext, oldIncarnation)));
+  out(network,
+    (coupledRemovalRoute,
+      issueRole(alice, manageMembers, preRemovalContext, oldIncarnation)));
+  out(network,
+    (coupledRemovalRoute,
+      issueRole(
+        alice, manageMembers, postCoupledRemovalContext, oldIncarnation)));
+  out(network,
+    (freshIncarnationRoute,
+      issueRole(alice, manageMembers, preRemovalContext, oldIncarnation)));
+  out(network,
+    (freshIncarnationRoute,
+      issueRole(
+        aliceFreshIncarnation, manageMembers,
+        postCoupledRemovalContext, newIncarnation)));
+  0.
+
+let Validator =
+  in(network, (selectedRoute : route, proof : roleassertion));
+  if selectedRoute = removalOnlyRoute then
+    let result = verifyRole(
+      proof, alice, manageMembers, preRemovalContext, oldIncarnation) in
+    if result = ok then
+      event RemovalOnlyAcceptedOldCredential(
+        alice, manageMembers, preRemovalContext, oldIncarnation);
+      out(network, removalOnlyRevivalCanary)
+    else 0
+  else if selectedRoute = coupledRemovalRoute then
+    let result = verifyRole(
+      proof, alice, manageMembers,
+      postCoupledRemovalContext, oldIncarnation) in
+    if result = ok then
+      event CoupledAccepted(
+        alice, manageMembers, postCoupledRemovalContext, oldIncarnation);
+      if proof = issueRole(
+          alice, manageMembers, preRemovalContext, oldIncarnation) then
+        out(network, coupledOldCredentialCanary)
+      else
+        out(network, coupledHonestCanary)
+    else 0
+  else if selectedRoute = freshIncarnationRoute then
+    let result = verifyRole(
+      proof, aliceFreshIncarnation, manageMembers,
+      postCoupledRemovalContext, newIncarnation) in
+    if result = ok then
+      event FreshIncarnationAccepted(
+        aliceFreshIncarnation, manageMembers,
+        postCoupledRemovalContext, newIncarnation);
+      if proof = issueRole(
+          alice, manageMembers, preRemovalContext, oldIncarnation) then
+        out(network, freshIncarnationOldCredentialCanary)
+      else
+        out(network, freshIncarnationHonestCanary)
+    else 0
+  else 0.
+
+process Issuer | !Validator
+PV
+          sha256sum /tmp/assumption-recheck/proverif/*.pv \
+            > /tmp/assumption-recheck/proverif-inputs.sha256
+
+      - name: Build a pinned ProVerif 2.05 Docker environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/assumption-recheck/ProVerif.Dockerfile <<'DOCKER'
+FROM ocaml/opam:debian-12-ocaml-4.14
+USER opam
+RUN opam update && opam install --yes proverif.2.05
+WORKDIR /work
+ENTRYPOINT ["opam", "exec", "--", "proverif"]
+DOCKER
+          docker build --pull --progress=plain \
+            --tag protocol-assumption-proverif:2.05 \
+            --file /tmp/assumption-recheck/ProVerif.Dockerfile \
+            /tmp/assumption-recheck \
+            2>&1 | tee /tmp/assumption-recheck/proverif-docker-build.txt
+          docker image inspect protocol-assumption-proverif:2.05 \
+            --format '{{json .Id}} {{json .RepoDigests}}' \
+            | tee /tmp/assumption-recheck/proverif-image.txt
+          docker run --rm --entrypoint sh \
+            protocol-assumption-proverif:2.05 \
+            -lc 'opam list --installed --columns=name,version proverif' \
+            | tee /tmp/assumption-recheck/proverif-version.txt
+
+      - name: Run the historical models and the new lifecycle model
+        shell: bash
+        run: |
+          set -euo pipefail
+          run_model() {
+            local model="$1"
+            local output="$2"
+            docker run --rm \
+              --volume /tmp/assumption-recheck/proverif:/work:ro \
+              --workdir /work \
+              protocol-assumption-proverif:2.05 "$model" \
+              2>&1 | tee "$output"
+          }
+
+          run_model composition_symbolic.pv \
+            /tmp/assumption-recheck/proverif-composition.txt
+          test "$(grep -c 'RESULT not attacker.* is true' /tmp/assumption-recheck/proverif-composition.txt)" -eq 3
+          ! grep -Eq 'RESULT not attacker.* (is false|cannot be proved)' \
+            /tmp/assumption-recheck/proverif-composition.txt
+
+          run_model secret_state_union_resurrection.pv \
+            /tmp/assumption-recheck/proverif-secret-union.txt
+          test "$(grep -c 'RESULT not attacker.* is false' /tmp/assumption-recheck/proverif-secret-union.txt)" -eq 2
+
+          run_model role_authorization_symbolic.pv \
+            /tmp/assumption-recheck/proverif-role-authorization.txt
+          test "$(grep -c 'RESULT event(OperationAccepted.* is true' /tmp/assumption-recheck/proverif-role-authorization.txt)" -eq 3
+          grep -Fq 'RESULT not attacker(responseCanary[]) is false.' \
+            /tmp/assumption-recheck/proverif-role-authorization.txt
+          grep -Fq 'RESULT not attacker(postRevokeAcceptanceCanary[]) is true.' \
+            /tmp/assumption-recheck/proverif-role-authorization.txt
+
+          run_model role_authorization_bypass.pv \
+            /tmp/assumption-recheck/proverif-role-bypass.txt
+          grep -q 'RESULT event(OperationAccepted.* is false' \
+            /tmp/assumption-recheck/proverif-role-bypass.txt
+
+          run_model role_context_binding_bypass.pv \
+            /tmp/assumption-recheck/proverif-context-bypass.txt
+          grep -q 'RESULT event(OperationAccepted.* is false' \
+            /tmp/assumption-recheck/proverif-context-bypass.txt
+
+          run_model authorization_lifecycle_revalidation.pv \
+            /tmp/assumption-recheck/proverif-lifecycle.txt
+          grep -Fq 'RESULT not attacker(removalOnlyRevivalCanary[]) is false.' \
+            /tmp/assumption-recheck/proverif-lifecycle.txt
+          grep -Fq 'RESULT not attacker(coupledOldCredentialCanary[]) is true.' \
+            /tmp/assumption-recheck/proverif-lifecycle.txt
+          grep -Fq 'RESULT not attacker(coupledHonestCanary[]) is false.' \
+            /tmp/assumption-recheck/proverif-lifecycle.txt
+          grep -Fq 'RESULT not attacker(freshIncarnationOldCredentialCanary[]) is true.' \
+            /tmp/assumption-recheck/proverif-lifecycle.txt
+          grep -Fq 'RESULT not attacker(freshIncarnationHonestCanary[]) is false.' \
+            /tmp/assumption-recheck/proverif-lifecycle.txt
+          test "$(grep -c 'RESULT event(.* is true' /tmp/assumption-recheck/proverif-lifecycle.txt)" -eq 2
+
+      - name: Upload ProVerif evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: assumption-recheck-proverif-docker
+          path: |
+            /tmp/assumption-recheck/proverif-inputs.sha256
+            /tmp/assumption-recheck/proverif/authorization_lifecycle_revalidation.pv
+            /tmp/assumption-recheck/proverif-docker-build.txt
+            /tmp/assumption-recheck/proverif-image.txt
+            /tmp/assumption-recheck/proverif-version.txt
+            /tmp/assumption-recheck/proverif-*.txt
+          if-no-files-found: error
