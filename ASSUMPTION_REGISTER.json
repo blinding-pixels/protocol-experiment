@@ -1,0 +1,146 @@
+{
+  "schema": "causal-dag-assurance.assumption-register.v1",
+  "assumptions": [
+    {
+      "id": "A-001-dual-target-identity",
+      "statement": "A matching first digest is insufficient; all result identity, provenance, and supplied digest conditions must hold conjunctively.",
+      "status": "verified",
+      "evidence": [
+        {"type":"source","path":"attack_lab/attack_identity.py","sha256":"0b0c3c97b87692cc99865e3530a52626d4e49488d6f71d615ad98cf4fc6b0769","negative_control_observed":false},
+        {"type":"test-report","path":"evidence/local-test-report.json","sha256":"2e172b711dcf601f56783d8e6c44ef6c98123e5219519c4082bf095ac73a7ad6","negative_control_observed":true}
+      ],
+      "remaining": []
+    },
+    {
+      "id": "A-002-compiled-mutation-execution",
+      "statement": "Every correct and one-defense-removed variant must be executed from manifest-verified compiled binaries and independently scored from raw fields.",
+      "status": "open",
+      "evidence": [
+        {"type":"infrastructure-finding","path":"evidence/runnerless-ci-finding.json","sha256":"02a779d555b796b7e141d9973e3132a1a398288ec3c6f69acc85991245e4c95e","negative_control_observed":false},
+        {"type":"historical-artifact-boundary","path":"evidence/historical-artifact-boundary.json","sha256":"b4b2750af62ac6c8e059dea291ea88b0d50d4daef3a11905c77e191e9046f35b","negative_control_observed":false}
+      ],
+      "remaining": ["Import the complete frozen Rust source tree into the standalone remote.","Install the pinned Rust toolchain.","Build and execute every variant outside Facets."]
+    },
+    {
+      "id": "A-003-canonical-public-state",
+      "statement": "Canonical context encoding must normalize set order and duplicates while binding policy version, domains, component positions, members, and capability codes.",
+      "status": "implemented-pending-execution",
+      "evidence": [
+        {"type":"source","path":"assurance/canonical_state.py","sha256":"da7097cac7edc3f3a62e1ea84599e2102a4a2c24995c079676c89db81331a038","negative_control_observed":false},
+        {"type":"test-report","path":"evidence/local-test-report.json","sha256":"2e172b711dcf601f56783d8e6c44ef6c98123e5219519c4082bf095ac73a7ad6","negative_control_observed":true},
+        {"type":"source","path":"assurance/canonical_state_vector.json","sha256":"251c5543cf4b72135663a6fa5fa9243f6f40c2903254fefdad1660fe572865af","negative_control_observed":false},
+        {"type":"source","path":"evidence/frozen-source-formal-audit.json","sha256":"0b53835ff79920e636c0a329dfe83adc764aa3a98e09cdb4cc99586260356123","negative_control_observed":false}
+      ],
+      "remaining": ["Emit the same vector from the compiled Rust implementation and require byte-for-byte equality."]
+    },
+    {
+      "id": "A-004-proof-source-binary-links",
+      "statement": "Claim evidence must use exact hashes, anchored declarations, acyclic dependencies, binary metadata, target-bound measurements, and negative controls.",
+      "status": "implemented-pending-execution",
+      "evidence": [
+        {"type":"source","path":"assurance/evidence_graph.py","sha256":"6e674d590ae963645d883d75556936275d77361c73282bee2ef12871718935a4","negative_control_observed":false},
+        {"type":"test-report","path":"evidence/local-test-report.json","sha256":"2e172b711dcf601f56783d8e6c44ef6c98123e5219519c4082bf095ac73a7ad6","negative_control_observed":true}
+      ],
+      "remaining": ["Import and hash every original proof, source, binary manifest, and measurement artifact into a real standalone evidence graph."]
+    },
+    {
+      "id": "A-005-production-integration",
+      "statement": "Prototype evidence does not close production retention, erasure, audit persistence, revocation propagation, or rollback obligations.",
+      "status": "implemented-pending-integration",
+      "evidence": [
+        {"type":"source","path":"assurance/integration_obligations.json","sha256":"620c4699377af058e6b99f5f51c02bbb10ad2e8082cd254f0949c34cbaae9e81","negative_control_observed":false},
+        {"type":"source","path":"assurance/obligations.py","sha256":"29152056723f8f4205fa4e0efb540883e8ced6ef5db09c414e7b5d22fe85efe5","negative_control_observed":false},
+        {"type":"test-report","path":"evidence/local-test-report.json","sha256":"2e172b711dcf601f56783d8e6c44ef6c98123e5219519c4082bf095ac73a7ad6","negative_control_observed":true}
+      ],
+      "remaining": ["Exercise each obligation through production adapters with integration negative controls."]
+    },
+    {
+      "id": "A-006-target-bound-measurement",
+      "statement": "Timing, cache, and assembly evidence supports only the exact measured binary and target identity.",
+      "status": "implemented-pending-execution",
+      "evidence": [
+        {"type":"source","path":"assurance/target_evidence.py","sha256":"bb5be4ee48aca642d28df31e0403f26648be9213697a1f5bb11076bc1173c78e","negative_control_observed":false},
+        {"type":"test-report","path":"evidence/local-test-report.json","sha256":"2e172b711dcf601f56783d8e6c44ef6c98123e5219519c4082bf095ac73a7ad6","negative_control_observed":true}
+      ],
+      "remaining": ["Generate fresh measurements for each supported target and exact binary hash."]
+    },
+    {
+      "id": "A-007-deployment-residue",
+      "statement": "Host residue properties must be enforced and tested per target or remain explicit unresolved findings.",
+      "status": "implemented-pending-integration",
+      "evidence": [
+        {"type":"source","path":"assurance/deployment_residue_requirements.json","sha256":"ffd54fe8f5089ef17ad01d49229a65ae057ae9bb7e5412e5356f1fa52996c153","negative_control_observed":false},
+        {"type":"source","path":"assurance/residue_requirements.py","sha256":"ecfb431a11c966011f5472fdb96f3cfad88a7bb0cd39d976cfa524956c4b07d6","negative_control_observed":false},
+        {"type":"test-report","path":"evidence/local-test-report.json","sha256":"2e172b711dcf601f56783d8e6c44ef6c98123e5219519c4082bf095ac73a7ad6","negative_control_observed":true}
+      ],
+      "remaining": ["Provide target host-policy or integration evidence for every unresolved requirement."]
+    },
+    {
+      "id": "A-008-standalone-remote-completeness",
+      "statement": "The dedicated protocol-experiment remote must preserve the current text source with independently verified part/blob/archive identities; historical binary archives and live exact-source reconstruction remain explicit.",
+      "status": "implemented-pending-execution",
+      "evidence": [
+        {"type":"source","path":"SOURCE_MANIFEST.json","sha256":"380af5d419645331cda63e04e0dd2684c74dd1dc01a335f9af49cc825f65b4d9","negative_control_observed":false},
+        {"type":"infrastructure-finding","path":"evidence/runnerless-ci-finding.json","sha256":"02a779d555b796b7e141d9973e3132a1a398288ec3c6f69acc85991245e4c95e","negative_control_observed":false},
+        {"type":"source","path":"REMOTE_LOCATION.json","sha256":"86bf6e9f9ba8786c6540113f05e85eabd2e7aa9b01d58c1a5751163c94bb3027","negative_control_observed":false}
+      ],
+      "remaining": ["Record the final protocol-experiment import commit identity in evidence.","Preserve the four excluded historical binary archive artifacts or record their independent storage.","Import the exact frozen Rust/formal tree as live browsable source rather than relying only on the verified text snapshot."]
+    },
+    {
+      "id": "A-009-stale-green-substitution",
+      "statement": "A successful artifact from an earlier source commit or a package that omits the required attack layer cannot be substituted for exact frozen-source execution evidence.",
+      "status": "verified",
+      "evidence": [
+        {"type":"source","path":"assurance/historical_artifacts.py","sha256":"ae708c826bcee985b71d36392b9e5ac0fef89d3342ca0ef6a5bf3e0eb9e2a68b","negative_control_observed":false},
+        {"type":"historical-artifact-boundary","path":"evidence/historical-artifact-boundary.json","sha256":"b4b2750af62ac6c8e059dea291ea88b0d50d4daef3a11905c77e191e9046f35b","negative_control_observed":false},
+        {"type":"test-report","path":"evidence/local-test-report.json","sha256":"2e172b711dcf601f56783d8e6c44ef6c98123e5219519c4082bf095ac73a7ad6","negative_control_observed":true}
+      ],
+      "remaining": []
+    },
+    {
+      "id": "A-010-membership-capability-revival",
+      "statement": "Membership removal alone does not imply authority non-revival: a surviving capability tag can become usable again when the same identity is re-added.",
+      "status": "verified",
+      "evidence": [
+        {"type":"source","path":"formal/authorization_lifecycle.py","sha256":"c4f828720ef38f708b399bad6ee4307500e017dd8e69d42d58a473ccabfbb88f","negative_control_observed":false},
+        {"type":"source","path":"evidence/authorization-lifecycle-finding.json","sha256":"81df86a39127cdb6b32612db6cc6ba3e1d624135e4ae1fbc011edc78c31c03bc","negative_control_observed":false},
+        {"type":"test-report","path":"evidence/local-test-report.json","sha256":"2e172b711dcf601f56783d8e6c44ef6c98123e5219519c4082bf095ac73a7ad6","negative_control_observed":true},
+        {"type":"source","path":"evidence/frozen-source-formal-audit.json","sha256":"0b53835ff79920e636c0a329dfe83adc764aa3a98e09cdb4cc99586260356123","negative_control_observed":false}
+      ],
+      "remaining": []
+    },
+    {
+      "id": "A-011-removal-rejoin-enforcement",
+      "statement": "Any production no-revival policy must enforce coupled visible capability-tag tombstoning or incarnation-scoped member identities, and capability grants must target an active member in the signed causal view.",
+      "status": "implemented-pending-integration",
+      "evidence": [
+        {"type":"source","path":"formal/authorization_lifecycle.py","sha256":"c4f828720ef38f708b399bad6ee4307500e017dd8e69d42d58a473ccabfbb88f","negative_control_observed":false},
+        {"type":"source","path":"assurance/integration_obligations.json","sha256":"620c4699377af058e6b99f5f51c02bbb10ad2e8082cd254f0949c34cbaae9e81","negative_control_observed":false},
+        {"type":"source","path":"evidence/frozen-source-formal-audit.json","sha256":"0b53835ff79920e636c0a329dfe83adc764aa3a98e09cdb4cc99586260356123","negative_control_observed":false}
+      ],
+      "remaining": ["Select one lifecycle policy in production.","Exercise removal, offline concurrency, rejoin, restart, and rollback negative controls through production adapters."]
+    },
+    {
+      "id": "A-012-formal-claim-drift",
+      "statement": "Formal prose must not exceed the machine-readable claim matrix, and every formal document must carry the current assumption revalidation boundary.",
+      "status": "verified",
+      "evidence": [
+        {"type":"source","path":"formal/claim_status.py","sha256":"42bbdde81cb7afe9f416c0eb129b43437ee8da0ba0c9791db6bc153b7646a58d","negative_control_observed":false},
+        {"type":"source","path":"formal/doc_claims.py","sha256":"4f8e5338a3cfb6d7bdbf84340455cb2ca4d9f8db94b72b8bea4784950edcc0c3","negative_control_observed":false},
+        {"type":"test-report","path":"evidence/local-test-report.json","sha256":"2e172b711dcf601f56783d8e6c44ef6c98123e5219519c4082bf095ac73a7ad6","negative_control_observed":true}
+      ],
+      "remaining": []
+    },
+    {
+      "id": "A-013-current-lean-kernel",
+      "statement": "The newly authored authorization-lifecycle theorems must be accepted by the exact Lean 4.32.2 kernel and existing axiom audit before being called kernel-checked.",
+      "status": "implemented-pending-execution",
+      "evidence": [
+        {"type":"source","path":"formal/current-source/CausalDagCgka/AuthorizationLifecycle.lean","sha256":"4752e466de814da45bea15df8aaefe35af1853ea0f1e700fab151f76f90a9730","negative_control_observed":false},
+        {"type":"source","path":"formal/current-source/README.md","sha256":"2f1c3763f1cc11d44a08f35f6271bdf336ce88c22324f4a1bb5901eb66f5086a","negative_control_observed":false},
+        {"type":"test-report","path":"evidence/local-test-report.json","sha256":"2e172b711dcf601f56783d8e6c44ef6c98123e5219519c4082bf095ac73a7ad6","negative_control_observed":true}
+      ],
+      "remaining": ["Install or otherwise obtain the official Lean 4.32.2 toolchain.","Run lake build --wfail on formal/current-source.","Run the existing leanchecker, placeholder scan, and axiom allowlist audit on the exact source tree."]
+    }
+  ]
+}
