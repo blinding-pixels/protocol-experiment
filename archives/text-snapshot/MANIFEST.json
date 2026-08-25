@@ -1,0 +1,29 @@
+{
+  "schema": "protocol-experiment.text-snapshot.v1",
+  "repository": "blinding-pixels/protocol-experiment",
+  "branch": "main",
+  "source_local_commit": "000b7a169c6a",
+  "archive_filename": "causal-dag-assurance-text-000b7a1.tar.xz",
+  "archive_bytes": 89788,
+  "archive_sha256": "db309e499865a3d6fec690d47e39626bb71ff5902a064e4c8b968f69a0c5787b",
+  "encoding": "base64-without-line-breaks",
+  "part_count": 12,
+  "utf8_tracked_file_count": 97,
+  "excluded_binary_history_artifacts": 4,
+  "remote_blob_identity_verified": true,
+  "parts": [
+    {"name":"part-000","bytes":10000,"sha256":"549b8870450e5e182f0578c7ed74e225dfc3737acfe2ea496bae5f9dc5dc3895","git_blob_sha1":"9751454e8013090f953ff7f6d37d00eee0039ad9"},
+    {"name":"part-001","bytes":10000,"sha256":"6fa3b28d201acf1264ccf5862a4b9cc5848d7d5a206fb45cfe7664df0bb34e2b","git_blob_sha1":"c8a5ca1e599fa0530a0f29b0502d2ae44196902c"},
+    {"name":"part-002","bytes":10000,"sha256":"a50ffa7933a42823db75436dd6500254916ef6b9931ee42cf7c97c1b5c9cf076","git_blob_sha1":"e55201dc2b49a9b395390364760128d7ed9c4749"},
+    {"name":"part-003","bytes":10000,"sha256":"f2b5ac3d7c0646cbfaa8a311fb607f049584b192c6e85b14f0e7bb1f090ab563","git_blob_sha1":"b21e71954a081cf8c34c529a01c84caa1198480c"},
+    {"name":"part-004","bytes":10000,"sha256":"4829e6fc38136662846b4a0d63370aa91d05e982d0369c355624fbb3ec2c9596","git_blob_sha1":"d1970b36391463a6c0a29acb84571aa4b1051807"},
+    {"name":"part-005","bytes":10000,"sha256":"64f050a7def5283dba840282b9a8853a8d8690c844b8146af65279406c3d1f89","git_blob_sha1":"9f993c9a4f26648ca3f7407a2b2554aabcec56d8"},
+    {"name":"part-006","bytes":10000,"sha256":"ff5dd7e11522908566a2c0db719bde92ad37b429906e2c1684ff5919fdfb2965","git_blob_sha1":"b83264cf139319b9906704d0c66af07203d59586"},
+    {"name":"part-007","bytes":10000,"sha256":"0d66cf3597055335a990d1b2374bc0ad62974d80e55947f20808ecc047feb9cc","git_blob_sha1":"d196c2d09e989980b2f6753e74edc25e5ec7d978"},
+    {"name":"part-008","bytes":10000,"sha256":"6d308c2fdffb222160e85d0138658f633aff5ecb4ebb373d1381ad7d2c98c9ac","git_blob_sha1":"cd401f8ee98c065bc6fa5f6265126a6cfc5b1be9"},
+    {"name":"part-009","bytes":10000,"sha256":"6b925817e733d84da46ca5f17c4b05ecd29ed1b0803e6afe267ac11b3c38a7ba","git_blob_sha1":"8a2a5c93e1c3dcf91c247c7aa64b42a6d1ff8c79"},
+    {"name":"part-010","bytes":10000,"sha256":"eeee4c567ccc1996ea1e9ff92dcb182730224c3c6f4da237a0a21ee40317630f","git_blob_sha1":"5ec5130b1792f94bc4071b0b810fad3a756e48cd"},
+    {"name":"part-011","bytes":9720,"sha256":"1bfe9d02c982ab7a349f8146ae6603272c5820db5aed3d3ec9bb3e12c4813323","git_blob_sha1":"97a5d73b63243c320a02cad40992690157425e31"}
+  ],
+  "boundary": "Preservation and reproducibility artifact only. It does not establish current Lean/EasyCrypt/ProVerif kernel execution, compiled mutation execution, production equivalence, or target side-channel properties."
+}
