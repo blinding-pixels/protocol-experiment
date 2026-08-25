@@ -109,10 +109,10 @@ let Issuer =
   0.
 
 let Validator =
-  in(network, (selectedRoute : route, proof : roleassertion));
+  in(network, (selectedRoute : route, roleCredential : roleassertion));
   if selectedRoute = removalOnlyRoute then
     let result = verifyRole(
-      proof, alice, manageMembers, preRemovalContext, oldIncarnation) in
+      roleCredential, alice, manageMembers, preRemovalContext, oldIncarnation) in
     if result = ok then
       event RemovalOnlyAcceptedOldCredential(
         alice, manageMembers, preRemovalContext, oldIncarnation);
@@ -120,12 +120,12 @@ let Validator =
     else 0
   else if selectedRoute = coupledRemovalRoute then
     let result = verifyRole(
-      proof, alice, manageMembers,
+      roleCredential, alice, manageMembers,
       postCoupledRemovalContext, oldIncarnation) in
     if result = ok then
       event CoupledAccepted(
         alice, manageMembers, postCoupledRemovalContext, oldIncarnation);
-      if proof = issueRole(
+      if roleCredential = issueRole(
           alice, manageMembers, preRemovalContext, oldIncarnation) then
         out(network, coupledOldCredentialCanary)
       else
@@ -133,13 +133,13 @@ let Validator =
     else 0
   else if selectedRoute = freshIncarnationRoute then
     let result = verifyRole(
-      proof, aliceFreshIncarnation, manageMembers,
+      roleCredential, aliceFreshIncarnation, manageMembers,
       postCoupledRemovalContext, newIncarnation) in
     if result = ok then
       event FreshIncarnationAccepted(
         aliceFreshIncarnation, manageMembers,
         postCoupledRemovalContext, newIncarnation);
-      if proof = issueRole(
+      if roleCredential = issueRole(
           alice, manageMembers, preRemovalContext, oldIncarnation) then
         out(network, freshIncarnationOldCredentialCanary)
       else
