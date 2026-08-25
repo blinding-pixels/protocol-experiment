@@ -1,0 +1,96 @@
+{
+  "schema": "causal-dag-assurance.formal-claim-status.v1",
+  "frozen_origin_commit": "5b5d50e6d03bc5a8691fed8449e10afb9cd9fe0f",
+  "claims": [
+    {
+      "id": "C-001",
+      "layer": "abstract",
+      "statement": "Validated public membership, capability, fork, grant, and puncture facts converge under componentwise observed-remove/set-union join.",
+      "model_result": "holds-conditionally",
+      "assumption_dependencies": ["A-003-canonical-public-state", "A-004-proof-source-binary-links"],
+      "status": "conditional-holds",
+      "rationale": "The semilattice theorem is abstract and unchanged; exact implementation encoding and current evidence execution remain separate."
+    },
+    {
+      "id": "C-002",
+      "layer": "abstract",
+      "statement": "A capability-gated operation accepted in its signed canonical causal context requires active membership, active capability, transcript binding, and signature acceptance.",
+      "model_result": "holds-conditionally",
+      "assumption_dependencies": ["A-003-canonical-public-state", "A-011-removal-rejoin-enforcement"],
+      "status": "conditional-holds",
+      "rationale": "The validity relation still holds, but transition validity and member lifecycle semantics must be explicit."
+    },
+    {
+      "id": "C-003",
+      "layer": "abstract",
+      "statement": "Finite-kappa cross-fork live-key security composes from the imported BeeKEM theorem and the stated domain-separated key-schedule assumptions.",
+      "model_result": "holds-conditionally",
+      "assumption_dependencies": ["A-004-proof-source-binary-links"],
+      "status": "conditional-holds",
+      "rationale": "The new assumptions do not alter BeeKEM's game, but they prevent promotion to an unexecuted implementation claim."
+    },
+    {
+      "id": "C-004",
+      "layer": "abstract",
+      "statement": "A grant intersecting at most b causal-linear segments in prefixes has an exact O(b log N) tagged subtree-capability representation.",
+      "model_result": "restricted-family-only",
+      "assumption_dependencies": ["A-004-proof-source-binary-links"],
+      "status": "conditional-holds",
+      "rationale": "The restricted combinatorial result survives; arbitrary DAG-region logarithmic compactness remains false."
+    },
+    {
+      "id": "C-005",
+      "layer": "abstract",
+      "statement": "Ungrantable content keys remain secure after actual secure erasure under the stated PRF, constrained-tree, KEM, AEAD, and leakage assumptions.",
+      "model_result": "holds-conditionally",
+      "assumption_dependencies": ["A-005-production-integration", "A-007-deployment-residue"],
+      "status": "conditional-holds",
+      "rationale": "This is an abstract implication; whether a host actually erases secrets is a production question."
+    },
+    {
+      "id": "C-006",
+      "layer": "abstract",
+      "statement": "Signature-valid receipt evidence is permutation-confluent and same-author, same-sequence, different-statement pairs persist as equivocation evidence once observed together.",
+      "model_result": "holds-conditionally",
+      "assumption_dependencies": ["A-005-production-integration", "A-004-proof-source-binary-links"],
+      "status": "conditional-holds",
+      "rationale": "The evidence-set theorem survives; gossip liveness, persistence, and rollback resistance are outside it."
+    },
+    {
+      "id": "C-007",
+      "layer": "abstract",
+      "statement": "Tombstoning membership alone permanently prevents the same identity from regaining an old capability after rejoin.",
+      "model_result": "counterexample-observed",
+      "assumption_dependencies": ["A-010-membership-capability-revival"],
+      "status": "does-not-hold-as-stated",
+      "rationale": "A surviving capability tag is dormant while membership is inactive and becomes usable after the same identity receives a fresh membership tag."
+    },
+    {
+      "id": "C-008",
+      "layer": "production",
+      "statement": "The production system implements the abstract protocol, lifecycle policy, persistence, revocation, retention, erasure, and rollback semantics end to end.",
+      "model_result": "not-executed-current-source",
+      "assumption_dependencies": ["A-005-production-integration", "A-007-deployment-residue", "A-011-removal-rejoin-enforcement"],
+      "status": "open",
+      "rationale": "No production adapter or fault-injection evidence closes these obligations."
+    },
+    {
+      "id": "C-009",
+      "layer": "implementation",
+      "statement": "Every exact frozen-source correct and one-defense-removed binary produces the independently derived expected dual-target contrast.",
+      "model_result": "not-executed-current-source",
+      "assumption_dependencies": ["A-001-dual-target-identity", "A-002-compiled-mutation-execution", "A-009-stale-green-substitution"],
+      "status": "open",
+      "rationale": "Identity validation is hardened, but the exact binaries have not run outside the runnerless Facets workflows."
+    },
+    {
+      "id": "C-010",
+      "layer": "measurement",
+      "statement": "Timing, cache, and assembly findings hold for each supported production target.",
+      "model_result": "not-executed-current-source",
+      "assumption_dependencies": ["A-006-target-bound-measurement", "A-009-stale-green-substitution"],
+      "status": "open",
+      "rationale": "No fresh exact-binary and exact-target artifacts exist in the temporary remote."
+    }
+  ]
+}
