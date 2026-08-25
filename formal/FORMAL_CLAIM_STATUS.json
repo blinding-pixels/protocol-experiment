@@ -91,6 +91,15 @@
       "assumption_dependencies": ["A-006-target-bound-measurement", "A-009-stale-green-substitution"],
       "status": "open",
       "rationale": "No fresh exact-binary and exact-target artifacts exist in the temporary remote."
+    },
+    {
+      "id": "C-011",
+      "layer": "abstract",
+      "statement": "The current AuthorizationLifecycle Lean source is accepted by the exact Lean 4.32.2 kernel without placeholders or axioms beyond the existing allowlist.",
+      "model_result": "not-executed-current-source",
+      "assumption_dependencies": ["A-013-current-lean-kernel"],
+      "status": "open",
+      "rationale": "The source and executable counterexample/repair oracle exist, but the exact kernel could not be installed in this environment and CI remains disabled."
     }
   ]
 }
