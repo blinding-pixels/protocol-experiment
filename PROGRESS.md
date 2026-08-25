@@ -27,7 +27,7 @@
   capability-revival counterexample and verifies two valid no-revival policy
   shapes: coupled visible capability tombstoning or a fresh incarnation
   identity.
-- Seventy-two local tests pass. The stable report is
+- Seventy-seven local tests pass. The stable report is
   `evidence/local-test-report.json`.
 
 ## Formal result after assumption revalidation
@@ -63,7 +63,8 @@ reason to add cryptography.
 
 ## Open
 
-- Record the protocol-experiment commit identity after migration.
+- Record the stable protocol-experiment content commit after the final source
+  import.
 - Import or reconstruct the complete frozen origin tree as live source.
 - Build and execute all correct and one-defense-removed Rust variants outside
   Facets.
@@ -76,3 +77,15 @@ reason to add cryptography.
 No item above is treated as complete merely because this file says it is.
 Machine-readable status and exact evidence hashes live in
 `ASSUMPTION_REGISTER.json`.
+
+## Current Lean lifecycle source
+
+- `formal/current-source/CausalDagCgka/AuthorizationLifecycle.lean` is authored
+  against the pinned Lean 4.32.2 package source.
+- It formalizes the dormant-capability boundary, same-identity revival
+  counterexample, coupled-tombstone repair, and fresh-incarnation repair.
+- It imports only the existing authorization layer and contains no placeholder,
+  new axiom, opaque primitive, or cryptographic construction.
+- Exact Lean kernel acceptance and the existing axiom audit remain open because
+  the official release asset could not be retrieved in this environment and CI
+  is intentionally disabled.
