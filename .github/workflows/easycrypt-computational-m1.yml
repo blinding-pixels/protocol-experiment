@@ -22,7 +22,7 @@ permissions:
 
 concurrency:
   group: easycrypt-m1-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   check:
@@ -113,7 +113,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          source_dir="$GITHUB_WORKSPACE/formal/current-source/easycrypt/computational"
           proof_dir="$RUNNER_TEMP/easycrypt-source"
           evidence="$RUNNER_TEMP/easycrypt-evidence"
 
