@@ -14,18 +14,17 @@ module MinimalNonCanonicalRejection = {
     var state : protocol_state;
     var result : validation_result;
 
-    envelope <- witness_edit_envelope(
-      ProtocolDomain 1,
-      1,
-      witness_document,
-      OperationId 900,
-      witness_bob_old,
-      CapEdit,
-      fset1 witness_base_node,
-      AuthorizationDigest 0,
-      EditBody EditText (Payload 900),
-      Nonce 900
-    );
+    envelope <- witness_edit_envelope
+      (ProtocolDomain 1)
+      (1)
+      (witness_document)
+      (OperationId 900)
+      (witness_bob_old)
+      (CapEdit)
+      (fset1 witness_base_node)
+      (AuthorizationDigest 0)
+      (EditBody EditText (Payload 900))
+      (Nonce 900);
     operation <-
       {| so_raw = NonCanonicalWire envelope (RawBytes 900);
          so_signature =
