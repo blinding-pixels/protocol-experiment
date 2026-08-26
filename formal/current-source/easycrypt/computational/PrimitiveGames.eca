@@ -1,0 +1,51 @@
+require import AllCore.
+require import ProtocolTypes CanonicalEncoding.
+
+(* Primitive interfaces. No security statement is imported here. Final
+   advantages must be probabilities of named games with named reductions. *)
+module type SIGNATURE_SCHEME = {
+  proc sign(
+    vk : verification_key,
+    message : signature_message
+  ) : signature
+
+  proc verify(
+    vk : verification_key,
+    message : signature_message,
+    bytes : signature_bytes
+  ) : bool
+}.
+
+module type NODE_HASH = {
+  proc hash(material : node_material) : node_id
+}.
+
+(* Executable negative-control primitives. These are intentionally insecure and
+   are used only by MutationWitnesses.ec. *)
+op signature_message_code : signature_message -> int.
+op node_material_code : node_material -> int.
+
+module TestSignature : SIGNATURE_SCHEME = {
+  proc sign(
+    vk : verification_key,
+    message : signature_message
+  ) : signature = {
+    return
+      {| sig_verification_key = vk;
+         sig_bytes = SignatureBytes (signature_message_code message) |};
+  }
+
+  proc verify(
+    vk : verification_key,
+    message : signature_message,
+    bytes : signature_bytes
+  ) : bool = {
+    return bytes = SignatureBytes (signature_message_code message);
+  }
+}.
+
+module TestNodeHash : NODE_HASH = {
+  proc hash(material : node_material) : node_id = {
+    return NodeId (node_material_code material);
+  }
+}.
