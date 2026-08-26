@@ -1,0 +1,148 @@
+name: EasyCrypt computational proof
+
+on:
+  push:
+    branches:
+      - formal/easycrypt-computational-m1
+    paths:
+      - '.github/workflows/easycrypt-computational.yml'
+      - 'formal/current-source/easycrypt/computational/**'
+      - 'tools/easycrypt/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/easycrypt-computational.yml'
+      - 'formal/current-source/easycrypt/computational/**'
+      - 'tools/easycrypt/**'
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch, tag, or commit to check
+        required: true
+        default: formal/easycrypt-computational-m1
+
+permissions:
+  contents: read
+
+concurrency:
+  group: easycrypt-${{ github.event.pull_request.number || inputs.ref || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Check complete EasyCrypt source closure
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      EASYCRYPT_IMAGE: ghcr.io/easycrypt/ec-test-box@sha256:84980006e8b01fe6497bbd0ecd67deeb5e7361d8ad17e27d24924122d368e0fc
+    steps:
+      - name: Check out exact proof source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.event.pull_request.head.sha || github.sha }}
+
+      - name: Record source identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/easycrypt-evidence"
+          source_dir="formal/current-source/easycrypt/computational"
+          mkdir -p "$evidence"
+          git rev-parse HEAD | tee "$evidence/source-commit.txt"
+          find "$source_dir" -maxdepth 1 -type f \
+            \( -name '*.ec' -o -name '*.eca' \) -print0 \
+            | LC_ALL=C sort -z \
+            | xargs -0 sha256sum \
+            | tee "$evidence/source-sha256.txt"
+          git status --short --branch | tee "$evidence/git-status.txt"
+
+      - name: Run repository anti-cheating audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/easycrypt-evidence"
+          set +e
+          python3 tools/easycrypt/audit_computational.py \
+            >"$evidence/audit-stdout.log" \
+            2>"$evidence/audit-stderr.log"
+          status=$?
+          set -e
+          printf '%s\n' "$status" >"$evidence/audit-exit-status.txt"
+          cat "$evidence/audit-stdout.log"
+          cat "$evidence/audit-stderr.log" >&2
+          exit "$status"
+
+      - name: Pull immutable EasyCrypt image
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/easycrypt-evidence"
+          docker pull "$EASYCRYPT_IMAGE" 2>&1 | tee "$evidence/image-pull.log"
+          docker image inspect "$EASYCRYPT_IMAGE" \
+            >"$evidence/image-inspect.json"
+          docker image inspect "$EASYCRYPT_IMAGE" \
+            --format '{{json .RepoDigests}}' \
+            | tee "$evidence/image-repo-digests.txt"
+
+      - name: Check every EasyCrypt source
+        shell: bash
+        run: |
+          set -euo pipefail
+          source_dir="$GITHUB_WORKSPACE/formal/current-source/easycrypt/computational"
+          proof_dir="$RUNNER_TEMP/easycrypt-source"
+          evidence="$RUNNER_TEMP/easycrypt-evidence"
+          mkdir -p "$proof_dir"
+          cp -R "$source_dir"/. "$proof_dir"/
+
+          mapfile -t files < <(
+            find "$proof_dir" -maxdepth 1 -type f \
+              \( -name '*.ec' -o -name '*.eca' \) \
+              -printf '%f\n' | LC_ALL=C sort
+          )
+          printf '%s\n' "${files[@]}" | tee "$evidence/dependency-closure.txt"
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo 'No EasyCrypt sources found' >&2
+            exit 1
+          fi
+
+          quoted_files=()
+          for file in "${files[@]}"; do
+            printf -v quoted '%q' "$file"
+            quoted_files+=("$quoted")
+          done
+          file_list="${quoted_files[*]}"
+
+          set +e
+          docker run --rm \
+            -v "$proof_dir:/proof" \
+            -w /proof \
+            "$EASYCRYPT_IMAGE" \
+            bash -lc "
+              set -euo pipefail
+              easycrypt --version
+              why3 --version || true
+              z3 --version || true
+              cvc5 --version || true
+              alt-ergo --version || true
+              for file in $file_list; do
+                echo CHECKING \"\$file\"
+                easycrypt \"\$file\"
+              done
+            " >"$evidence/checker-stdout.log" \
+              2>"$evidence/checker-stderr.log"
+          status=$?
+          set -e
+          printf '%s\n' "$status" >"$evidence/checker-exit-status.txt"
+          cat "$evidence/checker-stdout.log"
+          cat "$evidence/checker-stderr.log" >&2
+          exit "$status"
+
+      - name: Upload checker evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: easycrypt-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/easycrypt-evidence
+          if-no-files-found: error
+          retention-days: 14
