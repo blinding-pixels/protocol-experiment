@@ -209,7 +209,7 @@
         {
           "type": "source",
           "path": "assurance/historical_artifacts.py",
-          "sha256": "ae708c826bcee985b71d36392b9e5ac0fef89d3342ca0ef6a5bf3e0eb9e2a68b",
+          "sha256": "ae708c826bcee985b71b36392b9e5ac0fef89d3342ca0ef6a5bf3e0eb9e2a68b",
           "negative_control_observed": false
         },
         {
@@ -321,13 +321,13 @@
         {
           "type": "source",
           "path": "formal/current-source/CausalDagCgka/AuthorizationLifecycle.lean",
-          "sha256": "0539e8aba3c034580f8bb87be4bfff39436986b97ac7b74d6bfea896053705e1",
+          "sha256": "4752e466de814da45bea15df8aaefe35af1853ea0f1e700fab151f76f90a9730",
           "negative_control_observed": false
         },
         {
           "type": "source",
           "path": "formal/current-source/README.md",
-          "sha256": "de36ae87a755da08c4531823eda4359365f31af90cc5217bb90315f50bf50539",
+          "sha256": "a73667e6f1cdd6e559976b37f1dceb430b629cbd3033fc1dd36172bda6ee4259",
           "negative_control_observed": false
         },
         {

@@ -8,6 +8,7 @@ Pinned toolchain: Lean `4.32.2`.
 
 Current status:
 
+- lifecycle theorem status is **kernel-pending**;
 - source authored without `sorry`, `admit`, or `sorryAx`;
 - executable finite oracle and negative controls pass;
 - exact Lean 4.32.2 kernel run is pending because this execution environment

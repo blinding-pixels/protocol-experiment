@@ -62,7 +62,7 @@
     "formal.tests.test_doc_claims.DocumentClaimTests.test_missing_revalidation_section_is_rejected",
     "formal.tests.test_doc_claims.DocumentClaimTests.test_unqualified_production_claim_is_rejected"
   ],
-  "python": "3.13.5",
+  "python": "3.14.5",
   "schema": "causal-dag-assurance.local-test-report.v1",
   "skipped": [],
   "source_sha256": {
@@ -70,7 +70,7 @@
     "assurance/assumption_register.py": "034ab936360dad958c9c4445f196d168df3e13fc489c1fd4023a8bc922022377",
     "assurance/canonical_state.py": "da7097cac7edc3f3a62e1ea84599e2102a4a2c24995c079676c89db81331a038",
     "assurance/evidence_graph.py": "6e674d590ae963645d883d75556936275d77361c73282bee2ef12871718935a4",
-    "assurance/historical_artifacts.py": "ae708c826bcee985b71d36392b9e5ac0fef89d3342ca0ef6a5bf3e0eb9e2a68b",
+    "assurance/historical_artifacts.py": "ae708c826bcee985b71b36392b9e5ac0fef89d3342ca0ef6a5bf3e0eb9e2a68b",
     "assurance/obligations.py": "d60d7331b12886c336f875fe0cfd26cb236310ee38484e23a1c7589dd504fa3b",
     "assurance/residue_requirements.py": "ecfb431a11c966011f5472fdb96f3cfad88a7bb0cd39d976cfa524956c4b07d6",
     "assurance/target_evidence.py": "bb5be4ee48aca642d28df31e0403f26648be9213697a1f5bb11076bc1173c78e",

@@ -5,6 +5,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="/tmp/assumption-recheck/proverif-run"
 SNAPSHOT="$OUT/snapshot"
 MODELS="$OUT/models"
+SOURCE_COMMIT="$(git -C "$ROOT" rev-parse HEAD)"
 mkdir -p "$SNAPSHOT" "$MODELS"
 
 bash "$ROOT/archives/text-snapshot/RESTORE.sh" "$OUT/source.tar.xz"
@@ -95,7 +96,7 @@ test "$(grep -c 'RESULT event(.* is true' "$OUT/proverif-lifecycle.txt")" -eq 2
 cat > "$OUT/result.json" <<JSON
 {
   "result": "pass",
-  "source_commit": "${GITHUB_SHA:-local}",
+  "source_commit": "$SOURCE_COMMIT",
   "proverif_version": "2.05",
   "container_image": "protocol-assumption-proverif:2.05",
   "historical_models_rechecked": 5,
