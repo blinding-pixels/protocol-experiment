@@ -86,8 +86,10 @@ Verified progress on the pinned `r2026.07` checker:
 - `AuthorizationState.ec` compiles;
 - `CanonicalEncoding.ec` compiles;
 - the repository anti-cheating audit passes with zero manifest axioms;
-- deterministic syntax normalization was committed at
+- deterministic projection/return normalization was committed at
   `e0d903c11b866a61d0bdbd647fcde2948e677ba2`;
+- grouped EasyCrypt local declarations were split at
+  `07ec408d320f184e6b73743a363945e1adc08337`;
 - the complete dependency closure is not yet green, so no computational
   security theorem is marked complete.
 
