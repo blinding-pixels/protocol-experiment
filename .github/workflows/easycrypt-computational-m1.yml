@@ -1,0 +1,39 @@
+name: EasyCrypt computational Milestone 1
+
+on:
+  push:
+    branches:
+      - formal/easycrypt-computational-m1
+    paths:
+      - '.github/workflows/easycrypt-computational-m1.yml'
+      - 'formal/current-source/easycrypt/computational/**'
+      - 'tools/easycrypt/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  restore-historical-source:
+    name: Restore frozen formal source
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out exact branch source
+        uses: actions/checkout@v4
+      - name: Restore and verify frozen text snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/causal-dag-assurance-text-000b7a1.tar.xz"
+          restored="$RUNNER_TEMP/formal-snapshot"
+          bash archives/text-snapshot/RESTORE.sh "$archive"
+          mkdir -p "$restored"
+          tar -xJf "$archive" -C "$restored"
+          find "$restored" -type f -print | LC_ALL=C sort
+      - name: Upload exact restored source
+        uses: actions/upload-artifact@v4
+        with:
+          name: frozen-formal-source-000b7a1
+          path: ${{ runner.temp }}/formal-snapshot
+          if-no-files-found: error
+          retention-days: 3
