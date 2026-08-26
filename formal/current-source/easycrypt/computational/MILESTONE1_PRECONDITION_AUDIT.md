@@ -24,7 +24,7 @@ The frozen commit exposes the source files that were absent from the migrated
 - the historical EasyCrypt workflow.
 
 The recovered Lean source hash for `Authorization.lean` is Git blob
-`55b138aa423f46db69d50d4427d89d67636c6281`.  The recovered
+`55b138aa423f46db69d50d4427d89d67636c6281`. The recovered
 `Accountability.lean` blob is
 `e85f9df0cb19943009a365597fa6350feffe7774`.
 
@@ -45,13 +45,13 @@ The recovered Lean source hash for `Authorization.lean` is Git blob
 ## Production-policy mismatch found
 
 The live `Facets` Rust repository currently projects owner/admin/member/viewer
-roles and epoch authority.  For example, `SpaceRole::may_issue_member_invites`
-permits owner or admin.  That is not yet the handoff's key-native,
+roles and epoch authority. For example, `SpaceRole::may_issue_member_invites`
+permits owner or admin. That is not yet the handoff's key-native,
 observed-remove capability-fact protocol.
 
 The computational game therefore cannot honestly claim source-to-production
-identity today.  The current reference model follows the handoff's protocol
-semantics and records Rust correspondence as open.  The final traceability table
+identity today. The current reference model follows the handoff's protocol
+semantics and records Rust correspondence as open. The final traceability table
 must either:
 
 - map these game operations to a concrete deployed key-native protocol API; or
@@ -71,31 +71,39 @@ model uses this concrete recursive rule:
 - every context is an exact validated fact prefix in the reference execution;
 - a retired incarnation can never be a membership-add target again.
 
-This rule is a checkpoint decision, not yet a deployed-protocol fact.  It must be
+This rule is a checkpoint decision, not yet a deployed-protocol fact. It must be
 reviewed before the EasyCrypt reduction is promoted.
 
 ## Checker status
 
-A branch-scoped workflow was added, then evaluated through both push and draft
-pull-request events.  GitHub reported zero workflow runs.  A second disposable
-probe in `blinding-pixels/Facets` also produced zero runs.  Therefore:
+The branch workflow now runs the immutable EasyCrypt image
+`ghcr.io/easycrypt/ec-test-box@sha256:84980006e8b01fe6497bbd0ecd67deeb5e7361d8ad17e27d24924122d368e0fc`
+and preserves the exact checked source, hashes, checker output, and exit status
+as a workflow artifact.
 
-- no current source has pinned-image checker evidence;
-- no theorem is marked checked;
-- the workflow remains useful source, but not evidence.
+Verified progress on the pinned `r2026.07` checker:
+
+- `AuthorizationState.ec` compiles;
+- `CanonicalEncoding.ec` compiles;
+- the repository anti-cheating audit passes with zero manifest axioms;
+- deterministic syntax normalization was committed at
+  `e0d903c11b866a61d0bdbd647fcde2948e677ba2`;
+- the complete dependency closure is not yet green, so no computational
+  security theorem is marked complete.
 
 ## Next formal step
 
-Translate the reference types and validator into:
+First obtain a completely green syntax/typecheck closure. Then structure
+Deliverable A around the deterministic implication
 
 ```text
-ProtocolTypes.ec
-CanonicalEncoding.ec
-AuthorizationState.ec
-ProtocolOracles.ec
-UnauthorizedGame.ec
+unauthorized acceptance
+  => badOpSig \/ badFactSig \/ badHash \/ encodingFailure
 ```
 
-Then close deterministic representation lemmas before adding EUF-CMA and
-collision reductions.  `UnauthorizedReduction.ec` must not be written as a
-triangle-inequality shell around unproved adjacent-game bounds.
+Prove `encodingFailure` impossible from canonical encode/decode injectivity,
+connect the signature events to concrete EUF-CMA reduction modules with
+oracle-derived query losses, connect `badHash` to a collision adversary, and
+finish with identical-until-bad plus the union bound. The authorization
+lifecycle theorem shapes may be reused, but the EasyCrypt representation
+mapping must be proved rather than imported. BeeKEM is outside Deliverable A.
