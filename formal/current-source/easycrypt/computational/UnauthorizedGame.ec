@@ -115,3 +115,72 @@ module OneDefenseRemovedWithQueryEvidence(
     return (O.differential_win, O.query_count);
   }
 }.
+
+(* Some validator defenses concern the supplied public view itself. The shared
+   protocol environment normally derives that view, as required by the final
+   game. This direct-candidate differential harness exists only for mutation
+   controls that must independently vary the view or closure while still
+   executing the exact production ValidateOperation procedure. *)
+module type VALIDATION_CANDIDATE_ORACLE = {
+  proc submit(
+    operation : signed_operation,
+    view : public_view,
+    state : protocol_state
+  ) : bool
+}.
+
+module DifferentialValidator(S : SIGNATURE_SCHEME) = {
+  var removed_defense : defense
+  var differential_win : bool
+  var query_count : int
+
+  proc init(removed : defense) : unit = {
+    removed_defense <- removed;
+    differential_win <- false;
+    query_count <- 0;
+  }
+
+  proc submit(
+    operation : signed_operation,
+    view : public_view,
+    state : protocol_state
+  ) : bool = {
+    var production_result : validation_result;
+    var mutated_result : validation_result;
+
+    production_result <@
+      ValidateOperation(S).validate(Production, operation, view, state);
+    mutated_result <@
+      ValidateOperation(S).validate(
+        WithoutDefense removed_defense,
+        operation,
+        view,
+        state
+      );
+
+    query_count <- query_count + 1;
+    differential_win <-
+      differential_win \/
+      (mutated_result.vr_accepted /\ ! production_result.vr_accepted);
+
+    return mutated_result.vr_accepted;
+  }
+}.
+
+module type DIRECT_MUTATION_ADVERSARY(O : VALIDATION_CANDIDATE_ORACLE) = {
+  proc attack() : unit
+}.
+
+module OneDefenseRemovedDirect(
+  A : DIRECT_MUTATION_ADVERSARY,
+  S : SIGNATURE_SCHEME
+) = {
+  module O = DifferentialValidator(S)
+  module A = A(O)
+
+  proc main(removed : defense) : bool * int = {
+    O.init(removed);
+    A.attack();
+    return (O.differential_win, O.query_count);
+  }
+}.

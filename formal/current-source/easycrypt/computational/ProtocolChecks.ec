@@ -107,7 +107,7 @@ op operation_body_valid (body : operation_body) : bool =
   with body = RevokeCapabilityBody tags => tags <> fset0
   with body = BeeKemUpdateBody author path => true
   with body = HistoryGrantBody recipient merge selected cover =>
-    region_valid selected /\ cover_valid_for_region cover selected
+    region_valid selected /\ cover_entries_valid_list (elems cover)
   with body = PunctureBody selected => region_valid selected
   with body = OpaqueBody bytes => false.
 
@@ -205,4 +205,3 @@ op protocol_state_after_acceptance
      ps_seen_operation_ids =
        state.ps_seen_operation_ids `|` fset1 envelope.oe_operation_id;
      ps_seen_nonces = state.ps_seen_nonces `|` fset1 envelope.oe_nonce |}.
-
