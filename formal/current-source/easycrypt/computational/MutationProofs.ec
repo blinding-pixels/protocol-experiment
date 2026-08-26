@@ -1,5 +1,6 @@
 require import AllCore List FSet.
-require import MutationWitnesses.
+require import ProtocolTypes CanonicalEncoding ProtocolPrimitives AuthorizationState.
+require import ProtocolChecks ProtocolOracles UnauthorizedGame WitnessFixtures MutationWitnesses.
 
 (* A minimal noncanonical candidate reaches the production validator but is
    rejected before authorization normalization.  This proves the canonical
