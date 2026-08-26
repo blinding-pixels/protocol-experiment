@@ -47,23 +47,23 @@ op operation_transcript
     (mode : validator_mode)
     (envelope : operation_envelope) : operation_transcript =
   {| ot_label = ProtocolOperationTranscript;
-     ot_protocol_version = envelope.oe_protocol_version;
-     ot_document_id = envelope.oe_document_id;
-     ot_operation_id = envelope.oe_operation_id;
-     ot_author_verification_key = envelope.oe_author.p_verification_key;
-     ot_author_incarnation_nonce = envelope.oe_author.p_incarnation_nonce;
+     ot_protocol_version = envelope.`oe_protocol_version;
+     ot_document_id = envelope.`oe_document_id;
+     ot_operation_id = envelope.`oe_operation_id;
+     ot_author_verification_key = envelope.`oe_author.`p_verification_key;
+     ot_author_incarnation_nonce = envelope.`oe_author.`p_incarnation_nonce;
      ot_required_capability =
        if defense_enabled mode DefenseRequiredCapabilityBinding
-       then Some envelope.oe_required_capability
+       then Some envelope.`oe_required_capability
        else None;
-     ot_direct_predecessors = envelope.oe_direct_predecessors;
-     ot_authorization_digest = envelope.oe_authorization_digest;
-     ot_operation_kind = envelope.oe_operation_kind;
+     ot_direct_predecessors = envelope.`oe_direct_predecessors;
+     ot_authorization_digest = envelope.`oe_authorization_digest;
+     ot_operation_kind = envelope.`oe_operation_kind;
      ot_operation_body =
        if defense_enabled mode DefenseOperationBodyBinding
-       then Some envelope.oe_operation_body
+       then Some envelope.`oe_operation_body
        else None;
-     ot_nonce = envelope.oe_nonce |}.
+     ot_nonce = envelope.`oe_nonce |}.
 
 op production_transcript (envelope : operation_envelope) : operation_transcript =
   operation_transcript Production envelope.
