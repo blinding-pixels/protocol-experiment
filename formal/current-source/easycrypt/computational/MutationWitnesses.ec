@@ -123,6 +123,7 @@ module MutationOperationSignature = {
     var envelope : operation_envelope;
     var operation : signed_operation;
 
+    var outcome : bool * int;
     fixture <@ WitnessFixtures.base();
     envelope <- witness_edit_envelope(
       ProtocolDomain 1, 1, witness_document, OperationId 201,
@@ -137,11 +138,12 @@ module MutationOperationSignature = {
               sig_bytes =
                 SignatureBytes
                   (AuthorizationFactSignatureMessage witness_fact_1) |} |};
-    return <@ StatefulMutationRunner.run(
+    outcome <@ StatefulMutationRunner.run(
       DefenseOperationSignature,
       fixture,
       operation
     );
+    return outcome;
   }
 }.
 
@@ -151,6 +153,7 @@ module MutationAuthorKeyBinding = {
     var envelope : operation_envelope;
     var operation : signed_operation;
 
+    var outcome : bool * int;
     fixture <@ WitnessFixtures.base();
     envelope <- witness_edit_envelope(
       ProtocolDomain 1, 1, witness_document, OperationId 202,
@@ -163,11 +166,12 @@ module MutationAuthorKeyBinding = {
       envelope,
       witness_alice.`p_verification_key
     );
-    return <@ StatefulMutationRunner.run(
+    outcome <@ StatefulMutationRunner.run(
       DefenseAuthorKeyBinding,
       fixture,
       operation
     );
+    return outcome;
   }
 }.
 
@@ -177,6 +181,7 @@ module MutationIncarnationBinding = {
     var envelope : operation_envelope;
     var operation : signed_operation;
 
+    var outcome : bool * int;
     fixture <@ WitnessFixtures.rejoin();
     envelope <- witness_edit_envelope(
       ProtocolDomain 1, 1, witness_document, OperationId 203,
@@ -189,11 +194,12 @@ module MutationIncarnationBinding = {
       envelope,
       witness_bob_old.`p_verification_key
     );
-    return <@ StatefulMutationRunner.run(
+    outcome <@ StatefulMutationRunner.run(
       DefenseIncarnationBinding,
       fixture,
       operation
     );
+    return outcome;
   }
 }.
 
@@ -203,6 +209,7 @@ module MutationDocumentBinding = {
     var envelope : operation_envelope;
     var operation : signed_operation;
 
+    var outcome : bool * int;
     fixture <@ WitnessFixtures.base();
     envelope <- witness_edit_envelope(
       ProtocolDomain 1, 1, witness_other_document, OperationId 204,
@@ -215,11 +222,12 @@ module MutationDocumentBinding = {
       envelope,
       witness_bob_old.`p_verification_key
     );
-    return <@ StatefulMutationRunner.run(
+    outcome <@ StatefulMutationRunner.run(
       DefenseDocumentBinding,
       fixture,
       operation
     );
+    return outcome;
   }
 }.
 
@@ -229,6 +237,7 @@ module MutationDomainVersion = {
     var envelope : operation_envelope;
     var operation : signed_operation;
 
+    var outcome : bool * int;
     fixture <@ WitnessFixtures.base();
     envelope <- witness_edit_envelope(
       ProtocolDomain 2, 2, witness_document, OperationId 205,
@@ -241,11 +250,12 @@ module MutationDomainVersion = {
       envelope,
       witness_bob_old.`p_verification_key
     );
-    return <@ StatefulMutationRunner.run(
+    outcome <@ StatefulMutationRunner.run(
       DefenseDomainVersion,
       fixture,
       operation
     );
+    return outcome;
   }
 }.
 
@@ -257,6 +267,7 @@ module MutationOperationBodyBinding = {
     var original : signed_operation;
     var operation : signed_operation;
 
+    var outcome : bool * int;
     fixture <@ WitnessFixtures.base();
     signed_envelope <- witness_edit_envelope(
       ProtocolDomain 1, 1, witness_document, OperationId 206,
@@ -278,11 +289,12 @@ module MutationOperationBodyBinding = {
     operation <-
       {| so_raw = encode_operation submitted_envelope;
          so_signature = original.`so_signature |};
-    return <@ StatefulMutationRunner.run(
+    outcome <@ StatefulMutationRunner.run(
       DefenseOperationBodyBinding,
       fixture,
       operation
     );
+    return outcome;
   }
 }.
 
@@ -294,6 +306,7 @@ module MutationRequiredCapabilityBinding = {
     var original : signed_operation;
     var operation : signed_operation;
 
+    var outcome : bool * int;
     fixture <@ WitnessFixtures.base();
     signed_envelope <- witness_edit_envelope(
       ProtocolDomain 1, 1, witness_document, OperationId 207,
@@ -315,11 +328,12 @@ module MutationRequiredCapabilityBinding = {
     operation <-
       {| so_raw = encode_operation submitted_envelope;
          so_signature = original.`so_signature |};
-    return <@ StatefulMutationRunner.run(
+    outcome <@ StatefulMutationRunner.run(
       DefenseRequiredCapabilityBinding,
       fixture,
       operation
     );
+    return outcome;
   }
 }.
 
@@ -330,6 +344,7 @@ module MutationExactCausalContext = {
     var operation : signed_operation;
     var view : public_view;
 
+    var outcome : bool * int;
     fixture <@ WitnessFixtures.base();
     envelope <- witness_edit_envelope(
       ProtocolDomain 1, 1, witness_document, OperationId 208,
@@ -343,12 +358,13 @@ module MutationExactCausalContext = {
       witness_bob_old.`p_verification_key
     );
     view <- witness_public_view(fixture.`wf_facts, witness_context_6);
-    return <@ DirectMutationRunner.run(
+    outcome <@ DirectMutationRunner.run(
       DefenseExactCausalContext,
       operation,
       view,
       fixture.`wf_state
     );
+    return outcome;
   }
 }.
 
@@ -358,6 +374,7 @@ module MutationAuthorizationDigest = {
     var envelope : operation_envelope;
     var operation : signed_operation;
 
+    var outcome : bool * int;
     fixture <@ WitnessFixtures.extended();
     envelope <- witness_edit_envelope(
       ProtocolDomain 1, 1, witness_document, OperationId 209,
@@ -370,11 +387,12 @@ module MutationAuthorizationDigest = {
       envelope,
       witness_bob_old.`p_verification_key
     );
-    return <@ StatefulMutationRunner.run(
+    outcome <@ StatefulMutationRunner.run(
       DefenseAuthorizationDigest,
       fixture,
       operation
     );
+    return outcome;
   }
 }.
 
@@ -385,6 +403,7 @@ module MutationPredecessorCompleteness = {
     var operation : signed_operation;
     var view : public_view;
 
+    var outcome : bool * int;
     fixture <@ WitnessFixtures.missing_revocation();
     envelope <- witness_edit_envelope(
       ProtocolDomain 1, 1, witness_document, OperationId 210,
@@ -398,12 +417,13 @@ module MutationPredecessorCompleteness = {
       witness_bob_old.`p_verification_key
     );
     view <- witness_public_view(fixture.`wf_facts, witness_context_7);
-    return <@ DirectMutationRunner.run(
+    outcome <@ DirectMutationRunner.run(
       DefensePredecessorCompleteness,
       operation,
       view,
       fixture.`wf_state
     );
+    return outcome;
   }
 }.
 
@@ -413,6 +433,7 @@ module MutationGrantRecipientBinding = {
     var envelope : operation_envelope;
     var operation : signed_operation;
 
+    var outcome : bool * int;
     fixture <@ WitnessFixtures.base();
     envelope <- witness_history_envelope(
       OperationId 211,
@@ -428,11 +449,12 @@ module MutationGrantRecipientBinding = {
       envelope,
       witness_alice.`p_verification_key
     );
-    return <@ StatefulMutationRunner.run(
+    outcome <@ StatefulMutationRunner.run(
       DefenseGrantRecipientBinding,
       fixture,
       operation
     );
+    return outcome;
   }
 }.
 
@@ -442,6 +464,7 @@ module MutationMergeNodeBinding = {
     var envelope : operation_envelope;
     var operation : signed_operation;
 
+    var outcome : bool * int;
     fixture <@ WitnessFixtures.base();
     envelope <- witness_history_envelope(
       OperationId 212,
@@ -457,11 +480,12 @@ module MutationMergeNodeBinding = {
       envelope,
       witness_alice.`p_verification_key
     );
-    return <@ StatefulMutationRunner.run(
+    outcome <@ StatefulMutationRunner.run(
       DefenseMergeNodeBinding,
       fixture,
       operation
     );
+    return outcome;
   }
 }.
 
@@ -471,6 +495,7 @@ module MutationRegionBinding = {
     var envelope : operation_envelope;
     var operation : signed_operation;
 
+    var outcome : bool * int;
     fixture <@ WitnessFixtures.base();
     envelope <- witness_history_envelope(
       OperationId 213,
@@ -486,11 +511,12 @@ module MutationRegionBinding = {
       envelope,
       witness_alice.`p_verification_key
     );
-    return <@ StatefulMutationRunner.run(
+    outcome <@ StatefulMutationRunner.run(
       DefenseRegionBinding,
       fixture,
       operation
     );
+    return outcome;
   }
 }.
 
@@ -500,6 +526,7 @@ module MutationSegmentBinding = {
     var envelope : operation_envelope;
     var operation : signed_operation;
 
+    var outcome : bool * int;
     fixture <@ WitnessFixtures.base();
     envelope <- witness_history_envelope(
       OperationId 214,
@@ -515,10 +542,11 @@ module MutationSegmentBinding = {
       envelope,
       witness_alice.`p_verification_key
     );
-    return <@ StatefulMutationRunner.run(
+    outcome <@ StatefulMutationRunner.run(
       DefenseSegmentBinding,
       fixture,
       operation
     );
+    return outcome;
   }
 }.

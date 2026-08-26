@@ -1,5 +1,5 @@
 require import AllCore List FSet.
-require import ProtocolTypes CanonicalEncoding PrimitiveGames AuthorizationState.
+require import ProtocolTypes CanonicalEncoding ProtocolPrimitives AuthorizationState.
 require import ProtocolChecks ProtocolOracles UnauthorizedGame.
 
 op witness_alice : principal =
@@ -292,7 +292,7 @@ module WitnessFixtures = {
   proc sign_fact(fact : authorization_fact) : signed_authorization_fact = {
     var sig : signature;
     sig <@ TestSignature.sign(
-      fact.af_issuer.p_verification_key,
+      fact.`af_issuer.`p_verification_key,
       fact_signature_message fact
     );
     return {| saf_fact = fact; saf_signature = sig |};
@@ -345,7 +345,7 @@ module WitnessFixtures = {
 
     base_fixture <@ base();
     s8 <@ sign_fact(witness_carol_grant_fact);
-    facts <- rcons base_fixture.wf_facts s8;
+    facts <- rcons base_fixture.`wf_facts s8;
     (valid, authorization) <@
       NormalizeAuthorization(TestSignature).normalize(facts, witness_alice);
 
@@ -368,7 +368,7 @@ module WitnessFixtures = {
     s8 <@ sign_fact(witness_bob_revoke_fact);
     s9 <@ sign_fact(witness_bob_new_membership_fact);
     s10 <@ sign_fact(witness_bob_new_edit_fact);
-    facts <- rcons (rcons (rcons base_fixture.wf_facts s8) s9) s10;
+    facts <- rcons (rcons (rcons base_fixture.`wf_facts s8) s9) s10;
     (valid, authorization) <@
       NormalizeAuthorization(TestSignature).normalize(facts, witness_alice);
 
@@ -387,9 +387,9 @@ module WitnessFixtures = {
       {| wf_state =
            witness_protocol_state
              witness_missing_revoke_node witness_context_8;
-         wf_facts = base_fixture.wf_facts;
-         wf_authorization_valid = base_fixture.wf_authorization_valid;
-         wf_authorization = base_fixture.wf_authorization |};
+         wf_facts = base_fixture.`wf_facts;
+         wf_authorization_valid = base_fixture.`wf_authorization_valid;
+         wf_authorization = base_fixture.`wf_authorization |};
   }
 }.
 
