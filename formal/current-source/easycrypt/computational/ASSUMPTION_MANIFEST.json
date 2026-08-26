@@ -1,0 +1,14 @@
+{
+  "schema": "protocol-experiment.easycrypt-assumption-manifest.v1",
+  "status": "milestone-1-skeleton",
+  "allowed_axiom_files": [
+    "ImportedSecurity.eca",
+    "BeeKemKiInterface.eca"
+  ],
+  "declarations": [],
+  "notes": [
+    "No computational primitive axiom has been introduced at this checkpoint.",
+    "The Python KeyStore is executable test instrumentation and is not an imported security theorem.",
+    "A declaration may be added only with exact source theorem, game, reduction interface, and query-bound metadata."
+  ]
+}
