@@ -120,14 +120,14 @@ jobs:
             "$EASYCRYPT_IMAGE" \
             bash -lc "
               set -euo pipefail
-              easycrypt --version
-              why3 --version || true
+              opam exec -- easycrypt --version
+              opam exec -- why3 --version || true
               z3 --version || true
               cvc5 --version || true
               alt-ergo --version || true
               for file in $file_list; do
                 echo CHECKING \"\$file\"
-                easycrypt \"\$file\"
+                opam exec -- easycrypt \"\$file\"
               done
             " >"$evidence/checker-stdout.log" \
               2>"$evidence/checker-stderr.log"
