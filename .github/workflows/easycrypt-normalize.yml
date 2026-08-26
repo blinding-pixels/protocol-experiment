@@ -9,6 +9,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: write
   contents: write
 
 concurrency:
@@ -28,8 +29,10 @@ jobs:
       - name: Apply deterministic syntax normalization
         run: python3 tools/easycrypt/normalize_easycrypt_syntax.py
 
-      - name: Commit normalized source
+      - name: Commit normalized source and dispatch checker
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           if git diff --quiet; then
@@ -41,3 +44,5 @@ jobs:
           git add formal/current-source/easycrypt/computational
           git commit -m 'formal: apply deterministic EasyCrypt syntax normalization'
           git push origin HEAD:formal/easycrypt-computational-m1
+          gh workflow run easycrypt-computational-m1.yml \
+            --ref formal/easycrypt-computational-m1
