@@ -6,53 +6,47 @@ require import ProtocolChecks ProtocolOracles UnauthorizedGame WitnessFixtures M
    rejected before authorization normalization.  This proves the canonical
    check is an executable, non-vacuous branch of the same ValidateOperation
    procedure used by UnauthorizedReal. *)
-module MinimalNonCanonicalRejection = {
-  proc main() : bool = {
-    var envelope : operation_envelope;
-    var operation : signed_operation;
-    var view : public_view;
-    var state : protocol_state;
-    var result : validation_result;
+op minimal_noncanonical_envelope : operation_envelope =
+  witness_edit_envelope
+    (ProtocolDomain 1)
+    (1)
+    (witness_document)
+    (OperationId 900)
+    (witness_bob_old)
+    (CapEdit)
+    (fset1 witness_base_node)
+    (AuthorizationDigest 0)
+    (EditBody EditText (Payload 900))
+    (Nonce 900).
 
-    envelope <- witness_edit_envelope
-      (ProtocolDomain 1)
-      (1)
-      (witness_document)
-      (OperationId 900)
-      (witness_bob_old)
-      (CapEdit)
-      (fset1 witness_base_node)
-      (AuthorizationDigest 0)
-      (EditBody EditText (Payload 900))
-      (Nonce 900);
-    operation <-
-      {| so_raw = NonCanonicalWire envelope (RawBytes 900);
-         so_signature =
-           {| sig_verification_key =
-                witness_bob_old.`p_verification_key;
-              sig_bytes =
-                SignatureBytes
-                  (AuthorizationFactSignatureMessage witness_fact_1) |} |};
-    view <- {| pv_facts = []; pv_observed_fact_ids = fset0 |};
-    state <- witness_protocol_state witness_base_node fset0;
+op minimal_noncanonical_operation : signed_operation =
+  {| so_raw =
+       NonCanonicalWire minimal_noncanonical_envelope (RawBytes 900);
+     so_signature =
+       {| sig_verification_key = witness_bob_old.`p_verification_key;
+          sig_bytes =
+            SignatureBytes
+              (AuthorizationFactSignatureMessage witness_fact_1) |} |}.
 
-    result <@ ValidateOperation(TestSignature).validate(
-      Production,
-      operation,
-      view,
-      state
-    );
-    return
-      ! result.`vr_accepted /\
-      result.`vr_failure = Some FailureCanonicalReencoding;
-  }
-}.
+op minimal_noncanonical_view : public_view =
+  {| pv_facts = []; pv_observed_fact_ids = fset0 |}.
+
+op minimal_noncanonical_state : protocol_state =
+  witness_protocol_state witness_base_node fset0.
 
 lemma noncanonical_rejection_probability_one &m :
-  Pr[MinimalNonCanonicalRejection.main() @ &m : res] = 1%r.
+  Pr[ValidateOperation(TestSignature).validate(
+       Production,
+       minimal_noncanonical_operation,
+       minimal_noncanonical_view,
+       minimal_noncanonical_state
+     ) @ &m :
+       ! res.`vr_accepted /\
+       res.`vr_failure = Some FailureCanonicalReencoding] = 1%r.
 proof.
   byphoare=> //.
   proc.
-  inline *.
+  rcondf 10; first by auto.
+  rcondt 10; first by auto.
   auto.
 qed.
