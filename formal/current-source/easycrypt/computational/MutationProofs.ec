@@ -44,9 +44,22 @@ lemma noncanonical_rejection_probability_one &m :
        ! res.`vr_accepted /\
        res.`vr_failure = Some FailureCanonicalReencoding] = 1%r.
 proof.
-  byphoare=> //.
+  byphoare
+    (: mode = Production /\
+       signed_operation = minimal_noncanonical_operation /\
+       view = minimal_noncanonical_view /\
+       state = minimal_noncanonical_state
+       ==>
+       ! res.`vr_accepted /\
+       res.`vr_failure = Some FailureCanonicalReencoding)
+    => //.
   proc.
-  rcondf 10; first by auto.
-  rcondt 10; first by auto.
+  rcondf 10; first by
+    auto;
+    rewrite /minimal_noncanonical_operation /decode_operation.
+  rcondt 10; first by
+    auto;
+    rewrite /minimal_noncanonical_operation /canonical_reencoding
+      /defense_enabled /validation_success.
   auto.
 qed.
