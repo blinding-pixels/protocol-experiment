@@ -1,5 +1,5 @@
 require import AllCore List FSet.
-require import ProtocolTypes CanonicalEncoding PrimitiveGames AuthorizationState.
+require import ProtocolTypes CanonicalEncoding ProtocolPrimitives AuthorizationState.
 require import ProtocolChecks ProtocolOracles.
 
 (* The adversary receives only the stateful submission oracle. It controls the
@@ -161,9 +161,9 @@ module DifferentialValidator(S : SIGNATURE_SCHEME) = {
     query_count <- query_count + 1;
     differential_win <-
       differential_win \/
-      (mutated_result.vr_accepted /\ ! production_result.vr_accepted);
+      (mutated_result.`vr_accepted /\ ! production_result.`vr_accepted);
 
-    return mutated_result.vr_accepted;
+    return mutated_result.`vr_accepted;
   }
 }.
 
