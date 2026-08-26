@@ -3,8 +3,9 @@
 
 This is a narrow migration helper for the Milestone 1 branch. It is idempotent:
 record projections are derived from declared record types, concrete files stop
-importing the abstract primitive-game theory, and invalid `return <@` calls in
-the mutation harness are rewritten through an explicit local result variable.
+importing the abstract primitive-game theory, grouped local declarations are
+split, and invalid `return <@` calls in the mutation harness are rewritten
+through an explicit local result variable.
 """
 
 from __future__ import annotations
@@ -51,6 +52,30 @@ def normalize_record_projections(fields: set[str]) -> None:
             )
         if normalized != text:
             path.write_text(normalized, encoding="utf-8")
+
+
+def normalize_grouped_variables() -> None:
+    declaration = re.compile(
+        r"^(?P<indent>\s*)var\s+"
+        r"(?P<names>[A-Za-z_][A-Za-z0-9_]*(?:\s+[A-Za-z_][A-Za-z0-9_]*)+)"
+        r"\s*:\s*(?P<type>.+);\s*$"
+    )
+    for path in SOURCE_FILES:
+        lines = path.read_text(encoding="utf-8").splitlines()
+        normalized: list[str] = []
+        changed = False
+        for line in lines:
+            match = declaration.match(line)
+            if match is None:
+                normalized.append(line)
+                continue
+            changed = True
+            indent = match.group("indent")
+            type_name = match.group("type")
+            for name in match.group("names").split():
+                normalized.append(f"{indent}var {name} : {type_name};")
+        if changed:
+            path.write_text("\n".join(normalized) + "\n", encoding="utf-8")
 
 
 def procedure_end(lines: list[str], start: int) -> int:
@@ -110,13 +135,19 @@ def normalize_mutation_returns() -> None:
 def main() -> None:
     fields = declared_record_fields()
     normalize_record_projections(fields)
+    normalize_grouped_variables()
     normalize_mutation_returns()
 
-    remaining_returns = []
-    remaining_plain_projections = []
+    remaining_returns: list[str] = []
+    remaining_plain_projections: list[str] = []
+    remaining_grouped_variables: list[str] = []
     projection_pattern = re.compile(
         r"\.(?:p_|oe_|ot_|sig_|af_|saf_|pv_|nm_|mge_|cge_|as_|snapshot_|"
         r"ri_|sce_|he_|ps_|ao_|vr_|wf_)[A-Za-z0-9_]+"
+    )
+    grouped_pattern = re.compile(
+        r"^\s*var\s+[A-Za-z_][A-Za-z0-9_]*"
+        r"(?:\s+[A-Za-z_][A-Za-z0-9_]*)+\s*:"
     )
     for path in SOURCE_FILES:
         for line_number, line in enumerate(
@@ -128,12 +159,18 @@ def main() -> None:
                 remaining_plain_projections.append(
                     f"{path}:{line_number}:{line}"
                 )
+            if grouped_pattern.search(line):
+                remaining_grouped_variables.append(
+                    f"{path}:{line_number}:{line}"
+                )
 
-    if remaining_returns or remaining_plain_projections:
-        raise SystemExit(
-            "normalization incomplete:\n"
-            + "\n".join(remaining_returns + remaining_plain_projections)
-        )
+    leftovers = (
+        remaining_returns
+        + remaining_plain_projections
+        + remaining_grouped_variables
+    )
+    if leftovers:
+        raise SystemExit("normalization incomplete:\n" + "\n".join(leftovers))
 
     print(f"normalized {len(SOURCE_FILES)} EasyCrypt files using {len(fields)} fields")
 
