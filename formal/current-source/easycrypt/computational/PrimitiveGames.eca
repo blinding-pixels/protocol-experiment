@@ -1,53 +1,81 @@
-require import AllCore.
-require import ProtocolTypes CanonicalEncoding.
+require import AllCore List.
+require import ProtocolTypes CanonicalEncoding ProtocolPrimitives.
 
-(* Primitive interfaces. No security statement is imported here. Final
-   advantages must be probabilities of named games with named reductions. *)
-module type SIGNATURE_SCHEME = {
+(* Named primitive games. This abstract theory introduces no conclusion-shaped
+   protocol axiom and is not imported directly by executable validator files. *)
+type signature_query = verification_key * signature_message.
+
+module type SIGNING_ORACLE = {
   proc sign(
     vk : verification_key,
     message : signature_message
   ) : signature
-
-  proc verify(
-    vk : verification_key,
-    message : signature_message,
-    bytes : signature_bytes
-  ) : bool
 }.
 
-module type NODE_HASH = {
-  proc hash(material : node_material) : node_id
-}.
+module SigningOracle(S : SIGNATURE_SCHEME) : SIGNING_ORACLE = {
+  var queries : signature_query list
 
-(* Executable negative-control primitives. These are intentionally insecure and
-   are used only by MutationWitnesses.ec. TestSignature stores the exact signed
-   message so body/capability mutations cannot hide behind an abstract coding
-   collision. It deliberately does not bind the verification key inside the
-   bytes, leaving the validator's author-key check load-bearing. *)
-module TestSignature : SIGNATURE_SCHEME = {
+  proc init() : unit = {
+    queries <- [];
+  }
+
   proc sign(
     vk : verification_key,
     message : signature_message
   ) : signature = {
-    return
-      {| sig_verification_key = vk;
-         sig_bytes = SignatureBytes message |};
-  }
-
-  proc verify(
-    vk : verification_key,
-    message : signature_message,
-    bytes : signature_bytes
-  ) : bool = {
-    return bytes = SignatureBytes message;
+    var sig : signature;
+    sig <@ S.sign(vk, message);
+    queries <- rcons queries (vk, message);
+    return sig;
   }
 }.
 
-op node_material_code : node_material -> int.
+module type EUFCMA_ADVERSARY(O : SIGNING_ORACLE) = {
+  proc forge() : verification_key * signature_message * signature
+}.
 
-module TestNodeHash : NODE_HASH = {
-  proc hash(material : node_material) : node_id = {
-    return NodeId (node_material_code material);
+module EUFCMAGame(
+  A : EUFCMA_ADVERSARY,
+  S : SIGNATURE_SCHEME
+) = {
+  module O = SigningOracle(S)
+  module A = A(O)
+
+  proc main() : bool = {
+    var vk : verification_key;
+    var message : signature_message;
+    var sig : signature;
+    var valid : bool;
+
+    O.init();
+    (vk, message, sig) <@ A.forge();
+    valid <@ S.verify(vk, message, sig.`sig_bytes);
+
+    return
+         valid
+      /\ sig.`sig_verification_key = vk
+      /\ (vk, message) \notin O.queries;
+  }
+}.
+
+module type COLLISION_ADVERSARY = {
+  proc collide() : operation_transcript * operation_transcript
+}.
+
+module TranscriptCollisionGame(
+  A : COLLISION_ADVERSARY,
+  H : TRANSCRIPT_HASH
+) = {
+  proc main() : bool = {
+    var left : operation_transcript;
+    var right : operation_transcript;
+    var left_hash : node_id;
+    var right_hash : node_id;
+
+    (left, right) <@ A.collide();
+    left_hash <@ H.hash(left);
+    right_hash <@ H.hash(right);
+
+    return left <> right /\ left_hash = right_hash;
   }
 }.
