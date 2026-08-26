@@ -78,7 +78,7 @@ jobs:
             --format '{{json .RepoDigests}}' \
             | tee "$evidence/image-repo-digests.txt"
 
-      - name: Check every EasyCrypt source
+      - name: Check every EasyCrypt source with goal diagnostics
         shell: bash
         run: |
           set -euo pipefail
@@ -117,7 +117,7 @@ jobs:
               opam exec -- why3 --version || true
               for file in $file_list; do
                 echo CHECKING \"\$file\"
-                opam exec -- easycrypt compile -no-eco \"\$file\"
+                opam exec -- easycrypt llm -lastgoals \"\$file\"
               done
             " >"$evidence/checker-stdout.log" \
               2>"$evidence/checker-stderr.log"
