@@ -15,7 +15,6 @@ type leaf_key = [ LeafKey of int ].
 type member_tag = [ MemberTag of int ].
 type capability_tag = [ CapabilityTag of int ].
 type fact_id = [ FactId of int ].
-type signature_bytes = [ SignatureBytes of int ].
 type raw_bytes = [ RawBytes of int ].
 type beekem_path = [ BeeKemPath of int ].
 type merge_node = [ MergeNode of int ].
@@ -90,11 +89,6 @@ type operation_envelope = {
   oe_nonce : nonce
 }.
 
-type signature = {
-  sig_verification_key : verification_key;
-  sig_bytes : signature_bytes
-}.
-
 type authorization_fact_kind = [
   | GenesisMembership
   | GenesisCapability
@@ -154,6 +148,16 @@ type signature_message = [
   | OperationSignatureMessage of operation_transcript
   | AuthorizationFactSignatureMessage of authorization_fact
 ].
+
+(* The executable witness signature contains the exact signed message rather
+   than an abstract integer code. This makes transcript mutations deterministic
+   and keeps the author-key check separate from transcript equality. *)
+type signature_bytes = [ SignatureBytes of signature_message ].
+
+type signature = {
+  sig_verification_key : verification_key;
+  sig_bytes : signature_bytes
+}.
 
 type accepted_operation = {
   ao_operation_id : operation_id;
