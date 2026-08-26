@@ -372,13 +372,13 @@ module NormalizeAuthorization(S : SIGNATURE_SCHEME) = {
 }.
 
 lemma production_principal_matching_is_exact
-    (first second : principal) :
-  principal_matches Production first second = (first = second).
+    (p q : principal) :
+  principal_matches Production p q = (p = q).
 proof. by rewrite /principal_matches /defense_enabled. qed.
 
 lemma removed_incarnation_defense_matches_by_key
-    (first second : principal) :
+    (p q : principal) :
   principal_matches
-    (WithoutDefense DefenseIncarnationBinding) first second =
-  (first.`p_verification_key = second.`p_verification_key).
+    (WithoutDefense DefenseIncarnationBinding) p q =
+  (p.`p_verification_key = q.`p_verification_key).
 proof. by rewrite /principal_matches /defense_enabled. qed.
