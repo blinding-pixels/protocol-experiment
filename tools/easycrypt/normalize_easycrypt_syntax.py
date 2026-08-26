@@ -4,8 +4,8 @@
 This is a narrow migration helper for the Milestone 1 branch. It is idempotent:
 record projections are derived from declared record types, concrete files stop
 importing the abstract primitive-game theory, grouped local declarations are
-split, and invalid `return <@` calls in the mutation harness are rewritten
-through an explicit local result variable.
+split, fixture operators use curried application, and invalid `return <@` calls
+in the mutation harness are rewritten through an explicit local result variable.
 """
 
 from __future__ import annotations
@@ -78,6 +78,81 @@ def normalize_grouped_variables() -> None:
             path.write_text("\n".join(normalized) + "\n", encoding="utf-8")
 
 
+def matching_parenthesis(text: str, opening: int) -> int:
+    depth = 0
+    for index in range(opening, len(text)):
+        if text[index] == "(":
+            depth += 1
+        elif text[index] == ")":
+            depth -= 1
+            if depth == 0:
+                return index
+    raise RuntimeError(f"unclosed parenthesis at byte {opening}")
+
+
+def split_top_level_arguments(text: str) -> list[str]:
+    arguments: list[str] = []
+    start = 0
+    depth = 0
+    for index, character in enumerate(text):
+        if character in "([{":
+            depth += 1
+        elif character in ")]}":
+            depth -= 1
+        elif character == "," and depth == 0:
+            arguments.append(text[start:index].strip())
+            start = index + 1
+    arguments.append(text[start:].strip())
+    return arguments
+
+
+def normalize_curried_fixture_operators() -> None:
+    path = ROOT / "MutationWitnesses.ec"
+    text = path.read_text(encoding="utf-8")
+    targets = {
+        "witness_edit_envelope": 10,
+        "witness_history_envelope": 7,
+        "witness_public_view": 2,
+    }
+
+    for name, arity in targets.items():
+        position = 0
+        pattern = re.compile(r"\b" + re.escape(name) + r"\s*\(")
+        while True:
+            match = pattern.search(text, position)
+            if match is None:
+                break
+            call_start = match.start()
+            opening = text.find("(", call_start)
+            closing = matching_parenthesis(text, opening)
+            arguments = split_top_level_arguments(text[opening + 1 : closing])
+            if len(arguments) != arity:
+                position = closing + 1
+                continue
+
+            line_start = text.rfind("\n", 0, call_start) + 1
+            prefix = text[line_start:call_start]
+            indent_match = re.match(r"\s*", prefix)
+            indent = indent_match.group(0) if indent_match is not None else ""
+            continuation = indent + "  "
+
+            if "\n" not in text[opening + 1 : closing] and sum(
+                len(argument) for argument in arguments
+            ) < 72:
+                replacement = name + " " + " ".join(
+                    f"({argument})" for argument in arguments
+                )
+            else:
+                replacement = name + "\n" + "\n".join(
+                    continuation + f"({argument})" for argument in arguments
+                )
+
+            text = text[:call_start] + replacement + text[closing + 1 :]
+            position = call_start + len(replacement)
+
+    path.write_text(text, encoding="utf-8")
+
+
 def procedure_end(lines: list[str], start: int) -> int:
     depth = 1
     index = start + 1
@@ -132,10 +207,31 @@ def normalize_mutation_returns() -> None:
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+def tuple_style_fixture_calls() -> list[str]:
+    path = ROOT / "MutationWitnesses.ec"
+    text = path.read_text(encoding="utf-8")
+    leftovers: list[str] = []
+    for name, arity in {
+        "witness_edit_envelope": 10,
+        "witness_history_envelope": 7,
+        "witness_public_view": 2,
+    }.items():
+        pattern = re.compile(r"\b" + re.escape(name) + r"\s*\(")
+        for match in pattern.finditer(text):
+            opening = text.find("(", match.start())
+            closing = matching_parenthesis(text, opening)
+            arguments = split_top_level_arguments(text[opening + 1 : closing])
+            if len(arguments) == arity:
+                line = text.count("\n", 0, match.start()) + 1
+                leftovers.append(f"{path}:{line}:{name}")
+    return leftovers
+
+
 def main() -> None:
     fields = declared_record_fields()
     normalize_record_projections(fields)
     normalize_grouped_variables()
+    normalize_curried_fixture_operators()
     normalize_mutation_returns()
 
     remaining_returns: list[str] = []
@@ -168,6 +264,7 @@ def main() -> None:
         remaining_returns
         + remaining_plain_projections
         + remaining_grouped_variables
+        + tuple_style_fixture_calls()
     )
     if leftovers:
         raise SystemExit("normalization incomplete:\n" + "\n".join(leftovers))
