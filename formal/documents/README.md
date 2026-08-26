@@ -248,6 +248,10 @@ negative-control evidence.
 
 ## Document index
 
+- `EASYCRYPT_COMPUTATIONAL_PROOF_HANDOFF.md`
+  - exact real/ideal games, reduction obligations, assumption allowlist,
+    anti-cheating audit, and mandatory anti-triviality witnesses for the
+    missing computational proof;
 - `BEEKEM_PRIMARY_SOURCE_AUDIT.md`
   - exact BeeKEM theorem and threat-model boundary;
 - `RESEARCH_FINDINGS.md`
