@@ -8,7 +8,10 @@ type operation_id = [ OperationId of int ].
 type verification_key = [ VerificationKey of int ].
 type incarnation_nonce = [ IncarnationNonce of int ].
 type node_id = [ NodeId of int ].
-type authorization_digest = [ AuthorizationDigest of int ].
+type authorization_digest = [
+  | AuthorizationDigest of int
+  | InvalidAuthorizationDigest of int
+].
 type nonce = [ Nonce of int ].
 type payload = [ Payload of int ].
 type leaf_key = [ LeafKey of int ].
