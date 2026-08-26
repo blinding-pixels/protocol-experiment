@@ -312,7 +312,13 @@ module WitnessFixtures = {
   }
 
   proc base() : witness_fixture = {
-    var s1 s2 s3 s4 s5 s6 s7 : signed_authorization_fact;
+    var s1 : signed_authorization_fact;
+    var s2 : signed_authorization_fact;
+    var s3 : signed_authorization_fact;
+    var s4 : signed_authorization_fact;
+    var s5 : signed_authorization_fact;
+    var s6 : signed_authorization_fact;
+    var s7 : signed_authorization_fact;
     var facts : signed_authorization_fact list;
     var valid : bool;
     var authorization : authorization_state;
@@ -359,7 +365,9 @@ module WitnessFixtures = {
 
   proc rejoin() : witness_fixture = {
     var base_fixture : witness_fixture;
-    var s8 s9 s10 : signed_authorization_fact;
+    var s8 : signed_authorization_fact;
+    var s9 : signed_authorization_fact;
+    var s10 : signed_authorization_fact;
     var facts : signed_authorization_fact list;
     var valid : bool;
     var authorization : authorization_state;
