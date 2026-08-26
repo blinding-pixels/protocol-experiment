@@ -1,5 +1,5 @@
 require import AllCore List FSet.
-require import ProtocolTypes CanonicalEncoding PrimitiveGames AuthorizationState.
+require import ProtocolTypes CanonicalEncoding ProtocolPrimitives AuthorizationState.
 require import ProtocolChecks ProtocolOracles UnauthorizedGame WitnessFixtures.
 
 op witness_edit_body_one : operation_body =
@@ -20,7 +20,7 @@ module StatefulMutationRunner = {
     operation : signed_operation
   ) : bool * int = {
     var accepted : bool;
-    D.init(removed, fixture.wf_state, fixture.wf_facts);
+    D.init(removed, fixture.`wf_state, fixture.`wf_facts);
     accepted <@ D.submit(operation);
     return (D.differential_win, D.query_count);
   }
@@ -60,17 +60,17 @@ module HonestEditAcceptanceWitness = {
       witness_bob_old,
       CapEdit,
       fset1 witness_base_node,
-      authorization_digest_of fixture.wf_authorization,
+      authorization_digest_of fixture.`wf_authorization,
       witness_edit_body_one,
       Nonce 100
     );
     operation <@ WitnessFixtures.sign_operation(
       Production,
       envelope,
-      witness_bob_old.p_verification_key
+      witness_bob_old.`p_verification_key
     );
 
-    E.init(Production, fixture.wf_state, fixture.wf_facts);
+    E.init(Production, fixture.`wf_state, fixture.`wf_facts);
     accepted <@ E.submit(operation);
     return (accepted, size E.query_log);
   }
@@ -94,26 +94,26 @@ module NonCanonicalRejectionWitness = {
       witness_bob_old,
       CapEdit,
       fset1 witness_base_node,
-      authorization_digest_of fixture.wf_authorization,
+      authorization_digest_of fixture.`wf_authorization,
       witness_edit_body_one,
       Nonce 101
     );
     canonical_operation <@ WitnessFixtures.sign_operation(
       Production,
       envelope,
-      witness_bob_old.p_verification_key
+      witness_bob_old.`p_verification_key
     );
     operation <-
       {| so_raw = NonCanonicalWire envelope (RawBytes 1);
-         so_signature = canonical_operation.so_signature |};
-    view <- witness_public_view(fixture.wf_facts, witness_context_7);
+         so_signature = canonical_operation.`so_signature |};
+    view <- witness_public_view(fixture.`wf_facts, witness_context_7);
     result <@ ValidateOperation(TestSignature).validate(
       Production,
       operation,
       view,
-      fixture.wf_state
+      fixture.`wf_state
     );
-    return ! result.vr_accepted;
+    return ! result.`vr_accepted;
   }
 }.
 
@@ -127,13 +127,13 @@ module MutationOperationSignature = {
     envelope <- witness_edit_envelope(
       ProtocolDomain 1, 1, witness_document, OperationId 201,
       witness_bob_old, CapEdit, fset1 witness_base_node,
-      authorization_digest_of fixture.wf_authorization,
+      authorization_digest_of fixture.`wf_authorization,
       witness_edit_body_one, Nonce 201
     );
     operation <-
       {| so_raw = encode_operation envelope;
          so_signature =
-           {| sig_verification_key = witness_bob_old.p_verification_key;
+           {| sig_verification_key = witness_bob_old.`p_verification_key;
               sig_bytes =
                 SignatureBytes
                   (AuthorizationFactSignatureMessage witness_fact_1) |} |};
@@ -155,13 +155,13 @@ module MutationAuthorKeyBinding = {
     envelope <- witness_edit_envelope(
       ProtocolDomain 1, 1, witness_document, OperationId 202,
       witness_bob_old, CapEdit, fset1 witness_base_node,
-      authorization_digest_of fixture.wf_authorization,
+      authorization_digest_of fixture.`wf_authorization,
       witness_edit_body_one, Nonce 202
     );
     operation <@ WitnessFixtures.sign_operation(
       Production,
       envelope,
-      witness_alice.p_verification_key
+      witness_alice.`p_verification_key
     );
     return <@ StatefulMutationRunner.run(
       DefenseAuthorKeyBinding,
@@ -181,13 +181,13 @@ module MutationIncarnationBinding = {
     envelope <- witness_edit_envelope(
       ProtocolDomain 1, 1, witness_document, OperationId 203,
       witness_bob_old, CapEdit, fset1 witness_rejoin_node,
-      authorization_digest_of fixture.wf_authorization,
+      authorization_digest_of fixture.`wf_authorization,
       witness_edit_body_one, Nonce 203
     );
     operation <@ WitnessFixtures.sign_operation(
       Production,
       envelope,
-      witness_bob_old.p_verification_key
+      witness_bob_old.`p_verification_key
     );
     return <@ StatefulMutationRunner.run(
       DefenseIncarnationBinding,
@@ -207,13 +207,13 @@ module MutationDocumentBinding = {
     envelope <- witness_edit_envelope(
       ProtocolDomain 1, 1, witness_other_document, OperationId 204,
       witness_bob_old, CapEdit, fset1 witness_base_node,
-      authorization_digest_of fixture.wf_authorization,
+      authorization_digest_of fixture.`wf_authorization,
       witness_edit_body_one, Nonce 204
     );
     operation <@ WitnessFixtures.sign_operation(
       Production,
       envelope,
-      witness_bob_old.p_verification_key
+      witness_bob_old.`p_verification_key
     );
     return <@ StatefulMutationRunner.run(
       DefenseDocumentBinding,
@@ -233,13 +233,13 @@ module MutationDomainVersion = {
     envelope <- witness_edit_envelope(
       ProtocolDomain 2, 2, witness_document, OperationId 205,
       witness_bob_old, CapEdit, fset1 witness_base_node,
-      authorization_digest_of fixture.wf_authorization,
+      authorization_digest_of fixture.`wf_authorization,
       witness_edit_body_one, Nonce 205
     );
     operation <@ WitnessFixtures.sign_operation(
       Production,
       envelope,
-      witness_bob_old.p_verification_key
+      witness_bob_old.`p_verification_key
     );
     return <@ StatefulMutationRunner.run(
       DefenseDomainVersion,
@@ -261,23 +261,23 @@ module MutationOperationBodyBinding = {
     signed_envelope <- witness_edit_envelope(
       ProtocolDomain 1, 1, witness_document, OperationId 206,
       witness_bob_old, CapEdit, fset1 witness_base_node,
-      authorization_digest_of fixture.wf_authorization,
+      authorization_digest_of fixture.`wf_authorization,
       witness_edit_body_one, Nonce 206
     );
     submitted_envelope <- witness_edit_envelope(
       ProtocolDomain 1, 1, witness_document, OperationId 206,
       witness_bob_old, CapEdit, fset1 witness_base_node,
-      authorization_digest_of fixture.wf_authorization,
+      authorization_digest_of fixture.`wf_authorization,
       witness_edit_body_two, Nonce 206
     );
     original <@ WitnessFixtures.sign_operation(
       WithoutDefense DefenseOperationBodyBinding,
       signed_envelope,
-      witness_bob_old.p_verification_key
+      witness_bob_old.`p_verification_key
     );
     operation <-
       {| so_raw = encode_operation submitted_envelope;
-         so_signature = original.so_signature |};
+         so_signature = original.`so_signature |};
     return <@ StatefulMutationRunner.run(
       DefenseOperationBodyBinding,
       fixture,
@@ -298,23 +298,23 @@ module MutationRequiredCapabilityBinding = {
     signed_envelope <- witness_edit_envelope(
       ProtocolDomain 1, 1, witness_document, OperationId 207,
       witness_alice, CapEdit, fset1 witness_base_node,
-      authorization_digest_of fixture.wf_authorization,
+      authorization_digest_of fixture.`wf_authorization,
       witness_delete_body, Nonce 207
     );
     submitted_envelope <- witness_edit_envelope(
       ProtocolDomain 1, 1, witness_document, OperationId 207,
       witness_alice, CapAdmin, fset1 witness_base_node,
-      authorization_digest_of fixture.wf_authorization,
+      authorization_digest_of fixture.`wf_authorization,
       witness_delete_body, Nonce 207
     );
     original <@ WitnessFixtures.sign_operation(
       WithoutDefense DefenseRequiredCapabilityBinding,
       signed_envelope,
-      witness_alice.p_verification_key
+      witness_alice.`p_verification_key
     );
     operation <-
       {| so_raw = encode_operation submitted_envelope;
-         so_signature = original.so_signature |};
+         so_signature = original.`so_signature |};
     return <@ StatefulMutationRunner.run(
       DefenseRequiredCapabilityBinding,
       fixture,
@@ -334,20 +334,20 @@ module MutationExactCausalContext = {
     envelope <- witness_edit_envelope(
       ProtocolDomain 1, 1, witness_document, OperationId 208,
       witness_bob_old, CapEdit, fset1 witness_base_node,
-      authorization_digest_of fixture.wf_authorization,
+      authorization_digest_of fixture.`wf_authorization,
       witness_edit_body_one, Nonce 208
     );
     operation <@ WitnessFixtures.sign_operation(
       Production,
       envelope,
-      witness_bob_old.p_verification_key
+      witness_bob_old.`p_verification_key
     );
-    view <- witness_public_view(fixture.wf_facts, witness_context_6);
+    view <- witness_public_view(fixture.`wf_facts, witness_context_6);
     return <@ DirectMutationRunner.run(
       DefenseExactCausalContext,
       operation,
       view,
-      fixture.wf_state
+      fixture.`wf_state
     );
   }
 }.
@@ -368,7 +368,7 @@ module MutationAuthorizationDigest = {
     operation <@ WitnessFixtures.sign_operation(
       Production,
       envelope,
-      witness_bob_old.p_verification_key
+      witness_bob_old.`p_verification_key
     );
     return <@ StatefulMutationRunner.run(
       DefenseAuthorizationDigest,
@@ -389,20 +389,20 @@ module MutationPredecessorCompleteness = {
     envelope <- witness_edit_envelope(
       ProtocolDomain 1, 1, witness_document, OperationId 210,
       witness_bob_old, CapEdit, fset1 witness_missing_revoke_node,
-      authorization_digest_of fixture.wf_authorization,
+      authorization_digest_of fixture.`wf_authorization,
       witness_edit_body_one, Nonce 210
     );
     operation <@ WitnessFixtures.sign_operation(
       Production,
       envelope,
-      witness_bob_old.p_verification_key
+      witness_bob_old.`p_verification_key
     );
-    view <- witness_public_view(fixture.wf_facts, witness_context_7);
+    view <- witness_public_view(fixture.`wf_facts, witness_context_7);
     return <@ DirectMutationRunner.run(
       DefensePredecessorCompleteness,
       operation,
       view,
-      fixture.wf_state
+      fixture.`wf_state
     );
   }
 }.
@@ -416,7 +416,7 @@ module MutationGrantRecipientBinding = {
     fixture <@ WitnessFixtures.base();
     envelope <- witness_history_envelope(
       OperationId 211,
-      authorization_digest_of fixture.wf_authorization,
+      authorization_digest_of fixture.`wf_authorization,
       witness_carol,
       witness_merge_node,
       witness_region,
@@ -426,7 +426,7 @@ module MutationGrantRecipientBinding = {
     operation <@ WitnessFixtures.sign_operation(
       Production,
       envelope,
-      witness_alice.p_verification_key
+      witness_alice.`p_verification_key
     );
     return <@ StatefulMutationRunner.run(
       DefenseGrantRecipientBinding,
@@ -445,7 +445,7 @@ module MutationMergeNodeBinding = {
     fixture <@ WitnessFixtures.base();
     envelope <- witness_history_envelope(
       OperationId 212,
-      authorization_digest_of fixture.wf_authorization,
+      authorization_digest_of fixture.`wf_authorization,
       witness_bob_old,
       witness_other_merge_node,
       witness_region,
@@ -455,7 +455,7 @@ module MutationMergeNodeBinding = {
     operation <@ WitnessFixtures.sign_operation(
       Production,
       envelope,
-      witness_alice.p_verification_key
+      witness_alice.`p_verification_key
     );
     return <@ StatefulMutationRunner.run(
       DefenseMergeNodeBinding,
@@ -474,7 +474,7 @@ module MutationRegionBinding = {
     fixture <@ WitnessFixtures.base();
     envelope <- witness_history_envelope(
       OperationId 213,
-      authorization_digest_of fixture.wf_authorization,
+      authorization_digest_of fixture.`wf_authorization,
       witness_bob_old,
       witness_merge_node,
       witness_enlarged_region,
@@ -484,7 +484,7 @@ module MutationRegionBinding = {
     operation <@ WitnessFixtures.sign_operation(
       Production,
       envelope,
-      witness_alice.p_verification_key
+      witness_alice.`p_verification_key
     );
     return <@ StatefulMutationRunner.run(
       DefenseRegionBinding,
@@ -503,7 +503,7 @@ module MutationSegmentBinding = {
     fixture <@ WitnessFixtures.base();
     envelope <- witness_history_envelope(
       OperationId 214,
-      authorization_digest_of fixture.wf_authorization,
+      authorization_digest_of fixture.`wf_authorization,
       witness_bob_old,
       witness_merge_node,
       witness_region,
@@ -513,7 +513,7 @@ module MutationSegmentBinding = {
     operation <@ WitnessFixtures.sign_operation(
       Production,
       envelope,
-      witness_alice.p_verification_key
+      witness_alice.`p_verification_key
     );
     return <@ StatefulMutationRunner.run(
       DefenseSegmentBinding,
