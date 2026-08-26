@@ -57,7 +57,7 @@ proof.
   rcondf 10; first by
     auto;
     rewrite /minimal_noncanonical_operation /decode_operation.
-  rcondt 10; first by
+  rcondt 11; first by
     auto;
     rewrite /minimal_noncanonical_operation /canonical_reencoding
       /defense_enabled /validation_success.
