@@ -10,5 +10,7 @@ proof.
   byphoare=> //.
   proc.
   inline *.
+  unroll for ^while.
+  unroll for ^while.
   auto.
 qed.
