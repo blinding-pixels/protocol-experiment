@@ -90,6 +90,8 @@ Verified progress on the pinned `r2026.07` checker:
   `e0d903c11b866a61d0bdbd647fcde2948e677ba2`;
 - grouped EasyCrypt local declarations were split at
   `07ec408d320f184e6b73743a363945e1adc08337`;
+- fixture-operator calls were converted to curried EasyCrypt application at
+  `e2060de4d31641ad064f38a460de4d22e3eee4ab`;
 - the complete dependency closure is not yet green, so no computational
   security theorem is marked complete.
 
