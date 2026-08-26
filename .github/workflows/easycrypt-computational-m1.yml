@@ -41,7 +41,8 @@ jobs:
           set -euo pipefail
           evidence="$RUNNER_TEMP/easycrypt-evidence"
           source_dir="formal/current-source/easycrypt/computational"
-          mkdir -p "$evidence"
+          mkdir -p "$evidence/checked-source"
+          cp -R "$source_dir"/. "$evidence/checked-source"/
           git rev-parse HEAD | tee "$evidence/source-commit.txt"
           find "$source_dir" -maxdepth 1 -type f \
             \( -name '*.ec' -o -name '*.eca' \) -print0 \
