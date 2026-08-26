@@ -54,7 +54,7 @@ module EUFCMAGame(
     return
          valid
       /\ sig.`sig_verification_key = vk
-      /\ (vk, message) \notin O.queries;
+      /\ ! mem O.queries (vk, message);
   }
 }.
 
