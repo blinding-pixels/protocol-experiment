@@ -87,8 +87,8 @@ lemma decode_encode_operation (envelope : operation_envelope) :
 proof. by rewrite /decode_operation /encode_operation. qed.
 
 lemma encode_operation_injective
-    (left right : operation_envelope) :
-  encode_operation left = encode_operation right => left = right.
+    (e1 e2 : operation_envelope) :
+  encode_operation e1 = encode_operation e2 => e1 = e2.
 proof. by rewrite /encode_operation; smt(). qed.
 
 lemma encoded_operation_is_canonical (envelope : operation_envelope) :
