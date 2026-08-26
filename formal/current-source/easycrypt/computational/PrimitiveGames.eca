@@ -67,15 +67,15 @@ module TranscriptCollisionGame(
   H : TRANSCRIPT_HASH
 ) = {
   proc main() : bool = {
-    var left : operation_transcript;
-    var right : operation_transcript;
-    var left_hash : node_id;
-    var right_hash : node_id;
+    var t1 : operation_transcript;
+    var t2 : operation_transcript;
+    var h1 : node_id;
+    var h2 : node_id;
 
-    (left, right) <@ A.collide();
-    left_hash <@ H.hash(left);
-    right_hash <@ H.hash(right);
+    (t1, t2) <@ A.collide();
+    h1 <@ H.hash(t1);
+    h2 <@ H.hash(t2);
 
-    return left <> right /\ left_hash = right_hash;
+    return t1 <> t2 /\ h1 = h2;
   }
 }.
