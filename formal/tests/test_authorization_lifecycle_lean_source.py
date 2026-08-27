@@ -16,6 +16,14 @@ class AuthorizationLifecycleLeanSourceTests(unittest.TestCase):
         main = MAIN.read_text(encoding="utf-8")
         self.assertIn("CausalDagCgka.AuthorizationLifecycle", main)
 
+        imports = re.findall(r"^import\s+CausalDagCgka\.(.+)$", main, re.MULTILINE)
+        missing = [
+            module
+            for module in imports
+            if not (MAIN.parent / f"{module}.lean").is_file()
+        ]
+        self.assertEqual(missing, [])
+
     def test_lifecycle_source_has_no_placeholder_or_new_axiom(self) -> None:
         text = SOURCE.read_text(encoding="utf-8")
         for forbidden in ("sorry", "admit", "sorryAx", "axiom "):
@@ -34,10 +42,16 @@ class AuthorizationLifecycleLeanSourceTests(unittest.TestCase):
         ):
             self.assertIn(declaration, text)
 
-    def test_kernel_pending_boundary_cannot_be_misread_as_verified(self) -> None:
+    def test_wasm_green_boundary_cannot_be_misread_as_exact_pin(self) -> None:
         text = README.read_text(encoding="utf-8").lower()
-        self.assertIn("kernel-pending", text)
-        self.assertNotIn("kernel-verified", text)
+        self.assertIn("80-theorem source closure passes", text)
+        self.assertIn("lean wasm", text)
+        self.assertIn("exact pinned lean 4.32.2", text)
+        self.assertIn("remains pending", text)
+        self.assertRegex(
+            text,
+            r"must not\s+be described as an exact-toolchain package build",
+        )
 
 
 if __name__ == "__main__":
