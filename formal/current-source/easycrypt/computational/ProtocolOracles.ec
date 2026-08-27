@@ -2,15 +2,16 @@ require import AllCore List FSet.
 require import ProtocolTypes CanonicalEncoding ProtocolPrimitives AuthorizationState ProtocolChecks.
 
 module ValidateOperation(S : SIGNATURE_SCHEME) = {
-  proc validate(
+  (* The decoded suffix is the production validator after the wire-level
+     decoding and canonicality prefix.  It is invoked only by [validate]. *)
+  proc validate_decoded(
     mode : validator_mode,
     signed_operation : signed_operation,
+    envelope : operation_envelope,
     view : public_view,
     state : protocol_state
   ) : validation_result = {
     var result : validation_result;
-    var envelope_option : operation_envelope option;
-    var envelope : operation_envelope;
     var fact_ids : fact_id fset;
     var closure_option : fact_id fset option;
     var authorization_valid : bool;
@@ -19,26 +20,12 @@ module ValidateOperation(S : SIGNATURE_SCHEME) = {
     var target_option : principal option;
 
     result <- validation_success;
-    envelope <- witness;
     fact_ids <- fset0;
     closure_option <- None;
     authorization_valid <- false;
     authorization <- empty_authorization_state;
     signature_valid <- false;
     target_option <- None;
-
-    envelope_option <- decode_operation signed_operation.`so_raw;
-    if (envelope_option = None) {
-      result <- validation_error FailureCanonicalDecoding;
-    } else {
-      envelope <- oget envelope_option;
-    }
-
-    if (result.`vr_accepted /\
-        defense_enabled mode DefenseCanonicalEncoding /\
-        ! canonical_reencoding signed_operation.`so_raw) {
-      result <- validation_error FailureCanonicalReencoding;
-    }
 
     if (result.`vr_accepted /\
         defense_enabled mode DefenseDomainVersion /\
@@ -213,6 +200,54 @@ module ValidateOperation(S : SIGNATURE_SCHEME) = {
     if (result.`vr_accepted /\ envelope.`oe_operation_kind = OpPuncture /\
         ! puncture_binding_valid mode state envelope) {
       result <- validation_error FailurePuncturePolicy;
+    }
+
+    return result;
+  }
+
+  (* Production entry point.  Malformed and noncanonical wires are rejected
+     before the decoded suffix is entered; all games and witnesses call this
+     procedure rather than the suffix directly. *)
+  proc validate(
+    mode : validator_mode,
+    signed_operation : signed_operation,
+    view : public_view,
+    state : protocol_state
+  ) : validation_result = {
+    var result : validation_result;
+    var envelope_option : operation_envelope option;
+    var envelope : operation_envelope;
+    var fact_ids : fact_id fset;
+    var closure_option : fact_id fset option;
+    var authorization_valid : bool;
+    var authorization : authorization_state;
+    var signature_valid : bool;
+    var target_option : principal option;
+
+    result <- validation_success;
+    envelope <- witness;
+    fact_ids <- fset0;
+    closure_option <- None;
+    authorization_valid <- false;
+    authorization <- empty_authorization_state;
+    signature_valid <- false;
+    target_option <- None;
+
+    envelope_option <- decode_operation signed_operation.`so_raw;
+    if (envelope_option = None) {
+      result <- validation_error FailureCanonicalDecoding;
+    } else {
+      envelope <- oget envelope_option;
+    }
+
+    if (result.`vr_accepted /\
+        defense_enabled mode DefenseCanonicalEncoding /\
+        ! canonical_reencoding signed_operation.`so_raw) {
+      result <- validation_error FailureCanonicalReencoding;
+    }
+
+    if (result.`vr_accepted) {
+      result <@ validate_decoded(mode, signed_operation, envelope, view, state);
     }
 
     return result;
