@@ -146,18 +146,35 @@ op operation_body_valid_for_envelope
        Some envelope.`oe_operation_kind
   /\ operation_body_valid envelope.`oe_operation_body.
 
+(* Keep the edit-action policy independently executable: ordinary edits need
+   [CapEdit], while deleting a document is an administrative operation. *)
+op required_capability_for_edit_body
+    (body : operation_body) : capability =
+  with body = EditBody action content =>
+    if action = DeleteDocument then CapAdmin else CapEdit
+  with body = _ => CapEdit.
+
 op required_capability_for_operation
     (kind : operation_kind)
     (body : operation_body) : capability =
-  with kind = OpEdit, body = EditBody DeleteDocument content => CapAdmin
-  with kind = OpEdit, body = _ => CapEdit
-  with kind = OpAddMember, body = _ => CapAdmin
-  with kind = OpRemoveMember, body = _ => CapAdmin
-  with kind = OpGrantCapability, body = _ => CapAdmin
-  with kind = OpRevokeCapability, body = _ => CapAdmin
-  with kind = OpBeeKemUpdate, body = _ => CapBeeKemUpdate
-  with kind = OpHistoryGrant, body = _ => CapHistoryGrant
-  with kind = OpPuncture, body = _ => CapPuncture.
+  with kind = OpEdit => required_capability_for_edit_body body
+  with kind = OpAddMember => CapAdmin
+  with kind = OpRemoveMember => CapAdmin
+  with kind = OpGrantCapability => CapAdmin
+  with kind = OpRevokeCapability => CapAdmin
+  with kind = OpBeeKemUpdate => CapBeeKemUpdate
+  with kind = OpHistoryGrant => CapHistoryGrant
+  with kind = OpPuncture => CapPuncture.
+
+lemma required_capability_edit_text (content : payload) :
+  required_capability_for_operation
+    OpEdit (EditBody EditText content) = CapEdit.
+proof. by []. qed.
+
+lemma required_capability_delete_document (content : payload) :
+  required_capability_for_operation
+    OpEdit (EditBody DeleteDocument content) = CapAdmin.
+proof. by []. qed.
 
 op add_target_of_body (body : operation_body) : principal option =
   with body = AddMemberBody target leaf => Some target
