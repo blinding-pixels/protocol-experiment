@@ -26,7 +26,7 @@ concurrency:
 
 jobs:
   check:
-    name: Diagnose active EasyCrypt proof
+    name: Check active honest-operation contract
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
@@ -78,14 +78,14 @@ jobs:
             --format '{{json .RepoDigests}}' \
             | tee "$evidence/image-repo-digests.txt"
 
-      - name: Expose active normalizer residual
+      - name: Compile active honest-operation contract
         shell: bash
         run: |
           set -euo pipefail
           source_dir="$GITHUB_WORKSPACE/formal/current-source/easycrypt/computational"
           proof_dir="$RUNNER_TEMP/easycrypt-source"
           evidence="$RUNNER_TEMP/easycrypt-evidence"
-          target="AuthorizationNormalizerExecution.ec"
+          target="HonestOperationContract.ec"
           mkdir -p "$proof_dir"
           cp -R "$source_dir"/. "$proof_dir"/
 
@@ -94,66 +94,20 @@ jobs:
             -v "$proof_dir:/proof" \
             -w /proof \
             "$EASYCRYPT_IMAGE" \
-            bash -lc "opam exec -- easycrypt compile -no-eco $target" \
-            >"$evidence/baseline-stdout.log" \
-            2>"$evidence/baseline-stderr.log"
-          baseline_status=$?
-          set -e
-          printf '%s\n' "$baseline_status" >"$evidence/baseline-exit-status.txt"
-          cat "$evidence/baseline-stdout.log"
-          cat "$evidence/baseline-stderr.log" >&2
-
-          if [ "$baseline_status" -eq 0 ]; then
-            printf '%s\n' "$target already closes" \
-              >"$evidence/diagnostic-target.txt"
-            exit 0
-          fi
-
-          python3 - "$proof_dir/$target" <<'PY'
-          from pathlib import Path
-          import sys
-
-          path = Path(sys.argv[1])
-          text = path.read_text()
-          suffix = (
-              "    witness_empty_state_0 witness_initial_snapshots;\n"
-              "  by smt().\n"
-              "qed.\n"
-          )
-          replacement = (
-              "    witness_empty_state_0 witness_initial_snapshots.\n"
-              "  by [].\n"
-              "qed.\n"
-          )
-          if not text.endswith(suffix):
-              raise SystemExit("normalizer final postcondition block was not found")
-          path.write_text(text[:-len(suffix)] + replacement)
-          PY
-
-          printf '%s\n' \
-            'AuthorizationNormalizerExecution.ec:46 (disposable return residual)' \
-            >"$evidence/diagnostic-target.txt"
-          cp "$proof_dir/$target" \
-            "$evidence/AuthorizationNormalizerExecution-diagnostic.ec"
-
-          set +e
-          docker run --rm \
-            -v "$proof_dir:/proof" \
-            -w /proof \
-            "$EASYCRYPT_IMAGE" \
-            bash -lc '
+            bash -lc "
               set -euo pipefail
               opam exec -- easycrypt config
               opam exec -- why3 --version || true
-              echo CHECKING DISPOSABLE AuthorizationNormalizerExecution.ec COPY UP TO LINE 46
-              opam exec -- easycrypt llm -upto 46 AuthorizationNormalizerExecution.ec
-            ' >"$evidence/diagnostic-stdout.log" \
-              2>"$evidence/diagnostic-stderr.log"
+              echo CHECKING $target
+              opam exec -- easycrypt compile -no-eco $target
+            " >"$evidence/checker-stdout.log" \
+              2>"$evidence/checker-stderr.log"
           status=$?
           set -e
-          printf '%s\n' "$status" >"$evidence/diagnostic-exit-status.txt"
-          cat "$evidence/diagnostic-stdout.log"
-          cat "$evidence/diagnostic-stderr.log" >&2
+          printf '%s\n' "$status" >"$evidence/checker-exit-status.txt"
+          printf '%s\n' "$target" >"$evidence/diagnostic-target.txt"
+          cat "$evidence/checker-stdout.log"
+          cat "$evidence/checker-stderr.log" >&2
           exit "$status"
 
       - name: Upload checker evidence
