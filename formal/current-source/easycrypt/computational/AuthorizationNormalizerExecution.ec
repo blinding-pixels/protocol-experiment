@@ -69,8 +69,8 @@ proof.
   inline TestSignature.verify.
   rcondt ^while; first by
     auto; rewrite /witness_signed_facts_2.
-  rcondt ^while.
-  + auto;
+  rcondt ^while; first by
+    auto;
     rewrite /witness_signed_facts_2
       /witness_signed_fact_1 /witness_signed_fact_of
       witness_empty_state_0 witness_initial_snapshots.
