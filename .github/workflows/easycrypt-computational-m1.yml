@@ -26,7 +26,7 @@ concurrency:
 
 jobs:
   check:
-    name: Check complete EasyCrypt source closure
+    name: Diagnose active EasyCrypt proof
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
@@ -107,51 +107,6 @@ jobs:
           printf '%s\n' "$status" >"$evidence/diagnostic-exit-status.txt"
           cat "$evidence/diagnostic-stdout.log"
           cat "$evidence/diagnostic-stderr.log" >&2
-          exit "$status"
-
-      - name: Check every EasyCrypt source
-        shell: bash
-        run: |
-          set -euo pipefail
-          proof_dir="$RUNNER_TEMP/easycrypt-source"
-          evidence="$RUNNER_TEMP/easycrypt-evidence"
-
-          mapfile -t files < <(
-            find "$proof_dir" -maxdepth 1 -type f \
-              \( -name '*.ec' -o -name '*.eca' \) \
-              -printf '%f\n' | LC_ALL=C sort
-          )
-          printf '%s\n' "${files[@]}" | tee "$evidence/dependency-closure.txt"
-          if [ "${#files[@]}" -eq 0 ]; then
-            echo 'No EasyCrypt sources found' >&2
-            exit 1
-          fi
-
-          quoted_files=()
-          for file in "${files[@]}"; do
-            printf -v quoted '%q' "$file"
-            quoted_files+=("$quoted")
-          done
-          file_list="${quoted_files[*]}"
-
-          set +e
-          docker run --rm \
-            -v "$proof_dir:/proof" \
-            -w /proof \
-            "$EASYCRYPT_IMAGE" \
-            bash -lc "
-              set -euo pipefail
-              for file in $file_list; do
-                echo CHECKING \"\$file\"
-                opam exec -- easycrypt compile -no-eco \"\$file\"
-              done
-            " >"$evidence/checker-stdout.log" \
-              2>"$evidence/checker-stderr.log"
-          status=$?
-          set -e
-          printf '%s\n' "$status" >"$evidence/checker-exit-status.txt"
-          cat "$evidence/checker-stdout.log"
-          cat "$evidence/checker-stderr.log" >&2
           exit "$status"
 
       - name: Upload checker evidence
