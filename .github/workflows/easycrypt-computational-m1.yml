@@ -117,11 +117,11 @@ jobs:
             exit 0
           fi
 
-          # Open only the atomic rcond proof reported by the checker.  For a
-          # one-line `first by auto` proof, add a separate `auto` command.  For
-          # an expanded proof block, remove only `first by` and retain every
-          # committed tactic.  The helper therefore follows the next residual
-          # automatically instead of requiring CI-only retarget commits.
+          # Open only the rcond proof reported by the checker.  Atomic
+          # `first by` blocks are handled directly.  Explicit `rcond.` plus
+          # bullet blocks are opened by removing the final local `by` only in
+          # this disposable copy.  This keeps the committed theorem unchanged
+          # while exposing the exact pure residual.
           python3 - \
             "$proof_dir/MutationProofs.ec" \
             "$evidence/baseline-stdout.log" \
@@ -143,16 +143,26 @@ jobs:
               + "\n"
               + stderr_path.read_text(errors="replace")
           )
-          matches = []
-          for pattern in (
-              r"\[MutationProofs\.ec: line (\d+)(?: \(|\])",
-              r"\[MutationProofs\.ec:(\d+)\]",
+
+          reported_lines = []
+          for match in re.finditer(
+              r"\[MutationProofs\.ec: line (\d+)(?: \([^]]*\))?"
+              r"(?: to line (\d+)(?: \([^]]*\))?)?\]",
+              checker_output,
           ):
-              matches.extend(int(value) for value in re.findall(pattern, checker_output))
-          if not matches:
+              reported_lines.append(int(match.group(1)))
+              if match.group(2) is not None:
+                  reported_lines.append(int(match.group(2)))
+          reported_lines.extend(
+              int(value)
+              for value in re.findall(
+                  r"\[MutationProofs\.ec:(\d+)\]", checker_output
+              )
+          )
+          if not reported_lines:
               raise SystemExit("checker did not report a MutationProofs.ec line")
 
-          reported_line = matches[-1]
+          reported_line = max(reported_lines)
           lines = source_path.read_text().splitlines(keepends=True)
           if reported_line < 1 or reported_line > len(lines):
               raise SystemExit(f"reported line {reported_line} is outside MutationProofs.ec")
@@ -163,8 +173,6 @@ jobs:
           )
           match = atomic.match(lines[start].rstrip("\n"))
 
-          # Some checker versions point at a tactic inside the atomic block.
-          # Walk backward only to the nearest enclosing rcond proof.
           if match is None:
               for candidate in range(start - 1, -1, -1):
                   candidate_match = atomic.match(lines[candidate].rstrip("\n"))
@@ -172,31 +180,53 @@ jobs:
                       start = candidate
                       match = candidate_match
                       break
-          if match is None:
-              raise SystemExit(
-                  f"line {reported_line} is not inside an atomic rcond proof"
-              )
 
-          indent = match.group("indent")
-          rcond = match.group("rcond")
-          tail = match.group("tail").strip()
+          if match is not None:
+              indent = match.group("indent")
+              rcond = match.group("rcond")
+              tail = match.group("tail").strip()
 
-          if tail == "auto.":
-              lines[start] = f"{indent}{rcond}.\n{indent}auto.\n"
-              target_line = start + 2
+              if tail == "auto.":
+                  lines[start] = f"{indent}{rcond}.\n{indent}auto.\n"
+                  target_line = start + 2
+              else:
+                  lines[start] = lines[start].replace("; first by", ".", 1)
+                  base_indent = len(indent)
+                  next_command = len(lines)
+                  for candidate in range(start + 1, len(lines)):
+                      stripped = lines[candidate].strip()
+                      if not stripped:
+                          continue
+                      leading = len(lines[candidate]) - len(lines[candidate].lstrip())
+                      if leading <= base_indent:
+                          next_command = candidate
+                          break
+                  target_line = next_command
           else:
-              lines[start] = lines[start].replace("; first by", ".", 1)
-              base_indent = len(indent)
-              next_command = len(lines)
-              for candidate in range(start + 1, len(lines)):
-                  stripped = lines[candidate].strip()
-                  if not stripped:
-                      continue
-                  leading = len(lines[candidate]) - len(lines[candidate].lstrip())
-                  if leading <= base_indent:
-                      next_command = candidate
+              explicit = re.compile(r"^\s*rcond[tf]\s+\^while\.\s*$")
+              explicit_start = None
+              for candidate in range(start, -1, -1):
+                  if explicit.match(lines[candidate].rstrip("\n")):
+                      explicit_start = candidate
                       break
-              target_line = next_command
+              if explicit_start is None:
+                  raise SystemExit(
+                      f"line {reported_line} is not inside a recognized rcond proof"
+                  )
+
+              by_line = None
+              for candidate in range(start, explicit_start, -1):
+                  if re.match(r"^\s*by\s+", lines[candidate]):
+                      by_line = candidate
+                      break
+              if by_line is None:
+                  raise SystemExit(
+                      f"explicit rcond at line {explicit_start + 1} has no local by tactic"
+                  )
+              lines[by_line] = re.sub(
+                  r"^(\s*)by\s+", r"\1", lines[by_line], count=1
+              )
+              target_line = by_line + 1
 
           source_path.write_text("".join(lines))
           line_path.write_text(f"{target_line}\n")
