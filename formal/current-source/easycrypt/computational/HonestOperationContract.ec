@@ -112,7 +112,9 @@ proof.
     /witness_context_7 /witness_context_6 /witness_context_5
     /witness_context_4 /witness_context_3 /witness_context_2
     /witness_context_1.
-  by rewrite !fsetUA.
+  apply/fsetP=> id.
+  rewrite !inE.
+  smt().
 qed.
 
 lemma witness_base_signed_facts_for_context :
