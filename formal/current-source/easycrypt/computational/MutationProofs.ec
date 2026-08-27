@@ -29,10 +29,7 @@ qed.
 lemma empty_fact_ids_not_singleton (id : fact_id) :
   fset0<:fact_id> <> fset1 id.
 proof.
-  move=> empty_is_singleton.
-  have id_in_empty : id \in fset0<:fact_id> by
-    rewrite empty_is_singleton in_fset1.
-  by rewrite in_fset0 in id_in_empty.
+  smt(in_fset0 in_fset1).
 qed.
 
 (* A minimal noncanonical candidate reaches the production validator but is
