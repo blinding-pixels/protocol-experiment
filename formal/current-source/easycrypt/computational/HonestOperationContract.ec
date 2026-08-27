@@ -67,7 +67,7 @@ proof.
   by rewrite /all_predecessors_exist
     /witness_base_state_exact /witness_protocol_state
     /witness_honest_edit_envelope /witness_edit_envelope
-    elems_fset1 /= in_fset1.
+    elems_fset1 /=.
 qed.
 
 lemma witness_honest_exact_closure :
