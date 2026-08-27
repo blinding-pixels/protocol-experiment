@@ -13,6 +13,24 @@ op witness_base_state_exact : protocol_state =
 op witness_base_view_exact : public_view =
   witness_public_view witness_base_signed_facts witness_context_7.
 
+lemma witness_base_view_facts :
+  witness_base_view_exact.`pv_facts = witness_base_signed_facts.
+proof.
+  by rewrite /witness_base_view_exact /witness_public_view.
+qed.
+
+lemma witness_base_view_observed_fact_ids :
+  witness_base_view_exact.`pv_observed_fact_ids = witness_context_7.
+proof.
+  by rewrite /witness_base_view_exact /witness_public_view.
+qed.
+
+lemma witness_base_state_creator :
+  witness_base_state_exact.`ps_creator = witness_alice.
+proof.
+  by rewrite /witness_base_state_exact /witness_protocol_state.
+qed.
+
 op witness_honest_edit_envelope : operation_envelope =
   witness_edit_envelope
     (ProtocolDomain 1)
@@ -116,6 +134,27 @@ proof.
   apply/fsetP=> id.
   rewrite !inE.
   smt().
+qed.
+
+lemma witness_honest_closure_matches_fact_ids :
+     exact_predecessor_closure
+       witness_base_state_exact
+       witness_honest_edit_envelope.`oe_direct_predecessors <> None
+  /\ fact_ids_of_signed_facts witness_base_view_exact.`pv_facts =
+       oget (exact_predecessor_closure
+         witness_base_state_exact
+         witness_honest_edit_envelope.`oe_direct_predecessors).
+proof.
+  by rewrite witness_base_view_facts
+    witness_honest_exact_closure witness_base_fact_ids.
+qed.
+
+lemma witness_honest_observed_context_matches_fact_ids :
+  witness_base_view_exact.`pv_observed_fact_ids =
+    fact_ids_of_signed_facts witness_base_view_exact.`pv_facts.
+proof.
+  by rewrite witness_base_view_facts
+    witness_base_view_observed_fact_ids witness_base_fact_ids.
 qed.
 
 lemma witness_base_signed_facts_for_context :
@@ -256,15 +295,10 @@ proof.
 
   rcondf 10; first by
     auto;
-    rewrite /validation_success
-      /witness_base_view_exact /witness_public_view
-      witness_base_fact_ids;
-    smt(witness_honest_exact_closure).
+    smt(witness_honest_closure_matches_fact_ids).
   rcondf 10; first by
     auto;
-    rewrite /validation_success
-      /witness_base_view_exact /witness_public_view
-      witness_base_fact_ids.
+    smt(witness_honest_observed_context_matches_fact_ids).
   rcondt 10; first by auto; rewrite /validation_success.
 
   wp.
