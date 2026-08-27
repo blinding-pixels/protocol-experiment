@@ -78,13 +78,14 @@ jobs:
             --format '{{json .RepoDigests}}' \
             | tee "$evidence/image-repo-digests.txt"
 
-      - name: Expose second authorization residual
+      - name: Expose active normalizer residual
         shell: bash
         run: |
           set -euo pipefail
           source_dir="$GITHUB_WORKSPACE/formal/current-source/easycrypt/computational"
           proof_dir="$RUNNER_TEMP/easycrypt-source"
           evidence="$RUNNER_TEMP/easycrypt-evidence"
+          target="AuthorizationNormalizerExecution.ec"
           mkdir -p "$proof_dir"
           cp -R "$source_dir"/. "$proof_dir"/
 
@@ -93,7 +94,7 @@ jobs:
             -v "$proof_dir:/proof" \
             -w /proof \
             "$EASYCRYPT_IMAGE" \
-            bash -lc 'opam exec -- easycrypt compile -no-eco MutationProofs.ec' \
+            bash -lc "opam exec -- easycrypt compile -no-eco $target" \
             >"$evidence/baseline-stdout.log" \
             2>"$evidence/baseline-stderr.log"
           baseline_status=$?
@@ -103,29 +104,28 @@ jobs:
           cat "$evidence/baseline-stderr.log" >&2
 
           if [ "$baseline_status" -eq 0 ]; then
-            printf '%s\n' 'MutationProofs.ec already closes' \
+            printf '%s\n' "$target already closes" \
               >"$evidence/diagnostic-target.txt"
             exit 0
           fi
 
-          python3 - "$proof_dir/MutationProofs.ec" <<'PY'
+          python3 - "$proof_dir/$target" <<'PY'
           from pathlib import Path
           import sys
 
           path = Path(sys.argv[1])
           text = path.read_text()
-          old = "    by rewrite !inE no_capability_grant_in_empty.\n"
-          new = "    rewrite !inE no_capability_grant_in_empty.\n"
-          if text.count(old) != 1:
-              raise SystemExit("fact-2 final tactic was not found exactly once")
-          path.write_text(text.replace(old, new, 1))
+          suffix = "  by smt().\nqed.\n"
+          if not text.endswith(suffix):
+              raise SystemExit("normalizer final postcondition tactic was not found")
+          path.write_text(text[:-len(suffix)] + "qed.\n")
           PY
 
           printf '%s\n' \
-            'MutationProofs.ec:139 (disposable fact-2 final residual)' \
+            'AuthorizationNormalizerExecution.ec:46 (disposable return residual)' \
             >"$evidence/diagnostic-target.txt"
-          cp "$proof_dir/MutationProofs.ec" \
-            "$evidence/MutationProofs-diagnostic.ec"
+          cp "$proof_dir/$target" \
+            "$evidence/AuthorizationNormalizerExecution-diagnostic.ec"
 
           set +e
           docker run --rm \
@@ -136,8 +136,8 @@ jobs:
               set -euo pipefail
               opam exec -- easycrypt config
               opam exec -- why3 --version || true
-              echo CHECKING DISPOSABLE MutationProofs.ec COPY UP TO LINE 139
-              opam exec -- easycrypt llm -upto 139 MutationProofs.ec
+              echo CHECKING DISPOSABLE AuthorizationNormalizerExecution.ec COPY UP TO LINE 46
+              opam exec -- easycrypt llm -upto 46 AuthorizationNormalizerExecution.ec
             ' >"$evidence/diagnostic-stdout.log" \
               2>"$evidence/diagnostic-stderr.log"
           status=$?
