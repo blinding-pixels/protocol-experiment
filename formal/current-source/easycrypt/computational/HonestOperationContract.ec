@@ -63,8 +63,7 @@ lemma witness_honest_predecessor_elems :
   elems witness_honest_edit_envelope.`oe_direct_predecessors =
     [witness_base_node].
 proof.
-  by rewrite /witness_honest_edit_envelope /witness_edit_envelope
-    elems_fset1.
+  by rewrite /witness_honest_edit_envelope /witness_edit_envelope.
 qed.
 
 lemma witness_honest_predecessors_exist :
