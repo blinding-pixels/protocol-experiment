@@ -194,7 +194,7 @@ lemma witness_fact_1_transition :
   Some witness_authorization_state_1.
 proof.
   rewrite /witness_authorization_state_0 /witness_authorization_state_1
-   /witness_member_grant_alice_entry
+    /witness_member_grant_alice_entry
     /witness_fact_1 /witness_context_0 /witness_context_1
     /witness_alice /witness_member_tag_alice /witness_fact_id_1
     /apply_authorization_fact /authorization_fact_shape_valid
@@ -239,8 +239,10 @@ qed.
 lemma witness_fact_3_id_fresh :
   witness_fact_3.`af_id \notin witness_authorization_state_2.`as_fact_ids.
 proof.
-  by rewrite /witness_fact_3 /witness_authorization_state_2
+  rewrite /witness_fact_3 /witness_authorization_state_2
     /witness_context_2 /witness_context_1.
+  smt(in_fsetU in_fset1
+    witness_fact_id_3_neq_1 witness_fact_id_3_neq_2).
 qed.
 
 lemma witness_fact_3_issuer_allowed :
