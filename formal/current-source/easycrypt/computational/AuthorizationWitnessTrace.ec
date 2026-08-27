@@ -239,9 +239,8 @@ qed.
 lemma witness_fact_3_id_fresh :
   witness_fact_3.`af_id \notin witness_authorization_state_2.`as_fact_ids.
 proof.
-  rewrite /witness_fact_3 /witness_authorization_state_2
+  by rewrite /witness_fact_3 /witness_authorization_state_2
     /witness_context_2 /witness_context_1.
-  by rewrite witness_fact_id_3_neq_1 witness_fact_id_3_neq_2.
 qed.
 
 lemma witness_fact_3_issuer_allowed :
