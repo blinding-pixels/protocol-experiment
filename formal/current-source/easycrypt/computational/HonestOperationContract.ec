@@ -219,3 +219,53 @@ proof.
   by rewrite /witness_honest_edit_operation
     /witness_honest_edit_envelope /witness_edit_envelope.
 qed.
+
+(* The concrete honest operation traverses the public production entry point,
+   including decode/re-encode checks, and is accepted.  The authorization
+   loop is discharged only through its separately checked seven-fact
+   normalization contract. *)
+lemma witness_honest_operation_accepted &m :
+  Pr[
+    ValidateOperation(TestSignature).validate(
+      Production,
+      witness_honest_edit_operation,
+      witness_base_view_exact,
+      witness_base_state_exact
+    ) @ &m :
+    res.`vr_accepted
+  ] = 1%r.
+proof.
+  byphoare
+    (: mode = Production
+       /\ signed_operation = witness_honest_edit_operation
+       /\ view = witness_base_view_exact
+       /\ state = witness_base_state_exact
+       ==>
+       res.`vr_accepted)
+    => //.
+  proc.
+  inline ValidateOperation(TestSignature).validate_decoded
+    TestSignature.verify.
+  ecall (normalize_witness_base_signed_facts).
+  auto;
+  rewrite witness_honest_edit_decodes
+    witness_honest_edit_is_canonical
+    witness_honest_predecessors_exist
+    witness_honest_exact_closure
+    witness_base_fact_ids
+    witness_honest_domain_version
+    witness_honest_document_binding
+    witness_honest_freshness
+    witness_honest_authorization_digest
+    witness_honest_author_key_binding
+    witness_bob_old_member_active_state_7
+    witness_bob_old_edit_active_state_7
+    witness_honest_required_capability
+    witness_honest_operation_body_valid
+    /witness_base_view_exact /witness_public_view
+    /witness_base_state_exact /witness_protocol_state
+    /witness_honest_edit_operation
+    /witness_honest_edit_envelope /witness_edit_envelope
+    /witness_edit_body_one
+    /defense_enabled /validation_success /validation_error.
+qed.
