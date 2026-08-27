@@ -44,6 +44,6 @@ proof.
   rewrite /witness_signed_facts_1
     /witness_signed_fact_1 /witness_signed_fact_of
     witness_empty_state_0 witness_initial_snapshots
-    witness_fact_1_transition witness_extend_snapshots_1;
+    witness_extend_snapshots_1;
   by smt().
 qed.
