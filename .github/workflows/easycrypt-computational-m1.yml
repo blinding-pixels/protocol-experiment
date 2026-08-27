@@ -115,10 +115,19 @@ jobs:
 
           path = Path(sys.argv[1])
           text = path.read_text()
-          suffix = "  by smt().\nqed.\n"
+          suffix = (
+              "    witness_empty_state_0 witness_initial_snapshots;\n"
+              "  by smt().\n"
+              "qed.\n"
+          )
+          replacement = (
+              "    witness_empty_state_0 witness_initial_snapshots.\n"
+              "  by [].\n"
+              "qed.\n"
+          )
           if not text.endswith(suffix):
-              raise SystemExit("normalizer final postcondition tactic was not found")
-          path.write_text(text[:-len(suffix)] + "  by [].\nqed.\n")
+              raise SystemExit("normalizer final postcondition block was not found")
+          path.write_text(text[:-len(suffix)] + replacement)
           PY
 
           printf '%s\n' \
