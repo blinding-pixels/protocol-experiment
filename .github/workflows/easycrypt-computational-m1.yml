@@ -95,11 +95,17 @@ jobs:
             -w /proof \
             "$EASYCRYPT_IMAGE" \
             bash -lc "
-              set -euo pipefail
+              set -uo pipefail
               opam exec -- easycrypt config
               opam exec -- why3 --version || true
               echo CHECKING $target
               opam exec -- easycrypt compile -no-eco $target
+              status=\$?
+              if [ \"\$status\" -ne 0 ]; then
+                echo '--- EasyCrypt last goal before failure ---'
+                opam exec -- easycrypt llm -lastgoals $target || true
+              fi
+              exit \"\$status\"
             " >"$evidence/checker-stdout.log" \
               2>"$evidence/checker-stderr.log"
           status=$?
