@@ -1,0 +1,130 @@
+name: EasyCrypt computational proof
+
+on:
+  push:
+    branches:
+      - formal/easycrypt-computational-m1
+    paths:
+      - '.github/workflows/easycrypt-computational.yml'
+      - 'formal/current-source/easycrypt/computational/**'
+      - 'tools/easycrypt/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/easycrypt-computational.yml'
+      - 'formal/current-source/easycrypt/computational/**'
+      - 'tools/easycrypt/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: easycrypt-computational-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  computational-proof:
+    name: Check full computational proof
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      EASYCRYPT_IMAGE: ghcr.io/easycrypt/ec-test-box@sha256:84980006e8b01fe6497bbd0ecd67deeb5e7361d8ad17e27d24924122d368e0fc
+      CHECK_EC: ComputationalProof.ec
+    steps:
+      - name: Check out exact proof source
+        uses: actions/checkout@v4
+
+      - name: Record source identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/easycrypt-full-evidence"
+          source_dir="formal/current-source/easycrypt/computational"
+          mkdir -p "$evidence/checked-source"
+          cp -R "$source_dir"/. "$evidence/checked-source"/
+          git rev-parse HEAD | tee "$evidence/source-commit.txt"
+          find "$source_dir" -maxdepth 1 -type f \
+            \( -name '*.ec' -o -name '*.eca' \) -print0 \
+            | LC_ALL=C sort -z \
+            | xargs -0 sha256sum \
+            | tee "$evidence/source-sha256.txt"
+          git status --short --branch | tee "$evidence/git-status.txt"
+
+      - name: Verify active proof source
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/easycrypt-full-evidence"
+          proof_dir="formal/current-source/easycrypt/computational"
+          test -f "$proof_dir/$CHECK_EC"
+
+          set +e
+          python3 tools/easycrypt/audit_computational.py \
+            >"$evidence/audit-stdout.log" \
+            2>"$evidence/audit-stderr.log"
+          status=$?
+          set -e
+          printf '%s\n' "$status" >"$evidence/audit-exit-status.txt"
+          cat "$evidence/audit-stdout.log"
+          cat "$evidence/audit-stderr.log" >&2
+          exit "$status"
+
+      - name: Pull immutable EasyCrypt image
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/easycrypt-full-evidence"
+          docker pull "$EASYCRYPT_IMAGE" 2>&1 | tee "$evidence/image-pull.log"
+          docker image inspect "$EASYCRYPT_IMAGE" >"$evidence/image-inspect.json"
+          docker image inspect "$EASYCRYPT_IMAGE" \
+            --format '{{json .RepoDigests}}' \
+            | tee "$evidence/image-repo-digests.txt"
+
+      - name: Compile full computational proof
+        shell: bash
+        run: |
+          set -euo pipefail
+          source_dir="$GITHUB_WORKSPACE/formal/current-source/easycrypt/computational"
+          proof_dir="$RUNNER_TEMP/easycrypt-source"
+          evidence="$RUNNER_TEMP/easycrypt-full-evidence"
+          target="$CHECK_EC"
+          mkdir -p "$proof_dir"
+          cp -R "$source_dir"/. "$proof_dir"/
+
+          set +e
+          docker run --rm \
+            -v "$proof_dir:/proof" \
+            -w /proof \
+            "$EASYCRYPT_IMAGE" \
+            bash -lc "
+              set -uo pipefail
+              opam exec -- easycrypt config
+              opam exec -- why3 --version || true
+              echo CHECKING $target
+              opam exec -- easycrypt compile -no-eco $target
+              status=\$?
+              if [ \"\$status\" -ne 0 ]; then
+                echo '--- EasyCrypt last goal before failure ---'
+                opam exec -- easycrypt llm -lastgoals $target || true
+              fi
+              exit \"\$status\"
+            " >"$evidence/checker-stdout.log" \
+              2>"$evidence/checker-stderr.log"
+          status=$?
+          set -e
+          printf '%s\n' "$status" >"$evidence/checker-exit-status.txt"
+          printf '%s\n' "$target" >"$evidence/diagnostic-target.txt"
+          cat "$evidence/checker-stdout.log"
+          cat "$evidence/checker-stderr.log" >&2
+          exit "$status"
+
+      - name: Upload checker evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: easycrypt-full-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/easycrypt-full-evidence
+          if-no-files-found: error
+          retention-days: 14
