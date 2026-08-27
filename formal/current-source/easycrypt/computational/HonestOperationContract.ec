@@ -190,16 +190,17 @@ lemma witness_honest_required_capability :
     witness_honest_edit_envelope.`oe_operation_kind
     witness_honest_edit_envelope.`oe_operation_body = CapEdit.
 proof.
-  by rewrite /witness_honest_edit_envelope /witness_edit_envelope
-    /witness_edit_body_one /required_capability_for_operation /=.
+  rewrite /witness_honest_edit_envelope /witness_edit_envelope
+    /witness_edit_body_one.
+  cbv delta.
 qed.
 
 lemma witness_honest_operation_body_valid :
   operation_body_valid_for_envelope witness_honest_edit_envelope.
 proof.
-  by rewrite /witness_honest_edit_envelope /witness_edit_envelope
-    /witness_edit_body_one /operation_body_valid_for_envelope
-    /operation_body_kind /operation_body_valid /=.
+  rewrite /witness_honest_edit_envelope /witness_edit_envelope
+    /witness_edit_body_one.
+  cbv delta.
 qed.
 
 lemma witness_honest_authorization_digest :
