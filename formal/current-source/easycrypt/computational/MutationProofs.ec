@@ -136,7 +136,8 @@ proof.
     rewrite !inE no_member_grant_in_empty fset0U
       empty_fact_ids_not_singleton;
     cbv delta;
-    by rewrite !inE no_capability_grant_in_empty.
+    rewrite !inE no_capability_grant_in_empty !fset0U;
+    by cbv delta.
   rcondt ^while; first by auto.
   rcondt ^while; first by auto.
   rcondt ^while; first by auto.
