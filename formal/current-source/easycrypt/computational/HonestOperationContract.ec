@@ -79,9 +79,10 @@ lemma witness_honest_predecessors_exist :
     witness_base_state_exact
     witness_honest_edit_envelope.`oe_direct_predecessors.
 proof.
-  by rewrite /all_predecessors_exist
+  rewrite /all_predecessors_exist
     witness_honest_predecessor_elems
     /witness_base_state_exact /witness_protocol_state /=.
+  by rewrite in_fset1.
 qed.
 
 lemma witness_honest_exact_closure :
