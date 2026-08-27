@@ -1,5 +1,5 @@
 require import AllCore List FSet.
-require import ProtocolTypes ProtocolPrimitives AuthorizationState WitnessFixtures.
+require import ProtocolTypes CanonicalEncoding ProtocolPrimitives AuthorizationState WitnessFixtures.
 require import AuthorizationWitnessTrace AuthorizationWitnessTraceTail.
 require import AuthorizationNormalizerWitness AuthorizationSnapshotWitnessTail.
 require import AuthorizationSnapshotExtension.
