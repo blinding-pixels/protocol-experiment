@@ -193,6 +193,7 @@ proof.
   rewrite /witness_honest_edit_envelope /witness_edit_envelope
     /witness_edit_body_one.
   cbv delta.
+  trivial.
 qed.
 
 lemma witness_honest_operation_body_valid :
@@ -201,6 +202,7 @@ proof.
   rewrite /witness_honest_edit_envelope /witness_edit_envelope
     /witness_edit_body_one.
   cbv delta.
+  trivial.
 qed.
 
 lemma witness_honest_authorization_digest :
