@@ -50,13 +50,13 @@ lemma witness_honest_edit_decodes :
   decode_operation witness_honest_edit_operation.`so_raw =
     Some witness_honest_edit_envelope.
 proof.
-  by rewrite /witness_honest_edit_operation decode_encode_operation.
+  by rewrite /witness_honest_edit_operation.
 qed.
 
 lemma witness_honest_edit_is_canonical :
   canonical_reencoding witness_honest_edit_operation.`so_raw.
 proof.
-  by rewrite /witness_honest_edit_operation encoded_operation_is_canonical.
+  by rewrite /witness_honest_edit_operation.
 qed.
 
 lemma witness_honest_predecessors_exist :
