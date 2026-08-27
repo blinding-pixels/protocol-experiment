@@ -66,3 +66,45 @@ proof.
       rewrite /validation_error.
     auto; rewrite /validation_error; auto.
 qed.
+
+(* The positive production control uses the same stateful environment, exact
+   authorization normalizer, and production validator as the mutation games.
+   All three concrete seven-fact normalization passes are executed below; no
+   authorization-success premise is imported. *)
+lemma honest_edit_acceptance_probability_one &m :
+  Pr[HonestEditAcceptanceWitness.main() @ &m :
+       res = (true, 1)] = 1%r.
+proof.
+  byphoare => //.
+  proc.
+  inline *.
+
+  rcondt ^while; first by auto.
+  rcondt ^while; first by auto.
+  rcondt ^while; first by auto.
+  rcondt ^while; first by auto.
+  rcondt ^while; first by auto.
+  rcondt ^while; first by auto.
+  rcondt ^while; first by auto.
+  rcondf ^while; first by auto.
+
+  rcondt ^while; first by auto.
+  rcondt ^while; first by auto.
+  rcondt ^while; first by auto.
+  rcondt ^while; first by auto.
+  rcondt ^while; first by auto.
+  rcondt ^while; first by auto.
+  rcondt ^while; first by auto.
+  rcondf ^while; first by auto.
+
+  rcondt ^while; first by auto.
+  rcondt ^while; first by auto.
+  rcondt ^while; first by auto.
+  rcondt ^while; first by auto.
+  rcondt ^while; first by auto.
+  rcondt ^while; first by auto.
+  rcondt ^while; first by auto.
+  rcondf ^while; first by auto.
+
+  auto.
+qed.
