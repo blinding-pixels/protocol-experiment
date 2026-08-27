@@ -80,7 +80,16 @@ proof.
   inline *.
 
   rcondt ^while; first by auto.
-  rcondt ^while; first by auto.
+  rcondt ^while; first by
+    auto;
+    rewrite /witness_fact_1 /witness_context_0 /witness_alice
+      /witness_member_tag_alice /witness_fact_id_1
+      /fact_signature_message /authorization_snapshot_lookup
+      /apply_authorization_fact /authorization_fact_shape_valid
+      /authorization_fact_shape_valid_kind /authorization_issuer_allowed
+      /genesis_authorization_fact /apply_authorization_fact_kind
+      /member_tag_known /empty_authorization_state;
+    auto.
   rcondt ^while; first by auto.
   rcondt ^while; first by auto.
   rcondt ^while; first by auto.
