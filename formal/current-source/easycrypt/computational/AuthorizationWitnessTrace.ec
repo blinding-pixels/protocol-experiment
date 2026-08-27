@@ -278,7 +278,7 @@ proof.
     /witness_capability_tag_alice_admin
     /witness_capability_tag_alice_history
     /witness_context_3 /capability_tag_known.
-  by rewrite !inE; smt().
+  by smt().
 qed.
 
 lemma witness_fact_3_transition :
