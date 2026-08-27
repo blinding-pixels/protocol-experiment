@@ -256,12 +256,13 @@ proof.
 
   rcondf 10; first by
     auto;
-    rewrite /validation_success /defense_enabled
+    rewrite /validation_success
       /witness_base_view_exact /witness_public_view
-      witness_honest_exact_closure witness_base_fact_ids.
+      witness_base_fact_ids;
+    smt(witness_honest_exact_closure).
   rcondf 10; first by
     auto;
-    rewrite /validation_success /defense_enabled
+    rewrite /validation_success
       /witness_base_view_exact /witness_public_view
       witness_base_fact_ids.
   rcondt 10; first by auto; rewrite /validation_success.
