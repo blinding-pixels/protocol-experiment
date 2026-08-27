@@ -88,49 +88,9 @@ jobs:
           mkdir -p "$proof_dir"
           cp -R "$source_dir"/. "$proof_dir"/
 
-          # Change only the disposable checker copy.  Opening the first
-          # transition block after cbv plus inE prints the remaining pure goal
-          # without weakening or editing the committed theorem.
-          python3 - "$proof_dir/MutationProofs.ec" <<'PY'
-          from pathlib import Path
-          import sys
-
-          path = Path(sys.argv[1])
-          text = path.read_text()
-          old = """  rcondt ^while; first by
-              auto;
-              rewrite /witness_fact_1 /witness_context_0 /witness_alice
-                /witness_member_tag_alice /witness_fact_id_1
-                /fact_signature_message /authorization_snapshot_lookup
-                /apply_authorization_fact /authorization_fact_shape_valid
-                /authorization_fact_shape_valid_kind /authorization_issuer_allowed
-                /genesis_authorization_fact /apply_authorization_fact_kind
-                /member_tag_known /empty_authorization_state;
-              cbv delta;
-              rewrite !inE; auto.
-          """
-          new = """  rcondt ^while.
-            auto;
-            rewrite /witness_fact_1 /witness_context_0 /witness_alice
-              /witness_member_tag_alice /witness_fact_id_1
-              /fact_signature_message /authorization_snapshot_lookup
-              /apply_authorization_fact /authorization_fact_shape_valid
-              /authorization_fact_shape_valid_kind /authorization_issuer_allowed
-              /genesis_authorization_fact /apply_authorization_fact_kind
-              /member_tag_known /empty_authorization_state;
-            cbv delta;
-            rewrite !inE.
-          """
-          if text.count(old) != 1:
-              raise SystemExit("diagnostic proof block was not found exactly once")
-          path.write_text(text.replace(old, new, 1))
-          PY
-
-          printf '%s\n' 'MutationProofs.ec:93 (disposable post-inE diagnostic)' \
-            >"$evidence/diagnostic-target.txt"
-          cp "$proof_dir/MutationProofs.ec" \
-            "$evidence/MutationProofs-diagnostic.ec"
-
+          # First ask the pinned checker for the active failing source line.
+          # The expected failure is recorded as evidence and never changes the
+          # committed proof source.
           set +e
           docker run --rm \
             -v "$proof_dir:/proof" \
@@ -140,8 +100,128 @@ jobs:
               set -euo pipefail
               opam exec -- easycrypt config
               opam exec -- why3 --version || true
-              echo CHECKING DISPOSABLE MutationProofs.ec COPY UP TO LINE 93
-              opam exec -- easycrypt llm -upto 93 MutationProofs.ec
+              opam exec -- easycrypt compile -no-eco MutationProofs.ec
+            ' >"$evidence/baseline-stdout.log" \
+              2>"$evidence/baseline-stderr.log"
+          baseline_status=$?
+          set -e
+          printf '%s\n' "$baseline_status" \
+            >"$evidence/baseline-exit-status.txt"
+          cat "$evidence/baseline-stdout.log"
+          cat "$evidence/baseline-stderr.log" >&2
+
+          if [ "$baseline_status" -eq 0 ]; then
+            printf '%s\n' \
+              'MutationProofs.ec already closes under the pinned checker' \
+              >"$evidence/diagnostic-target.txt"
+            exit 0
+          fi
+
+          # Open only the atomic rcond proof reported by the checker.  For a
+          # one-line `first by auto` proof, add a separate `auto` command.  For
+          # an expanded proof block, remove only `first by` and retain every
+          # committed tactic.  The helper therefore follows the next residual
+          # automatically instead of requiring CI-only retarget commits.
+          python3 - \
+            "$proof_dir/MutationProofs.ec" \
+            "$evidence/baseline-stdout.log" \
+            "$evidence/baseline-stderr.log" \
+            "$evidence/diagnostic-line.txt" \
+            "$evidence/diagnostic-target.txt" <<'PY'
+          from pathlib import Path
+          import re
+          import sys
+
+          source_path = Path(sys.argv[1])
+          stdout_path = Path(sys.argv[2])
+          stderr_path = Path(sys.argv[3])
+          line_path = Path(sys.argv[4])
+          target_path = Path(sys.argv[5])
+
+          checker_output = (
+              stdout_path.read_text(errors="replace")
+              + "\n"
+              + stderr_path.read_text(errors="replace")
+          )
+          matches = []
+          for pattern in (
+              r"\[MutationProofs\.ec: line (\d+)(?: \(|\])",
+              r"\[MutationProofs\.ec:(\d+)\]",
+          ):
+              matches.extend(int(value) for value in re.findall(pattern, checker_output))
+          if not matches:
+              raise SystemExit("checker did not report a MutationProofs.ec line")
+
+          reported_line = matches[-1]
+          lines = source_path.read_text().splitlines(keepends=True)
+          if reported_line < 1 or reported_line > len(lines):
+              raise SystemExit(f"reported line {reported_line} is outside MutationProofs.ec")
+
+          start = reported_line - 1
+          atomic = re.compile(
+              r"^(?P<indent>\s*)(?P<rcond>rcond[tf]\s+\^while);\s+first\s+by(?P<tail>.*)$"
+          )
+          match = atomic.match(lines[start].rstrip("\n"))
+
+          # Some checker versions point at a tactic inside the atomic block.
+          # Walk backward only to the nearest enclosing rcond proof.
+          if match is None:
+              for candidate in range(start - 1, -1, -1):
+                  candidate_match = atomic.match(lines[candidate].rstrip("\n"))
+                  if candidate_match is not None:
+                      start = candidate
+                      match = candidate_match
+                      break
+          if match is None:
+              raise SystemExit(
+                  f"line {reported_line} is not inside an atomic rcond proof"
+              )
+
+          indent = match.group("indent")
+          rcond = match.group("rcond")
+          tail = match.group("tail").strip()
+
+          if tail == "auto.":
+              lines[start] = f"{indent}{rcond}.\n{indent}auto.\n"
+              target_line = start + 2
+          else:
+              lines[start] = lines[start].replace("; first by", ".", 1)
+              base_indent = len(indent)
+              next_command = len(lines)
+              for candidate in range(start + 1, len(lines)):
+                  stripped = lines[candidate].strip()
+                  if not stripped:
+                      continue
+                  leading = len(lines[candidate]) - len(lines[candidate].lstrip())
+                  if leading <= base_indent:
+                      next_command = candidate
+                      break
+              target_line = next_command
+
+          source_path.write_text("".join(lines))
+          line_path.write_text(f"{target_line}\n")
+          target_path.write_text(
+              f"MutationProofs.ec:{target_line} "
+              f"(disposable residual for checker line {reported_line})\n"
+          )
+          PY
+
+          target_line="$(cat "$evidence/diagnostic-line.txt")"
+          cp "$proof_dir/MutationProofs.ec" \
+            "$evidence/MutationProofs-diagnostic.ec"
+
+          set +e
+          docker run --rm \
+            -e DIAGNOSTIC_LINE="$target_line" \
+            -v "$proof_dir:/proof" \
+            -w /proof \
+            "$EASYCRYPT_IMAGE" \
+            bash -lc '
+              set -euo pipefail
+              opam exec -- easycrypt config
+              opam exec -- why3 --version || true
+              echo "CHECKING DISPOSABLE MutationProofs.ec COPY UP TO LINE $DIAGNOSTIC_LINE"
+              opam exec -- easycrypt llm -upto "$DIAGNOSTIC_LINE" MutationProofs.ec
             ' >"$evidence/diagnostic-stdout.log" \
               2>"$evidence/diagnostic-stderr.log"
           status=$?
