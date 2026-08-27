@@ -87,7 +87,7 @@ jobs:
           evidence="$RUNNER_TEMP/easycrypt-evidence"
           mkdir -p "$proof_dir"
           cp -R "$source_dir"/. "$proof_dir"/
-          printf '%s\n' 'MutationProofs.ec:68' >"$evidence/diagnostic-target.txt"
+          printf '%s\n' 'MutationProofs.ec:83' >"$evidence/diagnostic-target.txt"
 
           set +e
           docker run --rm \
@@ -98,8 +98,8 @@ jobs:
               set -euo pipefail
               opam exec -- easycrypt config
               opam exec -- why3 --version || true
-              echo CHECKING MutationProofs.ec UP TO LINE 68
-              opam exec -- easycrypt llm -upto 68 MutationProofs.ec
+              echo CHECKING MutationProofs.ec UP TO LINE 83
+              opam exec -- easycrypt llm -upto 83 MutationProofs.ec
             ' >"$evidence/diagnostic-stdout.log" \
               2>"$evidence/diagnostic-stderr.log"
           status=$?
