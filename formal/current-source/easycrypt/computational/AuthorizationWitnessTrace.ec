@@ -291,7 +291,6 @@ proof.
     /witness_capability_tag_alice_history
     /witness_context_3 /capability_tag_known;
   cbv delta;
-  rewrite !inE;
   by smt().
 qed.
 
