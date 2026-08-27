@@ -127,8 +127,7 @@ proof.
       /genesis_authorization_fact /apply_authorization_fact_kind
       /member_tag_known /capability_tag_known /empty_authorization_state;
     cbv delta;
-    by rewrite !inE no_member_grant_in_empty
-      no_capability_grant_in_empty fset0U fsetU0.
+    by rewrite !inE no_capability_grant_in_empty.
   rcondt ^while; first by auto.
   rcondt ^while; first by auto.
   rcondt ^while; first by auto.
