@@ -15,6 +15,9 @@ lemma normalize_witness_base_signed_facts :
     facts = witness_base_signed_facts /\ creator = witness_alice ==>
     res = (true, witness_authorization_state_7)].
 proof.
-  rewrite -witness_signed_facts_7_eq_base.
-  exact normalize_witness_prefix_7.
+  conseq normalize_witness_prefix_7 => //.
+  move=> &hr [facts_hr creator_hr].
+  split.
+  + by rewrite witness_signed_facts_7_eq_base.
+  exact creator_hr.
 qed.
