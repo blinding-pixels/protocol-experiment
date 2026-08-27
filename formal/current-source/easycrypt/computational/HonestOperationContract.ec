@@ -59,11 +59,19 @@ proof.
   by rewrite /witness_honest_edit_operation.
 qed.
 
+lemma witness_honest_predecessor_set :
+  witness_honest_edit_envelope.`oe_direct_predecessors =
+    fset1 witness_base_node.
+proof.
+  by rewrite /witness_honest_edit_envelope /witness_edit_envelope.
+qed.
+
 lemma witness_honest_predecessor_elems :
   elems witness_honest_edit_envelope.`oe_direct_predecessors =
     [witness_base_node].
 proof.
-  by rewrite /witness_honest_edit_envelope /witness_edit_envelope.
+  rewrite witness_honest_predecessor_set.
+  exact (elems_fset1 witness_base_node).
 qed.
 
 lemma witness_honest_predecessors_exist :
