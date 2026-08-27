@@ -294,11 +294,11 @@ proof.
   rcondt 8; first by auto; rewrite /validation_success.
 
   rcondf 10; first by
-    auto;
-    smt(witness_honest_closure_matches_fact_ids).
+    auto=> />;
+    exact witness_honest_closure_matches_fact_ids.
   rcondf 10; first by
-    auto;
-    smt(witness_honest_observed_context_matches_fact_ids).
+    auto=> />;
+    exact witness_honest_observed_context_matches_fact_ids.
   rcondt 10; first by auto; rewrite /validation_success.
 
   wp.
