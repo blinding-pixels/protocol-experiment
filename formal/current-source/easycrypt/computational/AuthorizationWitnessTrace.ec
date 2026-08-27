@@ -230,7 +230,7 @@ proof.
   rewrite /witness_fact_3 /witness_authorization_state_2
     /witness_context_2 /witness_context_1
     /witness_fact_id_1 /witness_fact_id_2 /witness_fact_id_3.
-  by rewrite !inE; smt().
+  by smt().
 qed.
 
 lemma witness_fact_3_issuer_allowed :
