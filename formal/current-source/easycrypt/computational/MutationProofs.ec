@@ -62,5 +62,5 @@ proof.
       rewrite /minimal_noncanonical_operation /canonical_reencoding
         /defense_enabled /validation_success.
     auto.
-  + auto.
+  + islossless.
 qed.
