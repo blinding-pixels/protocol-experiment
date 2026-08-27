@@ -137,7 +137,7 @@ proof.
       empty_fact_ids_not_singleton;
     cbv delta;
     rewrite !inE no_capability_grant_in_empty !fset0U;
-    by cbv delta.
+    by smt().
   rcondt ^while; first by auto.
   rcondt ^while; first by auto.
   rcondt ^while; first by auto.
