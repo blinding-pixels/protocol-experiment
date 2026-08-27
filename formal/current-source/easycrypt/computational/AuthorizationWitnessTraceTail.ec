@@ -62,11 +62,16 @@ lemma witness_fact_4_kind_application :
   Some witness_authorization_state_4.
 proof.
   rewrite /apply_authorization_fact_kind /witness_fact_4
-    witness_puncture_tag_unknown_state_3
     /witness_authorization_state_3 /witness_authorization_state_4
+    /witness_capability_grant_alice_admin_entry
+    /witness_capability_grant_alice_history_entry
     /witness_capability_grant_alice_puncture_entry
-    /witness_context_4.
-  by [].
+    /witness_capability_tag_alice_admin
+    /witness_capability_tag_alice_history
+    /witness_capability_tag_alice_puncture
+    /witness_context_4 /capability_tag_known;
+  cbv delta;
+  by smt(in_fsetU in_fset1).
 qed.
 
 lemma witness_fact_4_transition :
