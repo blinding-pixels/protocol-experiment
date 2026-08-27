@@ -19,6 +19,35 @@ op signed_facts_for_ids
     then signed_fact :: signed_facts_for_ids rest ids
     else signed_facts_for_ids rest ids.
 
+(* Public computation equations for the two recursive fact-list projections.
+   These lemmas keep client proofs semantic: concrete witnesses can reduce one
+   list constructor at a time without depending on cross-theory unfolding. *)
+lemma fact_ids_of_signed_facts_nil :
+  fact_ids_of_signed_facts [] = fset0<:fact_id>.
+proof. by []. qed.
+
+lemma fact_ids_of_signed_facts_cons
+    (signed_fact : signed_authorization_fact)
+    (rest : signed_authorization_fact list) :
+  fact_ids_of_signed_facts (signed_fact :: rest) =
+    fset1 signed_fact.`saf_fact.`af_id `|`
+      fact_ids_of_signed_facts rest.
+proof. by []. qed.
+
+lemma signed_facts_for_ids_nil (ids : fact_id fset) :
+  signed_facts_for_ids [] ids = [].
+proof. by []. qed.
+
+lemma signed_facts_for_ids_cons
+    (signed_fact : signed_authorization_fact)
+    (rest : signed_authorization_fact list)
+    (ids : fact_id fset) :
+  signed_facts_for_ids (signed_fact :: rest) ids =
+    if signed_fact.`saf_fact.`af_id \in ids
+    then signed_fact :: signed_facts_for_ids rest ids
+    else signed_facts_for_ids rest ids.
+proof. by []. qed.
+
 op all_predecessors_exist_list
     (nodes : node_id fset)
     (predecessors : node_id list) : bool =

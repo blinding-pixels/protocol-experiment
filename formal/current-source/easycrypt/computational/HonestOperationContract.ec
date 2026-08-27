@@ -101,8 +101,8 @@ qed.
 lemma witness_base_fact_ids :
   fact_ids_of_signed_facts witness_base_signed_facts = witness_context_7.
 proof.
-  rewrite /witness_base_signed_facts.
-  rewrite /fact_ids_of_signed_facts
+  rewrite /witness_base_signed_facts
+    !fact_ids_of_signed_facts_cons fact_ids_of_signed_facts_nil
     /witness_signed_fact_1 /witness_signed_fact_2
     /witness_signed_fact_3 /witness_signed_fact_4
     /witness_signed_fact_5 /witness_signed_fact_6
@@ -122,8 +122,8 @@ lemma witness_base_signed_facts_for_context :
   signed_facts_for_ids witness_base_signed_facts witness_context_7 =
     witness_base_signed_facts.
 proof.
-  rewrite /witness_base_signed_facts.
-  rewrite /signed_facts_for_ids
+  rewrite /witness_base_signed_facts
+    !signed_facts_for_ids_cons signed_facts_for_ids_nil
     /witness_signed_fact_1 /witness_signed_fact_2
     /witness_signed_fact_3 /witness_signed_fact_4
     /witness_signed_fact_5 /witness_signed_fact_6
