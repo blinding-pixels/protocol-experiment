@@ -217,6 +217,50 @@ proof.
   by smt().
 qed.
 
+lemma witness_fact_3_shape_valid :
+  authorization_fact_shape_valid witness_fact_3.
+proof.
+  by rewrite /authorization_fact_shape_valid
+    /authorization_fact_shape_valid_kind /witness_fact_3.
+qed.
+
+lemma witness_fact_3_id_fresh :
+  witness_fact_3.`af_id \notin witness_authorization_state_2.`as_fact_ids.
+proof.
+  rewrite /witness_fact_3 /witness_authorization_state_2
+    /witness_context_2 /witness_context_1
+    /witness_fact_id_1 /witness_fact_id_2 /witness_fact_id_3.
+  by rewrite !inE; smt().
+qed.
+
+lemma witness_fact_3_issuer_allowed :
+  authorization_issuer_allowed
+    witness_authorization_state_2
+    witness_authorization_state_2
+    witness_alice
+    witness_fact_3.
+proof.
+  by rewrite /authorization_issuer_allowed /genesis_authorization_fact
+    /witness_fact_3 /witness_authorization_state_2.
+qed.
+
+lemma witness_fact_3_kind_application :
+  apply_authorization_fact_kind
+    witness_fact_3.`af_kind
+    witness_authorization_state_2
+    witness_fact_3 =
+  Some witness_authorization_state_3.
+proof.
+  rewrite /apply_authorization_fact_kind /witness_fact_3
+    /witness_authorization_state_2 /witness_authorization_state_3
+    /witness_capability_grant_alice_admin_entry
+    /witness_capability_grant_alice_history_entry
+    /witness_capability_tag_alice_admin
+    /witness_capability_tag_alice_history
+    /witness_context_3 /capability_tag_known.
+  by rewrite !inE; smt().
+qed.
+
 lemma witness_fact_3_transition :
   apply_authorization_fact
     witness_authorization_state_2
@@ -225,21 +269,9 @@ lemma witness_fact_3_transition :
     witness_fact_3 =
   Some witness_authorization_state_3.
 proof.
-  rewrite /witness_authorization_state_2 /witness_authorization_state_3
-    /witness_member_grant_alice_entry
-    /witness_capability_grant_alice_admin_entry
-    /witness_capability_grant_alice_history_entry
-    /witness_fact_3 /witness_context_1 /witness_context_2 /witness_context_3
-    /witness_alice /witness_capability_tag_alice_admin
-    /witness_capability_tag_alice_history
-    /witness_fact_id_1 /witness_fact_id_2 /witness_fact_id_3
-    /apply_authorization_fact /authorization_fact_shape_valid
-    /authorization_fact_shape_valid_kind /authorization_issuer_allowed
-    /genesis_authorization_fact /apply_authorization_fact_kind
-    /capability_tag_known /empty_authorization_state;
-  cbv delta;
-  rewrite !inE;
-  by smt().
+  rewrite /apply_authorization_fact witness_fact_3_shape_valid
+    witness_fact_3_id_fresh witness_fact_3_issuer_allowed.
+  exact witness_fact_3_kind_application.
 qed.
 
 lemma witness_fact_4_transition :
