@@ -157,6 +157,18 @@ proof.
   by rewrite /witness_fact_id_2 /witness_fact_id_1; smt().
 qed.
 
+lemma witness_fact_id_3_neq_1 :
+  witness_fact_id_3 <> witness_fact_id_1.
+proof.
+  by rewrite /witness_fact_id_3 /witness_fact_id_1; smt().
+qed.
+
+lemma witness_fact_id_3_neq_2 :
+  witness_fact_id_3 <> witness_fact_id_2.
+proof.
+  by rewrite /witness_fact_id_3 /witness_fact_id_2; smt().
+qed.
+
 lemma no_member_grant_in_empty_trace (tag : member_tag) :
   ! (exists (entry : member_grant_entry),
        entry \in fset0<:member_grant_entry> /\
@@ -182,7 +194,7 @@ lemma witness_fact_1_transition :
   Some witness_authorization_state_1.
 proof.
   rewrite /witness_authorization_state_0 /witness_authorization_state_1
-    /witness_member_grant_alice_entry
+   /witness_member_grant_alice_entry
     /witness_fact_1 /witness_context_0 /witness_context_1
     /witness_alice /witness_member_tag_alice /witness_fact_id_1
     /apply_authorization_fact /authorization_fact_shape_valid
@@ -229,7 +241,7 @@ lemma witness_fact_3_id_fresh :
 proof.
   rewrite /witness_fact_3 /witness_authorization_state_2
     /witness_context_2 /witness_context_1.
-  by rewrite /witness_fact_id_1 /witness_fact_id_2 /witness_fact_id_3; smt().
+  by rewrite witness_fact_id_3_neq_1 witness_fact_id_3_neq_2.
 qed.
 
 lemma witness_fact_3_issuer_allowed :
@@ -272,4 +284,3 @@ proof.
     witness_fact_3_id_fresh witness_fact_3_issuer_allowed.
   exact witness_fact_3_kind_application.
 qed.
-
