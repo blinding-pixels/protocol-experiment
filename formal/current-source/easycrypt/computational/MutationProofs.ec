@@ -90,7 +90,7 @@ proof.
       /genesis_authorization_fact /apply_authorization_fact_kind
       /member_tag_known /empty_authorization_state;
     cbv delta;
-    rewrite !inE; auto.
+    rewrite !inE; smt(in_fset0).
   rcondt ^while; first by auto.
   rcondt ^while; first by auto.
   rcondt ^while; first by auto.
