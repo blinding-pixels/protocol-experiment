@@ -26,6 +26,15 @@ proof.
   by rewrite in_fset0 in entry_in.
 qed.
 
+lemma empty_fact_ids_not_singleton (id : fact_id) :
+  fset0<:fact_id> <> fset1 id.
+proof.
+  move=> empty_is_singleton.
+  have id_in_empty : id \in fset0<:fact_id> by
+    rewrite empty_is_singleton in_fset1.
+  by rewrite in_fset0 in id_in_empty.
+qed.
+
 (* A minimal noncanonical candidate reaches the production validator but is
    rejected before authorization normalization.  This proves the canonical
    check is an executable, non-vacuous branch of the same ValidateOperation
@@ -127,7 +136,10 @@ proof.
       /genesis_authorization_fact /apply_authorization_fact_kind
       /member_tag_known /capability_tag_known /empty_authorization_state;
     cbv delta;
-    by rewrite !inE no_member_grant_in_empty fset0U.
+    rewrite !inE no_member_grant_in_empty fset0U
+      empty_fact_ids_not_singleton;
+    cbv delta;
+    by rewrite !inE no_capability_grant_in_empty.
   rcondt ^while; first by auto.
   rcondt ^while; first by auto.
   rcondt ^while; first by auto.
