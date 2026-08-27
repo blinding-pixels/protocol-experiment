@@ -91,10 +91,11 @@ lemma witness_honest_exact_closure :
     witness_honest_edit_envelope.`oe_direct_predecessors =
   Some witness_context_7.
 proof.
-  by rewrite /exact_predecessor_closure
+  rewrite /exact_predecessor_closure
+    witness_honest_predecessor_elems
     /witness_base_state_exact /witness_protocol_state
-    /witness_honest_edit_envelope /witness_edit_envelope
-    elems_fset1 /= /witness_closure_map fsetU0.
+    /witness_closure_map /=.
+  by rewrite fsetU0.
 qed.
 
 lemma witness_base_fact_ids :
