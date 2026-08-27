@@ -13,5 +13,5 @@ proof.
     inline TestSignature.verify.
     auto => />.
     smt(size_behead size_ge0).
-  - auto.
+  - by auto; smt(size_ge0).
 qed.
