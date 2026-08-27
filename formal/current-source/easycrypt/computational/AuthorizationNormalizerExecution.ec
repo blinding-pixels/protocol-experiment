@@ -43,6 +43,10 @@ proof.
   auto;
   rewrite /witness_signed_facts_1
     /witness_signed_fact_1 /witness_signed_fact_of
-    witness_empty_state_0 witness_initial_snapshots;
-  by smt().
+    witness_empty_state_0 witness_initial_snapshots.
+  move=> &hr [facts_hr creator_hr].
+  rewrite facts_hr creator_hr /=
+    witness_fact_1_context_projection
+    witness_lookup_context_0 witness_fact_1_transition.
+  by [].
 qed.
