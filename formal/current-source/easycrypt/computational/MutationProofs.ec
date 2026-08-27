@@ -2,6 +2,15 @@ require import AllCore List FSet.
 require import ProtocolTypes CanonicalEncoding ProtocolPrimitives AuthorizationState.
 require import ProtocolChecks ProtocolOracles UnauthorizedGame WitnessFixtures MutationWitnesses.
 
+lemma no_member_grant_in_empty (tag : member_tag) :
+  ! (exists (entry : member_grant_entry),
+       entry \in fset0<:member_grant_entry> /\
+       entry.`mge_tag = tag).
+proof.
+  move=> [entry [entry_in _]].
+  by rewrite in_fset0 in entry_in.
+qed.
+
 (* A minimal noncanonical candidate reaches the production validator but is
    rejected before authorization normalization.  This proves the canonical
    check is an executable, non-vacuous branch of the same ValidateOperation
@@ -90,7 +99,7 @@ proof.
       /genesis_authorization_fact /apply_authorization_fact_kind
       /member_tag_known /empty_authorization_state;
     cbv delta;
-    rewrite !inE; smt(in_fset0).
+    rewrite !inE no_member_grant_in_empty.
   rcondt ^while; first by auto.
   rcondt ^while; first by auto.
   rcondt ^while; first by auto.
