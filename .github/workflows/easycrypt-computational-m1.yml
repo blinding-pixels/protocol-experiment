@@ -118,7 +118,7 @@ jobs:
           suffix = "  by smt().\nqed.\n"
           if not text.endswith(suffix):
               raise SystemExit("normalizer final postcondition tactic was not found")
-          path.write_text(text[:-len(suffix)] + "qed.\n")
+          path.write_text(text[:-len(suffix)])
           PY
 
           printf '%s\n' \
