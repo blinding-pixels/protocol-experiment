@@ -14,6 +14,18 @@ proof.
   by rewrite in_fset0 in entry_in.
 qed.
 
+lemma no_capability_grant_in_empty (tag : capability_tag) :
+  ! (exists (entry : capability_grant_entry),
+       entry \in fset0<:capability_grant_entry> /\
+       entry.`cge_tag = tag).
+proof.
+  case (exists (entry : capability_grant_entry),
+          entry \in fset0<:capability_grant_entry> /\
+          entry.`cge_tag = tag) =>
+    [[entry [entry_in _]] | //].
+  by rewrite in_fset0 in entry_in.
+qed.
+
 (* A minimal noncanonical candidate reaches the production validator but is
    rejected before authorization normalization.  This proves the canonical
    check is an executable, non-vacuous branch of the same ValidateOperation
@@ -103,7 +115,20 @@ proof.
       /member_tag_known /empty_authorization_state;
     cbv delta;
     by rewrite !inE no_member_grant_in_empty.
-  rcondt ^while; first by auto.
+  rcondt ^while.
+  + auto;
+    rewrite /witness_fact_1 /witness_fact_2
+      /witness_context_0 /witness_context_1 /witness_alice
+      /witness_member_tag_alice /witness_capability_tag_alice_admin
+      /witness_fact_id_1 /witness_fact_id_2
+      /fact_signature_message /authorization_snapshot_lookup
+      /apply_authorization_fact /authorization_fact_shape_valid
+      /authorization_fact_shape_valid_kind /authorization_issuer_allowed
+      /genesis_authorization_fact /apply_authorization_fact_kind
+      /member_tag_known /capability_tag_known /empty_authorization_state;
+    cbv delta;
+    by rewrite !inE no_member_grant_in_empty
+      no_capability_grant_in_empty fset0U fsetU0.
   rcondt ^while; first by auto.
   rcondt ^while; first by auto.
   rcondt ^while; first by auto.
