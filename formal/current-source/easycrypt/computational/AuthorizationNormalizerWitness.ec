@@ -99,14 +99,28 @@ proof.
   by smt(in_fset0 in_fset1).
 qed.
 
+lemma witness_context_0_neq_2 :
+  witness_context_0 <> witness_context_2.
+proof.
+  rewrite /witness_context_0 /witness_context_2 /witness_context_1
+    /witness_fact_id_1 /witness_fact_id_2.
+  smt(in_fset0 in_fset1 in_fsetU).
+qed.
+
+lemma witness_context_1_neq_2 :
+  witness_context_1 <> witness_context_2.
+proof.
+  rewrite /witness_context_2 /witness_context_1
+    /witness_fact_id_1 /witness_fact_id_2.
+  smt(in_fset1 in_fsetU).
+qed.
+
 lemma witness_lookup_context_2 :
   authorization_snapshot_lookup
     witness_context_2 witness_snapshots_2 =
   Some witness_authorization_state_2.
 proof.
-  rewrite /authorization_snapshot_lookup /witness_snapshots_2
+  by rewrite /authorization_snapshot_lookup /witness_snapshots_2
     /witness_snapshot_0 /witness_snapshot_1 /witness_snapshot_2
-    /witness_context_0 /witness_context_1 /witness_context_2
-    /witness_fact_id_1 /witness_fact_id_2.
-  by smt(in_fset0 in_fset1 in_fsetU).
+    witness_context_0_neq_2 witness_context_1_neq_2.
 qed.
