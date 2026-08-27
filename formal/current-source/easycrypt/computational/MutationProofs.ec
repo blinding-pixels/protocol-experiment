@@ -64,5 +64,5 @@ proof.
     rcondf 12; first by
       auto;
       rewrite /validation_error.
-    auto; rewrite /validation_error.
+    auto; rewrite /validation_error; auto.
 qed.
