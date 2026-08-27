@@ -46,5 +46,6 @@ proof.
     witness_empty_state_0 witness_initial_snapshots
     witness_fact_1_context_projection
     witness_lookup_context_0 witness_fact_1_transition
-    witness_extend_snapshots_1.
+    witness_extend_snapshots_1;
+  by smt().
 qed.
