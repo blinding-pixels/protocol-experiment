@@ -287,8 +287,12 @@ proof.
     /witness_authorization_state_2 /witness_authorization_state_3
     /witness_capability_grant_alice_admin_entry
     /witness_capability_grant_alice_history_entry
-    /witness_context_3.
-  by [].
+    /witness_capability_tag_alice_admin
+    /witness_capability_tag_alice_history
+    /witness_context_3 /capability_tag_known;
+  cbv delta;
+  rewrite !inE;
+  by smt().
 qed.
 
 lemma witness_fact_3_transition :
