@@ -7,7 +7,10 @@ lemma no_member_grant_in_empty (tag : member_tag) :
        entry \in fset0<:member_grant_entry> /\
        entry.`mge_tag = tag).
 proof.
-  move=> [entry [entry_in _]].
+  case (exists (entry : member_grant_entry),
+          entry \in fset0<:member_grant_entry> /\
+          entry.`mge_tag = tag) =>
+    [[entry [entry_in _]] | //].
   by rewrite in_fset0 in entry_in.
 qed.
 
