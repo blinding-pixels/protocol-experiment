@@ -61,6 +61,9 @@ proof.
       auto;
       rewrite /minimal_noncanonical_operation /canonical_reencoding
         /defense_enabled /validation_success.
-    auto.
+    rcondf 12; first by
+      auto;
+      rewrite /validation_error.
+    auto; rewrite /validation_error.
   + islossless.
 qed.
