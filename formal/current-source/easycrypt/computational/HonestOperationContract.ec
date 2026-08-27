@@ -43,10 +43,7 @@ lemma witness_sign_honest_edit_operation :
     ==>
     res = witness_honest_edit_operation].
 proof.
-  proc.
-  inline TestSignature.sign.
-  auto;
-  rewrite /witness_honest_edit_operation.
+  by proc; inline TestSignature.sign; auto.
 qed.
 
 lemma witness_honest_edit_decodes :
