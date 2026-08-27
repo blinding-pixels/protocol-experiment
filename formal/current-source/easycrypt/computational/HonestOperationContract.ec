@@ -171,7 +171,7 @@ proof.
   rewrite /member_active /witness_authorization_state_7
     /witness_member_grant_alice_entry
     /witness_member_grant_bob_old_entry
-    /principal_matches /defense_enabled.
+    /principal_matches.
   smt(in_fsetU in_fset1 in_fset0).
 qed.
 
@@ -181,7 +181,7 @@ lemma witness_bob_old_edit_active_state_7 :
 proof.
   rewrite /capability_active /witness_authorization_state_7
     /witness_capability_grant_bob_old_edit_entry
-    /principal_matches /defense_enabled.
+    /principal_matches.
   smt(in_fsetU in_fset1 in_fset0).
 qed.
 
@@ -191,7 +191,7 @@ lemma witness_honest_required_capability :
     witness_honest_edit_envelope.`oe_operation_body = CapEdit.
 proof.
   by rewrite /witness_honest_edit_envelope /witness_edit_envelope
-    /witness_edit_body_one /required_capability_for_operation.
+    /witness_edit_body_one /required_capability_for_operation /=.
 qed.
 
 lemma witness_honest_operation_body_valid :
@@ -199,7 +199,7 @@ lemma witness_honest_operation_body_valid :
 proof.
   by rewrite /witness_honest_edit_envelope /witness_edit_envelope
     /witness_edit_body_one /operation_body_valid_for_envelope
-    /operation_body_kind /operation_body_valid.
+    /operation_body_kind /operation_body_valid /=.
 qed.
 
 lemma witness_honest_authorization_digest :
