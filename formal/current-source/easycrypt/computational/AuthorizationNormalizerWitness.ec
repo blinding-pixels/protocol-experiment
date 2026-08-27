@@ -12,7 +12,6 @@ proof.
   - move=> z.
     inline TestSignature.verify.
     auto => />.
-    rewrite size_behead.
-    smt(size_ge0).
+    smt(size_behead size_ge0).
   - auto.
 qed.
