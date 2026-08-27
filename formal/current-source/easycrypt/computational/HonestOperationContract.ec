@@ -168,20 +168,21 @@ qed.
 lemma witness_bob_old_member_active_state_7 :
   member_active Production witness_authorization_state_7 witness_bob_old.
 proof.
-  rewrite /member_active /witness_authorization_state_7.
-  exists witness_member_grant_bob_old_entry.
-  by rewrite production_principal_matching_is_exact
-    /witness_member_grant_bob_old_entry !inE.
+  rewrite /member_active /witness_authorization_state_7
+    /witness_member_grant_alice_entry
+    /witness_member_grant_bob_old_entry
+    /principal_matches /defense_enabled.
+  smt(in_fsetU in_fset1 in_fset0).
 qed.
 
 lemma witness_bob_old_edit_active_state_7 :
   capability_active
     Production witness_authorization_state_7 witness_bob_old CapEdit.
 proof.
-  rewrite /capability_active /witness_authorization_state_7.
-  exists witness_capability_grant_bob_old_edit_entry.
-  by rewrite production_principal_matching_is_exact
-    /witness_capability_grant_bob_old_edit_entry !inE.
+  rewrite /capability_active /witness_authorization_state_7
+    /witness_capability_grant_bob_old_edit_entry
+    /principal_matches /defense_enabled.
+  smt(in_fsetU in_fset1 in_fset0).
 qed.
 
 lemma witness_honest_required_capability :
