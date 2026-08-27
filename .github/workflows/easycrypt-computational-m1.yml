@@ -89,8 +89,8 @@ jobs:
           cp -R "$source_dir"/. "$proof_dir"/
 
           # Change only the disposable checker copy.  Removing `first by`
-          # lets `llm -upto` print the pure side-condition that remains after
-          # symbolic execution, without weakening or editing the committed proof.
+          # lets `llm -upto` show whether full call-by-value reduction closes
+          # the concrete side-condition, without editing the committed proof.
           python3 - "$proof_dir/MutationProofs.ec" <<'PY'
           from pathlib import Path
           import sys
@@ -116,14 +116,15 @@ jobs:
               /apply_authorization_fact /authorization_fact_shape_valid
               /authorization_fact_shape_valid_kind /authorization_issuer_allowed
               /genesis_authorization_fact /apply_authorization_fact_kind
-              /member_tag_known /empty_authorization_state.
+              /member_tag_known /empty_authorization_state;
+            cbv delta.
           """
           if text.count(old) != 1:
               raise SystemExit("diagnostic proof block was not found exactly once")
           path.write_text(text.replace(old, new, 1))
           PY
 
-          printf '%s\n' 'MutationProofs.ec:91 (disposable diagnostic copy)' \
+          printf '%s\n' 'MutationProofs.ec:92 (disposable cbv diagnostic)' \
             >"$evidence/diagnostic-target.txt"
           cp "$proof_dir/MutationProofs.ec" \
             "$evidence/MutationProofs-diagnostic.ec"
@@ -137,8 +138,8 @@ jobs:
               set -euo pipefail
               opam exec -- easycrypt config
               opam exec -- why3 --version || true
-              echo CHECKING DISPOSABLE MutationProofs.ec COPY UP TO LINE 91
-              opam exec -- easycrypt llm -upto 91 MutationProofs.ec
+              echo CHECKING DISPOSABLE MutationProofs.ec COPY UP TO LINE 92
+              opam exec -- easycrypt llm -upto 92 MutationProofs.ec
             ' >"$evidence/diagnostic-stdout.log" \
               2>"$evidence/diagnostic-stderr.log"
           status=$?
