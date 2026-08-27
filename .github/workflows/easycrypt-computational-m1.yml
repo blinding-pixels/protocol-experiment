@@ -114,15 +114,15 @@ jobs:
 
           path = Path(sys.argv[1])
           text = path.read_text()
-          old = "    by rewrite !inE no_member_grant_in_empty fset0U.\n"
-          new = "    rewrite !inE no_member_grant_in_empty fset0U.\n"
+          old = "    by rewrite !inE no_capability_grant_in_empty.\n"
+          new = "    rewrite !inE no_capability_grant_in_empty.\n"
           if text.count(old) != 1:
-              raise SystemExit("fact-2 closing tactic was not found exactly once")
+              raise SystemExit("fact-2 final tactic was not found exactly once")
           path.write_text(text.replace(old, new, 1))
           PY
 
           printf '%s\n' \
-            'MutationProofs.ec:130 (disposable fact-2 residual)' \
+            'MutationProofs.ec:139 (disposable fact-2 final residual)' \
             >"$evidence/diagnostic-target.txt"
           cp "$proof_dir/MutationProofs.ec" \
             "$evidence/MutationProofs-diagnostic.ec"
@@ -136,8 +136,8 @@ jobs:
               set -euo pipefail
               opam exec -- easycrypt config
               opam exec -- why3 --version || true
-              echo CHECKING DISPOSABLE MutationProofs.ec COPY UP TO LINE 130
-              opam exec -- easycrypt llm -upto 130 MutationProofs.ec
+              echo CHECKING DISPOSABLE MutationProofs.ec COPY UP TO LINE 139
+              opam exec -- easycrypt llm -upto 139 MutationProofs.ec
             ' >"$evidence/diagnostic-stdout.log" \
               2>"$evidence/diagnostic-stderr.log"
           status=$?
