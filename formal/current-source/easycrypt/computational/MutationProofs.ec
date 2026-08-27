@@ -65,5 +65,4 @@ proof.
       auto;
       rewrite /validation_error.
     auto; rewrite /validation_error.
-  + islossless.
 qed.
