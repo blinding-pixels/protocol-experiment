@@ -120,7 +120,7 @@ lemma witness_lookup_context_2 :
     witness_context_2 witness_snapshots_2 =
   Some witness_authorization_state_2.
 proof.
-  by rewrite /authorization_snapshot_lookup /witness_snapshots_2
-    /witness_snapshot_0 /witness_snapshot_1 /witness_snapshot_2
-    witness_context_0_neq_2 witness_context_1_neq_2.
+  rewrite /witness_snapshots_2
+    /witness_snapshot_0 /witness_snapshot_1 /witness_snapshot_2.
+  by smt(witness_context_0_neq_2 witness_context_1_neq_2).
 qed.
