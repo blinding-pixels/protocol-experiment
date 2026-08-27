@@ -101,7 +101,7 @@ qed.
 lemma witness_base_fact_ids :
   fact_ids_of_signed_facts witness_base_signed_facts = witness_context_7.
 proof.
-  rewrite /witness_base_signed_facts
+  rewrite /witness_base_signed_facts /fact_ids_of_signed_facts
     /witness_signed_fact_1 /witness_signed_fact_2
     /witness_signed_fact_3 /witness_signed_fact_4
     /witness_signed_fact_5 /witness_signed_fact_6
