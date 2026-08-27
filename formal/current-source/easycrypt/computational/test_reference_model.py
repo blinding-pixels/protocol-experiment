@@ -10,6 +10,20 @@ class T(unittest.TestCase):
    f=Fact(i,kind,self.a,tuple(x.id for x in fs),target,cap,tag).signed(self.k); fs.append(f)
   add("f1",FKind.GM,self.a,"ma"); add("f2",FKind.GC,self.a,"aa",Cap.ADMIN); add("f3",FKind.GC,self.a,"ah",Cap.HISTORY); add("f4",FKind.GC,self.a,"ap",Cap.PUNCTURE); add("f5",FKind.GC,self.a,"ab",Cap.BEE); add("f6",FKind.GM,self.b,"mb"); add("f7",FKind.GC,self.b,"be",Cap.EDIT)
   self.f=tuple(fs); self.auth=norm(self.f,self.a,self.k); self.ids=tuple(x.id for x in self.f); self.v=View(self.f,self.ids); self.s=State(self.a,"doc",frozenset({"n"}),{"n":frozenset(self.ids)})
+ def test_00_base_authorization_trace(self):
+  expected=(
+   Auth(),
+   Auth(members=(("ma",self.a),),ids=("f1",)),
+   Auth(members=(("ma",self.a),),caps=(("aa",self.a,Cap.ADMIN),),ids=("f1","f2")),
+   Auth(members=(("ma",self.a),),caps=(("aa",self.a,Cap.ADMIN),("ah",self.a,Cap.HISTORY)),ids=("f1","f2","f3")),
+   Auth(members=(("ma",self.a),),caps=(("aa",self.a,Cap.ADMIN),("ah",self.a,Cap.HISTORY),("ap",self.a,Cap.PUNCTURE)),ids=("f1","f2","f3","f4")),
+   Auth(members=(("ma",self.a),),caps=(("aa",self.a,Cap.ADMIN),("ab",self.a,Cap.BEE),("ah",self.a,Cap.HISTORY),("ap",self.a,Cap.PUNCTURE)),ids=("f1","f2","f3","f4","f5")),
+   Auth(members=(("ma",self.a),("mb",self.b)),caps=(("aa",self.a,Cap.ADMIN),("ab",self.a,Cap.BEE),("ah",self.a,Cap.HISTORY),("ap",self.a,Cap.PUNCTURE)),ids=("f1","f2","f3","f4","f5","f6")),
+   Auth(members=(("ma",self.a),("mb",self.b)),caps=(("aa",self.a,Cap.ADMIN),("ab",self.a,Cap.BEE),("ah",self.a,Cap.HISTORY),("ap",self.a,Cap.PUNCTURE),("be",self.b,Cap.EDIT)),ids=self.ids),
+  )
+  for prefix_length, expected_state in enumerate(expected):
+   with self.subTest(prefix_length=prefix_length):
+    self.assertEqual(norm(self.f[:prefix_length],self.a,self.k),expected_state)
  def fact(self,i,kind,ctx,target=None,cap=None,tag=None,obs=()): return Fact(i,kind,self.a,ctx,target,cap,tag,obs).signed(self.k)
  def env(self,**kw):
   d=dict(domain=DOMAIN,version=VERSION,doc="doc",oid="o",author=self.b,cap=Cap.EDIT,preds=("n",),adigest=self.auth.digest(),kind=Kind.EDIT,body={"action":"edit","payload":"x"},nonce="q"); d.update(kw); return Envelope(**d)
