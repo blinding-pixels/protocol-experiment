@@ -2,7 +2,7 @@ require import AllCore List FSet.
 require import ProtocolTypes CanonicalEncoding ProtocolPrimitives AuthorizationState.
 require import WitnessFixtures.
 
-(* Concrete mathematical ledger for the seven-fact honest base fixture.
+*J Concrete mathematical ledger for the seven-fact honest base fixture.
    The Python reference model checks the same prefixes independently. *)
 
 op witness_member_grant_alice_entry : member_grant_entry =
@@ -284,7 +284,6 @@ lemma witness_fact_3_kind_application :
   Some witness_authorization_state_3.
 proof.
   rewrite /apply_authorization_fact_kind /witness_fact_3
-    witness_history_tag_unknown_state_2
     /witness_authorization_state_2 /witness_authorization_state_3
     /witness_capability_grant_alice_admin_entry
     /witness_capability_grant_alice_history_entry
