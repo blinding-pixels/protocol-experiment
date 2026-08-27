@@ -89,7 +89,7 @@ proof.
       /authorization_fact_shape_valid_kind /authorization_issuer_allowed
       /genesis_authorization_fact /apply_authorization_fact_kind
       /member_tag_known /empty_authorization_state;
-    auto.
+    rewrite !inE; auto.
   rcondt ^while; first by auto.
   rcondt ^while; first by auto.
   rcondt ^while; first by auto.
