@@ -220,10 +220,71 @@ proof.
     /witness_honest_edit_envelope /witness_edit_envelope.
 qed.
 
-(* The concrete honest operation traverses the public production entry point,
-   including decode/re-encode checks, and is accepted.  The authorization
-   loop is discharged only through its separately checked seven-fact
-   normalization contract. *)
+(* First discharge the decoded production suffix.  The proof follows the
+   honest branch of every executable check, then uses the separately checked
+   seven-fact normalizer contract at the only remaining procedure call. *)
+lemma witness_honest_validate_decoded :
+  hoare [ValidateOperation(TestSignature).validate_decoded :
+       mode = Production
+    /\ signed_operation = witness_honest_edit_operation
+    /\ envelope = witness_honest_edit_envelope
+    /\ view = witness_base_view_exact
+    /\ state = witness_base_state_exact
+    ==>
+    res.`vr_accepted].
+proof.
+  proc.
+  inline TestSignature.verify.
+
+  rcondf 8; first by
+    auto;
+    rewrite /validation_success /defense_enabled;
+    smt(witness_honest_domain_version).
+  rcondf 8; first by
+    auto;
+    rewrite /validation_success /defense_enabled;
+    smt(witness_honest_document_binding).
+  rcondf 8; first by
+    auto;
+    rewrite /validation_success /defense_enabled;
+    smt(witness_honest_freshness).
+  rcondf 8; first by
+    auto;
+    rewrite /validation_success;
+    smt(witness_honest_predecessors_exist).
+  rcondt 8; first by auto; rewrite /validation_success.
+
+  rcondf 10; first by
+    auto;
+    rewrite /validation_success /defense_enabled
+      /witness_base_view_exact /witness_public_view
+      witness_honest_exact_closure witness_base_fact_ids.
+  rcondf 10; first by
+    auto;
+    rewrite /validation_success /defense_enabled
+      /witness_base_view_exact /witness_public_view
+      witness_base_fact_ids.
+  rcondt 10; first by auto; rewrite /validation_success.
+
+  wp.
+  call (normalize_witness_base_signed_facts).
+  auto;
+  rewrite witness_honest_authorization_digest
+    witness_honest_author_key_binding
+    witness_bob_old_member_active_state_7
+    witness_bob_old_edit_active_state_7
+    witness_honest_required_capability
+    witness_honest_operation_body_valid
+    /witness_base_view_exact /witness_public_view
+    /witness_base_state_exact /witness_protocol_state
+    /witness_honest_edit_operation
+    /witness_honest_edit_envelope /witness_edit_envelope
+    /witness_edit_body_one
+    /defense_enabled /validation_success /validation_error.
+qed.
+
+(* The final theorem uses the public production entry point, so the canonical
+   decoding and re-encoding prefix is checked before the decoded contract. *)
 lemma witness_honest_operation_accepted &m :
   Pr[
     ValidateOperation(TestSignature).validate(
@@ -244,28 +305,14 @@ proof.
        res.`vr_accepted)
     => //.
   proc.
-  inline ValidateOperation(TestSignature).validate_decoded
-    TestSignature.verify.
-  ecall (normalize_witness_base_signed_facts).
-  auto;
-  rewrite witness_honest_edit_decodes
-    witness_honest_edit_is_canonical
-    witness_honest_predecessors_exist
-    witness_honest_exact_closure
-    witness_base_fact_ids
-    witness_honest_domain_version
-    witness_honest_document_binding
-    witness_honest_freshness
-    witness_honest_authorization_digest
-    witness_honest_author_key_binding
-    witness_bob_old_member_active_state_7
-    witness_bob_old_edit_active_state_7
-    witness_honest_required_capability
-    witness_honest_operation_body_valid
-    /witness_base_view_exact /witness_public_view
-    /witness_base_state_exact /witness_protocol_state
-    /witness_honest_edit_operation
-    /witness_honest_edit_envelope /witness_edit_envelope
-    /witness_edit_body_one
-    /defense_enabled /validation_success /validation_error.
+  rcondf 10; first by
+    auto;
+    rewrite witness_honest_edit_decodes /validation_success.
+  rcondf 11; first by
+    auto;
+    rewrite witness_honest_edit_is_canonical
+      /defense_enabled /validation_success.
+  rcondt 11; first by auto; rewrite /validation_success.
+  call (witness_honest_validate_decoded).
+  auto; rewrite witness_honest_edit_decodes.
 qed.
