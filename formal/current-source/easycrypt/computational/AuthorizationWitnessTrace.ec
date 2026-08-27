@@ -194,7 +194,7 @@ lemma witness_fact_1_transition :
   Some witness_authorization_state_1.
 proof.
   rewrite /witness_authorization_state_0 /witness_authorization_state_1
-    /witness_member_grant_alice_entry
+   /witness_member_grant_alice_entry
     /witness_fact_1 /witness_context_0 /witness_context_1
     /witness_alice /witness_member_tag_alice /witness_fact_id_1
     /apply_authorization_fact /authorization_fact_shape_valid
@@ -264,6 +264,18 @@ proof.
     /witness_fact_3 witness_alice_active_state_2.
 qed.
 
+lemma witness_history_tag_unknown_state_2 :
+  capability_tag_known
+    witness_authorization_state_2
+    witness_capability_tag_alice_history = false.
+proof.
+  rewrite /capability_tag_known /witness_authorization_state_2
+    /witness_capability_grant_alice_admin_entry
+    /witness_capability_tag_alice_admin
+    /witness_capability_tag_alice_history.
+  smt(in_fset1).
+qed.
+
 lemma witness_fact_3_kind_application :
   apply_authorization_fact_kind
     witness_fact_3.`af_kind
@@ -272,13 +284,12 @@ lemma witness_fact_3_kind_application :
   Some witness_authorization_state_3.
 proof.
   rewrite /apply_authorization_fact_kind /witness_fact_3
+    witness_history_tag_unknown_state_2
     /witness_authorization_state_2 /witness_authorization_state_3
     /witness_capability_grant_alice_admin_entry
     /witness_capability_grant_alice_history_entry
-    /witness_capability_tag_alice_admin
-    /witness_capability_tag_alice_history
-    /witness_context_3 /capability_tag_known.
-  by smt().
+    /witness_context_3.
+  by [].
 qed.
 
 lemma witness_fact_3_transition :
