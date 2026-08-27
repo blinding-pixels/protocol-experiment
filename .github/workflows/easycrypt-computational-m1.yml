@@ -78,7 +78,7 @@ jobs:
             --format '{{json .RepoDigests}}' \
             | tee "$evidence/image-repo-digests.txt"
 
-      - name: Diagnose active EasyCrypt proof
+      - name: Expose second authorization residual
         shell: bash
         run: |
           set -euo pipefail
@@ -88,164 +88,47 @@ jobs:
           mkdir -p "$proof_dir"
           cp -R "$source_dir"/. "$proof_dir"/
 
-          # First ask the pinned checker for the active failing source line.
-          # The expected failure is recorded as evidence and never changes the
-          # committed proof source.
           set +e
           docker run --rm \
             -v "$proof_dir:/proof" \
             -w /proof \
             "$EASYCRYPT_IMAGE" \
-            bash -lc '
-              set -euo pipefail
-              opam exec -- easycrypt config
-              opam exec -- why3 --version || true
-              opam exec -- easycrypt compile -no-eco MutationProofs.ec
-            ' >"$evidence/baseline-stdout.log" \
-              2>"$evidence/baseline-stderr.log"
+            bash -lc 'opam exec -- easycrypt compile -no-eco MutationProofs.ec' \
+            >"$evidence/baseline-stdout.log" \
+            2>"$evidence/baseline-stderr.log"
           baseline_status=$?
           set -e
-          printf '%s\n' "$baseline_status" \
-            >"$evidence/baseline-exit-status.txt"
+          printf '%s\n' "$baseline_status" >"$evidence/baseline-exit-status.txt"
           cat "$evidence/baseline-stdout.log"
           cat "$evidence/baseline-stderr.log" >&2
 
           if [ "$baseline_status" -eq 0 ]; then
-            printf '%s\n' \
-              'MutationProofs.ec already closes under the pinned checker' \
+            printf '%s\n' 'MutationProofs.ec already closes' \
               >"$evidence/diagnostic-target.txt"
             exit 0
           fi
 
-          # Open only the nearest rcond proof preceding the checker span.
-          # Atomic `first by` and explicit bullet forms are both recognized;
-          # selection is by source proximity, never by preferred syntax.
-          python3 - \
-            "$proof_dir/MutationProofs.ec" \
-            "$evidence/baseline-stdout.log" \
-            "$evidence/baseline-stderr.log" \
-            "$evidence/diagnostic-line.txt" \
-            "$evidence/diagnostic-target.txt" <<'PY'
+          python3 - "$proof_dir/MutationProofs.ec" <<'PY'
           from pathlib import Path
-          import re
           import sys
 
-          source_path = Path(sys.argv[1])
-          stdout_path = Path(sys.argv[2])
-          stderr_path = Path(sys.argv[3])
-          line_path = Path(sys.argv[4])
-          target_path = Path(sys.argv[5])
-
-          checker_output = (
-              stdout_path.read_text(errors="replace")
-              + "\n"
-              + stderr_path.read_text(errors="replace")
-          )
-
-          reported_lines = []
-          for match in re.finditer(
-              r"\[MutationProofs\.ec: line (\d+)(?: \([^]]*\))?"
-              r"(?: to line (\d+)(?: \([^]]*\))?)?\]",
-              checker_output,
-          ):
-              reported_lines.append(int(match.group(1)))
-              if match.group(2) is not None:
-                  reported_lines.append(int(match.group(2)))
-          reported_lines.extend(
-              int(value)
-              for value in re.findall(
-                  r"\[MutationProofs\.ec:(\d+)\]", checker_output
-              )
-          )
-          if not reported_lines:
-              raise SystemExit("checker did not report a MutationProofs.ec line")
-
-          reported_line = max(reported_lines)
-          lines = source_path.read_text().splitlines(keepends=True)
-          if reported_line < 1 or reported_line > len(lines):
-              raise SystemExit(f"reported line {reported_line} is outside MutationProofs.ec")
-
-          atomic = re.compile(
-              r"^(?P<indent>\s*)(?P<rcond>rcond[tf]\s+\^while);\s+first\s+by(?P<tail>.*)$"
-          )
-          explicit = re.compile(r"^\s*rcond[tf]\s+\^while\.\s*$")
-
-          block_kind = None
-          block_start = None
-          atomic_match = None
-          for candidate in range(reported_line - 1, -1, -1):
-              candidate_line = lines[candidate].rstrip("\n")
-              candidate_atomic = atomic.match(candidate_line)
-              if candidate_atomic is not None:
-                  block_kind = "atomic"
-                  block_start = candidate
-                  atomic_match = candidate_atomic
-                  break
-              if explicit.match(candidate_line):
-                  block_kind = "explicit"
-                  block_start = candidate
-                  break
-
-          if block_kind is None or block_start is None:
-              raise SystemExit(
-                  f"line {reported_line} is not inside a recognized rcond proof"
-              )
-
-          if block_kind == "atomic":
-              assert atomic_match is not None
-              indent = atomic_match.group("indent")
-              rcond = atomic_match.group("rcond")
-              tail = atomic_match.group("tail").strip()
-
-              if tail == "auto.":
-                  lines[block_start] = f"{indent}{rcond}.\n{indent}auto.\n"
-                  target_line = block_start + 2
-              else:
-                  lines[block_start] = lines[block_start].replace(
-                      "; first by", ".", 1
-                  )
-                  base_indent = len(indent)
-                  next_command = len(lines)
-                  for candidate in range(block_start + 1, len(lines)):
-                      stripped = lines[candidate].strip()
-                      if not stripped:
-                          continue
-                      leading = len(lines[candidate]) - len(lines[candidate].lstrip())
-                      if leading <= base_indent:
-                          next_command = candidate
-                          break
-                  target_line = next_command
-          else:
-              by_line = None
-              upper = min(reported_line - 1, len(lines) - 1)
-              for candidate in range(upper, block_start, -1):
-                  if re.match(r"^\s*by\s+", lines[candidate]):
-                      by_line = candidate
-                      break
-              if by_line is None:
-                  raise SystemExit(
-                      f"explicit rcond at line {block_start + 1} has no local by tactic"
-                  )
-              lines[by_line] = re.sub(
-                  r"^(\s*)by\s+", r"\1", lines[by_line], count=1
-              )
-              target_line = by_line + 1
-
-          source_path.write_text("".join(lines))
-          line_path.write_text(f"{target_line}\n")
-          target_path.write_text(
-              f"MutationProofs.ec:{target_line} "
-              f"(disposable residual for checker line {reported_line})\n"
-          )
+          path = Path(sys.argv[1])
+          text = path.read_text()
+          old = "    by rewrite !inE no_member_grant_in_empty fset0U.\n"
+          new = "    rewrite !inE no_member_grant_in_empty fset0U.\n"
+          if text.count(old) != 1:
+              raise SystemExit("fact-2 closing tactic was not found exactly once")
+          path.write_text(text.replace(old, new, 1))
           PY
 
-          target_line="$(cat "$evidence/diagnostic-line.txt")"
+          printf '%s\n' \
+            'MutationProofs.ec:130 (disposable fact-2 residual)' \
+            >"$evidence/diagnostic-target.txt"
           cp "$proof_dir/MutationProofs.ec" \
             "$evidence/MutationProofs-diagnostic.ec"
 
           set +e
           docker run --rm \
-            -e DIAGNOSTIC_LINE="$target_line" \
             -v "$proof_dir:/proof" \
             -w /proof \
             "$EASYCRYPT_IMAGE" \
@@ -253,8 +136,8 @@ jobs:
               set -euo pipefail
               opam exec -- easycrypt config
               opam exec -- why3 --version || true
-              echo "CHECKING DISPOSABLE MutationProofs.ec COPY UP TO LINE $DIAGNOSTIC_LINE"
-              opam exec -- easycrypt llm -upto "$DIAGNOSTIC_LINE" MutationProofs.ec
+              echo CHECKING DISPOSABLE MutationProofs.ec COPY UP TO LINE 130
+              opam exec -- easycrypt llm -upto 130 MutationProofs.ec
             ' >"$evidence/diagnostic-stdout.log" \
               2>"$evidence/diagnostic-stderr.log"
           status=$?
