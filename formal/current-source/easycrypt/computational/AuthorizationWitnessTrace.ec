@@ -291,7 +291,7 @@ proof.
     /witness_capability_tag_alice_history
     /witness_context_3 /capability_tag_known;
   cbv delta;
-  by smt().
+  by smt(in_fsetU in_fset1).
 qed.
 
 lemma witness_fact_3_transition :
