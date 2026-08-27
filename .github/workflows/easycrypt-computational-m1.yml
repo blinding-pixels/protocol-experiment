@@ -117,11 +117,9 @@ jobs:
             exit 0
           fi
 
-          # Open only the rcond proof reported by the checker.  Atomic
-          # `first by` blocks are handled directly.  Explicit `rcond.` plus
-          # bullet blocks are opened by removing the final local `by` only in
-          # this disposable copy.  This keeps the committed theorem unchanged
-          # while exposing the exact pure residual.
+          # Open only the nearest rcond proof preceding the checker span.
+          # Atomic `first by` and explicit bullet forms are both recognized;
+          # selection is by source proximity, never by preferred syntax.
           python3 - \
             "$proof_dir/MutationProofs.ec" \
             "$evidence/baseline-stdout.log" \
@@ -167,33 +165,48 @@ jobs:
           if reported_line < 1 or reported_line > len(lines):
               raise SystemExit(f"reported line {reported_line} is outside MutationProofs.ec")
 
-          start = reported_line - 1
           atomic = re.compile(
               r"^(?P<indent>\s*)(?P<rcond>rcond[tf]\s+\^while);\s+first\s+by(?P<tail>.*)$"
           )
-          match = atomic.match(lines[start].rstrip("\n"))
+          explicit = re.compile(r"^\s*rcond[tf]\s+\^while\.\s*$")
 
-          if match is None:
-              for candidate in range(start - 1, -1, -1):
-                  candidate_match = atomic.match(lines[candidate].rstrip("\n"))
-                  if candidate_match is not None:
-                      start = candidate
-                      match = candidate_match
-                      break
+          block_kind = None
+          block_start = None
+          atomic_match = None
+          for candidate in range(reported_line - 1, -1, -1):
+              candidate_line = lines[candidate].rstrip("\n")
+              candidate_atomic = atomic.match(candidate_line)
+              if candidate_atomic is not None:
+                  block_kind = "atomic"
+                  block_start = candidate
+                  atomic_match = candidate_atomic
+                  break
+              if explicit.match(candidate_line):
+                  block_kind = "explicit"
+                  block_start = candidate
+                  break
 
-          if match is not None:
-              indent = match.group("indent")
-              rcond = match.group("rcond")
-              tail = match.group("tail").strip()
+          if block_kind is None or block_start is None:
+              raise SystemExit(
+                  f"line {reported_line} is not inside a recognized rcond proof"
+              )
+
+          if block_kind == "atomic":
+              assert atomic_match is not None
+              indent = atomic_match.group("indent")
+              rcond = atomic_match.group("rcond")
+              tail = atomic_match.group("tail").strip()
 
               if tail == "auto.":
-                  lines[start] = f"{indent}{rcond}.\n{indent}auto.\n"
-                  target_line = start + 2
+                  lines[block_start] = f"{indent}{rcond}.\n{indent}auto.\n"
+                  target_line = block_start + 2
               else:
-                  lines[start] = lines[start].replace("; first by", ".", 1)
+                  lines[block_start] = lines[block_start].replace(
+                      "; first by", ".", 1
+                  )
                   base_indent = len(indent)
                   next_command = len(lines)
-                  for candidate in range(start + 1, len(lines)):
+                  for candidate in range(block_start + 1, len(lines)):
                       stripped = lines[candidate].strip()
                       if not stripped:
                           continue
@@ -203,25 +216,15 @@ jobs:
                           break
                   target_line = next_command
           else:
-              explicit = re.compile(r"^\s*rcond[tf]\s+\^while\.\s*$")
-              explicit_start = None
-              for candidate in range(start, -1, -1):
-                  if explicit.match(lines[candidate].rstrip("\n")):
-                      explicit_start = candidate
-                      break
-              if explicit_start is None:
-                  raise SystemExit(
-                      f"line {reported_line} is not inside a recognized rcond proof"
-                  )
-
               by_line = None
-              for candidate in range(start, explicit_start, -1):
+              upper = min(reported_line - 1, len(lines) - 1)
+              for candidate in range(upper, block_start, -1):
                   if re.match(r"^\s*by\s+", lines[candidate]):
                       by_line = candidate
                       break
               if by_line is None:
                   raise SystemExit(
-                      f"explicit rcond at line {explicit_start + 1} has no local by tactic"
+                      f"explicit rcond at line {block_start + 1} has no local by tactic"
                   )
               lines[by_line] = re.sub(
                   r"^(\s*)by\s+", r"\1", lines[by_line], count=1
