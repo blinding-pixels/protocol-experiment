@@ -195,10 +195,13 @@ section A5IdealZero.
   declare module S <: SIGNATURE_SCHEME.
   declare module H <: NODE_HASH.
 
+  local module OI = IdealCandidateEnvironment(S, H).
+  local module GI = UnauthorizedA5Ideal(A, S, H).
+
   lemma ideal_submit_preserves_no_unauthorized :
-    hoare [IdealCandidateEnvironment(S, H).submit :
-      ! IdealCandidateEnvironment(S, H).ideal_unauthorized_accepted ==>
-      ! IdealCandidateEnvironment(S, H).ideal_unauthorized_accepted].
+    hoare [OI.submit :
+      ! OI.ideal_unauthorized_accepted ==>
+      ! OI.ideal_unauthorized_accepted].
   proof.
     proc.
     wp.
@@ -211,12 +214,12 @@ section A5IdealZero.
 
   lemma ideal_main_never_unauthorized
       (initial : protocol_state) :
-    hoare [UnauthorizedA5Ideal(A, S, H).main :
+    hoare [GI.main :
       initial_state = initial ==> ! res].
   proof.
     proc.
     call (_ :
-      ! UnauthorizedA5Ideal(A, S, H).O.ideal_unauthorized_accepted).
+      ! GI.O.ideal_unauthorized_accepted).
     + exact ideal_submit_preserves_no_unauthorized.
     auto.
   qed.
