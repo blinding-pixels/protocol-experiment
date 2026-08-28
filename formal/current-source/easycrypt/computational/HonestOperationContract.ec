@@ -439,17 +439,16 @@ lemma witness_honest_validate_decoded_lossless :
 proof.
   proc.
   inline TestSignature.verify.
-  wp.
-  call normalize_test_signature_lossless.
-  auto.
+  islossless.
+  exact normalize_test_signature_lossless.
 qed.
 
 lemma witness_honest_validate_lossless :
   islossless ValidateOperation(TestSignature).validate.
 proof.
   proc.
-  call witness_honest_validate_decoded_lossless.
-  auto.
+  islossless.
+  exact witness_honest_validate_decoded_lossless.
 qed.
 
 (* The final theorem uses the public production entry point, so the canonical
