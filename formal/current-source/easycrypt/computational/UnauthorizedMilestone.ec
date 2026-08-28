@@ -1,9 +1,9 @@
-require import UnauthorizedFactReduction UnauthorizedSignatureReduction UnauthorizedHashReduction MutationProofs.
+require import AuthorizationAncestry UnauthorizedFactReduction UnauthorizedSignatureReduction UnauthorizedHashReduction MutationProofs.
 
 (* Active Deliverable A checker entry point.  Every new unauthorized-game or
    reduction theorem is imported here while it is under development, so a red
    proof cannot be hidden behind the already-green general checkpoint. *)
-print UnauthorizedFactReduction.normalize_success_implies_policy_ancestry.
+print AuthorizationAncestry.normalize_success_implies_policy_ancestry.
 print UnauthorizedFactReduction.bad_fact_signature_exactly_reduces_to_multi_user_eufcma.
 print UnauthorizedSignatureReduction.bad_operation_signature_exactly_reduces_to_multi_user_eufcma.
 print UnauthorizedHashReduction.bad_hash_exactly_reduces_to_node_collision.
