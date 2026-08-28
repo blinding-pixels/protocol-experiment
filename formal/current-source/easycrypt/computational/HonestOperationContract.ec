@@ -376,19 +376,35 @@ proof.
       auto.
     rcondf 1; first by
       auto=> />;
-      try rewrite witness_honest_operation_body_valid
-        /defense_enabled /validation_success;
-      auto.
+      smt(witness_honest_operation_body_valid).
 
-    rcondf 1; first by auto.
-    rcondf 1; first by auto.
-    rcondf 1; first by auto.
-    rcondf 1; first by auto.
-    rcondf 1; first by auto.
-    rcondf 1; first by auto.
-    rcondf 1; first by auto.
-    rcondf 1; first by auto.
-    rcondf 1; first by auto.
+    rcondf 1; first by
+      auto=> />;
+      smt(witness_honest_operation_kind).
+    rcondf 1; first by
+      auto=> />;
+      smt(witness_honest_operation_kind).
+    rcondf 1; first by
+      auto=> />;
+      smt(witness_honest_operation_kind).
+    rcondf 1; first by
+      auto=> />;
+      smt(witness_honest_operation_kind).
+    rcondf 1; first by
+      auto=> />;
+      smt(witness_honest_operation_kind).
+    rcondf 1; first by
+      auto=> />;
+      smt(witness_honest_operation_kind).
+    rcondf 1; first by
+      auto=> />;
+      smt(witness_honest_operation_kind).
+    rcondf 1; first by
+      auto=> />;
+      smt(witness_honest_operation_kind).
+    rcondf 1; first by
+      auto=> />;
+      smt(witness_honest_operation_kind).
 
     by auto.
 qed.
