@@ -114,3 +114,120 @@ section A5ValidatorSoundness.
     smt().
   qed.
 end section A5ValidatorSoundness.
+
+(* A5 executes the same production validator and state transition as A0.  The
+   only change is the win predicate: after A1--A4 have excluded their named bad
+   events, an accepted candidate is compared with the pure ideal predicate
+   proved above.  The environment therefore remains reachable and accepts the
+   honest witness; it is not a reject-all or constant-false game. *)
+module IdealCandidateEnvironment(
+  S : SIGNATURE_SCHEME,
+  H : NODE_HASH
+) = {
+  module V = ValidateOperation(S)
+
+  var state : protocol_state
+  var accepted_operations : accepted_operation list
+  var query_count : int
+  var ideal_unauthorized_accepted : bool
+
+  proc init(initial_state : protocol_state) : unit = {
+    state <- initial_state;
+    accepted_operations <- [];
+    query_count <- 0;
+    ideal_unauthorized_accepted <- false;
+  }
+
+  proc submit(
+    operation : signed_operation,
+    view : public_view
+  ) : bool = {
+    var state_before : protocol_state;
+    var result : validation_result;
+    var envelope : operation_envelope;
+    var node : node_id;
+
+    state_before <- state;
+    result <@ V.validate(Production, operation, view, state_before);
+    envelope <- witness;
+    node <- witness;
+
+    if (result.`vr_accepted) {
+      envelope <- oget (decode_operation operation.`so_raw);
+      node <@ H.hash(
+        production_node_material envelope operation.`so_signature
+      );
+      state <- protocol_state_after_acceptance
+        state_before envelope node view.`pv_observed_fact_ids;
+      accepted_operations <- rcons accepted_operations
+        {| ao_operation_id = envelope.`oe_operation_id;
+           ao_author = envelope.`oe_author;
+           ao_capability = envelope.`oe_required_capability;
+           ao_context = view.`pv_observed_fact_ids;
+           ao_transcript = production_transcript envelope |};
+      ideal_unauthorized_accepted <-
+        ideal_unauthorized_accepted \/
+        ! ideal_authorized_candidate operation view state_before;
+    }
+
+    query_count <- query_count + 1;
+    return result.`vr_accepted;
+  }
+}.
+
+module UnauthorizedA5Ideal(
+  A : ADAPTIVE_UNAUTHORIZED_ADVERSARY,
+  S : SIGNATURE_SCHEME,
+  H : NODE_HASH
+) = {
+  module O = IdealCandidateEnvironment(S, H)
+  module A = A(O)
+
+  proc main(initial_state : protocol_state) : bool = {
+    O.init(initial_state);
+    A.attack();
+    return O.ideal_unauthorized_accepted;
+  }
+}.
+
+section A5IdealZero.
+  declare module A <: ADAPTIVE_UNAUTHORIZED_ADVERSARY.
+  declare module S <: SIGNATURE_SCHEME.
+  declare module H <: NODE_HASH.
+
+  lemma ideal_submit_preserves_no_unauthorized :
+    hoare [IdealCandidateEnvironment(S, H).submit :
+      ! IdealCandidateEnvironment(S, H).ideal_unauthorized_accepted ==>
+      ! IdealCandidateEnvironment(S, H).ideal_unauthorized_accepted].
+  proof.
+    proc.
+    wp.
+    call (_ : true ==> true).
+    call (validate_acceptance_implies_ideal_authorization
+      operation view state_before).
+    auto=> />.
+    smt().
+  qed.
+
+  lemma ideal_main_never_unauthorized
+      (initial : protocol_state) :
+    hoare [UnauthorizedA5Ideal(A, S, H).main :
+      initial_state = initial ==> ! res].
+  proof.
+    proc.
+    call (_ :
+      ! UnauthorizedA5Ideal(A, S, H).O.ideal_unauthorized_accepted).
+    + exact ideal_submit_preserves_no_unauthorized.
+    auto.
+  qed.
+
+  lemma ideal_unauthorized_probability_zero
+      &m (initial : protocol_state) :
+    Pr[
+      UnauthorizedA5Ideal(A, S, H).main(initial) @ &m : res
+    ] = 0%r.
+  proof.
+    byphoare (_ : initial_state = initial ==> ! res) => //=.
+    exact (ideal_main_never_unauthorized initial).
+  qed.
+end section A5IdealZero.

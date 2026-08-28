@@ -3,6 +3,9 @@ require import UnauthorizedIdeal CausalClosureRepresentation AuthorizationRepres
 (* Active Deliverable A checker entry point.  Every new unauthorized-game or
    reduction theorem is imported here while it is under development, so a red
    proof cannot be hidden behind the already-green general checkpoint. *)
+print UnauthorizedIdeal.ideal_unauthorized_probability_zero.
+print UnauthorizedIdeal.ideal_main_never_unauthorized.
+print UnauthorizedIdeal.ideal_submit_preserves_no_unauthorized.
 print UnauthorizedIdeal.validate_acceptance_implies_ideal_authorization.
 print UnauthorizedIdeal.validate_decoded_acceptance_implies_ideal_authorization.
 print CausalClosureRepresentation.acceptance_preserves_causal_representation.
