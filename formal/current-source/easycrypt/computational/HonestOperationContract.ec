@@ -343,10 +343,16 @@ proof.
     try rewrite witness_base_view_facts witness_base_state_creator;
     auto.
   + rcondf 1; first by auto.
-    rcondf 1; first by auto.
-    rcondf 1; first by auto.
+    rcondf 1; first by
+      auto=> />;
+      exact witness_honest_authorization_digest.
+    rcondf 1; first by
+      auto=> />;
+      exact witness_honest_author_key_binding.
     rcondt 1; first by auto.
-    rcondf 5; first by auto.
+    rcondf 5; first by
+      auto=> />;
+      exact witness_honest_signature_bytes.
 
     sp 4.
     rcondf 1; first by
