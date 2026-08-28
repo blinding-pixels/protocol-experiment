@@ -1,12 +1,12 @@
 require import AllCore List FSet.
 require import ProtocolTypes CanonicalEncoding ProtocolPrimitives AuthorizationState.
-require PrimitiveGames.
-clone import PrimitiveGames as PG.
 require import UnauthorizedSignatureReduction UnauthorizedReduction.
 
-(* Accepted public views are traversed inside the reduction environment.  A
-   local variable typed as [PG.signature_forgery] ensures that every recorded
-   candidate belongs to this exact cloned primitive-game instance. *)
+(* Accepted public views are traversed inside the reduction environment.  This
+   file deliberately reuses the [PG] clone exported by
+   [UnauthorizedSignatureReduction].  Creating a second clone would create a
+   distinct generative forgery carrier and disconnect this reduction from the
+   exact A2 primitive oracle. *)
 op find_fact_signature_forgery
     (accepted : PG.signature_forgery list)
     (sign_queries : PG.signature_query list)
