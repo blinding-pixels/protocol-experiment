@@ -4,23 +4,9 @@ require PrimitiveGames.
 clone import PrimitiveGames as PG.
 require import UnauthorizedSignatureReduction UnauthorizedReduction.
 
-(* Convert the signed authorization facts supplied in an accepted public view
-   into the exact primitive-message candidates checked by the shared
-   normalizer. *)
-op fact_signature_candidate
-    (signed_fact : signed_authorization_fact) : PG.signature_forgery =
-  {| sf_verification_key =
-       signed_fact.`saf_signature.`sig_verification_key;
-     sf_message = fact_signature_message signed_fact.`saf_fact;
-     sf_signature = signed_fact.`saf_signature |}.
-
-op fact_signature_candidates
-    (facts : signed_authorization_fact list) : PG.signature_forgery list =
-  with facts = [] => []
-  with facts = signed_fact :: rest =>
-    fact_signature_candidate signed_fact ::
-      fact_signature_candidates rest.
-
+(* Accepted public views are traversed inside the reduction environment.  A
+   local variable typed as [PG.signature_forgery] ensures that every recorded
+   candidate belongs to this exact cloned primitive-game instance. *)
 op find_fact_signature_forgery
     (accepted : PG.signature_forgery list)
     (sign_queries : PG.signature_query list)
@@ -61,11 +47,25 @@ module CandidateFactSignatureEnvironment(
     view : public_view
   ) : bool = {
     var accepted : bool;
+    var remaining : signed_authorization_fact list;
+    var signed_fact : signed_authorization_fact;
+    var candidate : PG.signature_forgery;
 
     accepted <@ Base.submit(operation, view);
+    remaining <- view.`pv_facts;
+    candidate <- witness;
     if (accepted) {
-      accepted_fact_signatures <-
-        accepted_fact_signatures ++ fact_signature_candidates view.`pv_facts;
+      while (remaining <> []) {
+        signed_fact <- head witness remaining;
+        remaining <- behead remaining;
+        candidate <-
+          {| sf_verification_key =
+               signed_fact.`saf_signature.`sig_verification_key;
+             sf_message = fact_signature_message signed_fact.`saf_fact;
+             sf_signature = signed_fact.`saf_signature |};
+        accepted_fact_signatures <-
+          rcons accepted_fact_signatures candidate;
+      }
     }
     unauthorized_accepted <- Base.unauthorized_accepted;
     return accepted;
