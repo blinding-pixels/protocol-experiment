@@ -1,18 +1,18 @@
-name: EasyCrypt computational proof
+name: EasyCrypt computational Milestone 1
 
 on:
   push:
     branches:
       - formal/easycrypt-computational-m1
     paths:
-      - '.github/workflows/easycrypt-computational.yml'
+      - '.github/workflows/easycrypt-computational-m1.yml'
       - 'formal/current-source/easycrypt/computational/**'
       - 'tools/easycrypt/**'
   pull_request:
     branches:
       - main
     paths:
-      - '.github/workflows/easycrypt-computational.yml'
+      - '.github/workflows/easycrypt-computational-m1.yml'
       - 'formal/current-source/easycrypt/computational/**'
       - 'tools/easycrypt/**'
   workflow_dispatch:
@@ -21,17 +21,16 @@ permissions:
   contents: read
 
 concurrency:
-  group: easycrypt-computational-${{ github.event.pull_request.number || github.ref }}
+  group: easycrypt-m1-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
-  computational-proof:
-    name: Check full computational proof
+  check:
+    name: Check active honest-operation contract
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
       EASYCRYPT_IMAGE: ghcr.io/easycrypt/ec-test-box@sha256:84980006e8b01fe6497bbd0ecd67deeb5e7361d8ad17e27d24924122d368e0fc
-      CHECK_EC: ComputationalProof.ec
     steps:
       - name: Check out exact proof source
         uses: actions/checkout@v4
@@ -40,7 +39,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          evidence="$RUNNER_TEMP/easycrypt-full-evidence"
+          evidence="$RUNNER_TEMP/easycrypt-evidence"
           source_dir="formal/current-source/easycrypt/computational"
           mkdir -p "$evidence/checked-source"
           cp -R "$source_dir"/. "$evidence/checked-source"/
@@ -52,14 +51,11 @@ jobs:
             | tee "$evidence/source-sha256.txt"
           git status --short --branch | tee "$evidence/git-status.txt"
 
-      - name: Verify active proof source
+      - name: Run repository anti-cheating audit
         shell: bash
         run: |
           set -euo pipefail
-          evidence="$RUNNER_TEMP/easycrypt-full-evidence"
-          proof_dir="formal/current-source/easycrypt/computational"
-          test -f "$proof_dir/$CHECK_EC"
-
+          evidence="$RUNNER_TEMP/easycrypt-evidence"
           set +e
           python3 tools/easycrypt/audit_computational.py \
             >"$evidence/audit-stdout.log" \
@@ -75,21 +71,21 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          evidence="$RUNNER_TEMP/easycrypt-full-evidence"
+          evidence="$RUNNER_TEMP/easycrypt-evidence"
           docker pull "$EASYCRYPT_IMAGE" 2>&1 | tee "$evidence/image-pull.log"
           docker image inspect "$EASYCRYPT_IMAGE" >"$evidence/image-inspect.json"
           docker image inspect "$EASYCRYPT_IMAGE" \
             --format '{{json .RepoDigests}}' \
             | tee "$evidence/image-repo-digests.txt"
 
-      - name: Compile full computational proof
+      - name: Compile active honest-operation contract
         shell: bash
         run: |
           set -euo pipefail
           source_dir="$GITHUB_WORKSPACE/formal/current-source/easycrypt/computational"
           proof_dir="$RUNNER_TEMP/easycrypt-source"
-          evidence="$RUNNER_TEMP/easycrypt-full-evidence"
-          target="$CHECK_EC"
+          evidence="$RUNNER_TEMP/easycrypt-evidence"
+          target="HonestOperationContract.ec"
           mkdir -p "$proof_dir"
           cp -R "$source_dir"/. "$proof_dir"/
 
@@ -124,7 +120,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: easycrypt-full-evidence-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/easycrypt-full-evidence
+          name: easycrypt-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/easycrypt-evidence
           if-no-files-found: error
           retention-days: 14

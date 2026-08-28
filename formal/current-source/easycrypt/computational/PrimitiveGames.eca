@@ -1,0 +1,81 @@
+require import AllCore List.
+require import ProtocolTypes CanonicalEncoding ProtocolPrimitives.
+
+(* Named primitive games. This abstract theory introduces no conclusion-shaped
+   protocol axiom and is not imported directly by executable validator files. *)
+type signature_query = verification_key * signature_message.
+
+module type SIGNING_ORACLE = {
+  proc sign(
+    vk : verification_key,
+    message : signature_message
+  ) : signature
+}.
+
+module SigningOracle(S : SIGNATURE_SCHEME) : SIGNING_ORACLE = {
+  var queries : signature_query list
+
+  proc init() : unit = {
+    queries <- [];
+  }
+
+  proc sign(
+    vk : verification_key,
+    message : signature_message
+  ) : signature = {
+    var sig : signature;
+    sig <@ S.sign(vk, message);
+    queries <- rcons queries (vk, message);
+    return sig;
+  }
+}.
+
+module type EUFCMA_ADVERSARY(O : SIGNING_ORACLE) = {
+  proc forge() : verification_key * signature_message * signature
+}.
+
+module EUFCMAGame(
+  A : EUFCMA_ADVERSARY,
+  S : SIGNATURE_SCHEME
+) = {
+  module O = SigningOracle(S)
+  module A = A(O)
+
+  proc main() : bool = {
+    var vk : verification_key;
+    var message : signature_message;
+    var sig : signature;
+    var valid : bool;
+
+    O.init();
+    (vk, message, sig) <@ A.forge();
+    valid <@ S.verify(vk, message, sig.`sig_bytes);
+
+    return
+         valid
+      /\ sig.`sig_verification_key = vk
+      /\ ! mem O.queries (vk, message);
+  }
+}.
+
+module type COLLISION_ADVERSARY = {
+  proc collide() : operation_transcript * operation_transcript
+}.
+
+module TranscriptCollisionGame(
+  A : COLLISION_ADVERSARY,
+  H : TRANSCRIPT_HASH
+) = {
+  proc main() : bool = {
+    var t1 : operation_transcript;
+    var t2 : operation_transcript;
+    var h1 : node_id;
+    var h2 : node_id;
+
+    (t1, t2) <@ A.collide();
+    h1 <@ H.hash(t1);
+    h2 <@ H.hash(t2);
+
+    return t1 <> t2 /\ h1 = h2;
+  }
+}.

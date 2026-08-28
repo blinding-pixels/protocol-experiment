@@ -1,0 +1,48 @@
+name: Normalize EasyCrypt branch syntax
+
+on:
+  push:
+    branches:
+      - formal/easycrypt-computational-m1
+    paths:
+      - 'tools/easycrypt/normalize_easycrypt_syntax.py'
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: write
+
+concurrency:
+  group: easycrypt-normalize-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  normalize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: formal/easycrypt-computational-m1
+          fetch-depth: 0
+
+      - name: Apply deterministic syntax normalization
+        run: python3 tools/easycrypt/normalize_easycrypt_syntax.py
+
+      - name: Commit normalized source and dispatch checker
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if git diff --quiet; then
+            echo 'EasyCrypt source already normalized'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add formal/current-source/easycrypt/computational
+          git commit -m 'formal: apply deterministic EasyCrypt syntax normalization'
+          git push origin HEAD:formal/easycrypt-computational-m1
+          gh workflow run easycrypt-computational-m1.yml \
+            --ref formal/easycrypt-computational-m1

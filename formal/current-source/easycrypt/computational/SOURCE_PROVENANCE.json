@@ -1,0 +1,38 @@
+{
+  "schema": "protocol-experiment.easycrypt-computational-source-provenance.v1",
+  "recorded_at": "2026-08-26",
+  "canonical_repository": "blinding-pixels/protocol-experiment",
+  "canonical_base_commit": "62d4c544a65cb61110613cdc019b935659a17d26",
+  "development_branch": "formal/easycrypt-computational-m1",
+  "draft_pull_request": 1,
+  "historical_source_repository": "blinding-pixels/Facets",
+  "historical_source_commit": "7f685d35a72a463cbcc1052a81710bb02c0c5b80",
+  "sources": [
+    {
+      "path": "research/causal-dag-cgka/CausalDagCgka/Authorization.lean",
+      "git_blob_sha1": "55b138aa423f46db69d50d4427d89d67636c6281",
+      "role": "observed-remove membership and capability normalization"
+    },
+    {
+      "path": "research/causal-dag-cgka/CausalDagCgka/Accountability.lean",
+      "git_blob_sha1": "e85f9df0cb19943009a365597fa6350feffe7774",
+      "role": "causal-context validity and immutable accepted-operation evidence"
+    },
+    {
+      "path": "research/causal-dag-cgka/easycrypt/CausalDagCompositionKernel.ec",
+      "git_blob_sha1": "4a1ed97bef9999e21d599df7f9479c0797630ce1",
+      "role": "historical toy/event-inclusion proof retained as negative design evidence"
+    },
+    {
+      "path": ".github/workflows/causal-dag-cgka-easycrypt.yml",
+      "git_blob_sha1": "a89c38b7535cdacbfe567e7177897a55c56a6676",
+      "role": "historical checker workflow; superseded by immutable-image requirement"
+    }
+  ],
+  "easycrypt_image": {
+    "tag": "ghcr.io/easycrypt/ec-test-box:r2026.07",
+    "digest": "sha256:84980006e8b01fe6497bbd0ecd67deeb5e7361d8ad17e27d24924122d368e0fc"
+  },
+  "checker_status": "not-run-actions-disabled",
+  "claim_status": "computational-proof-skeleton"
+}

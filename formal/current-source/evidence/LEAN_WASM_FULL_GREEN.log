@@ -1,0 +1,263 @@
+[DEBUG:A] lean_main entered, argc=2
+[DEBUG:A] argv[0]=/bin/lean
+[DEBUG:A] argv[1]=/work/FullCombinatorialSpineAudit.lean
+[DEBUG:C] About to create lean::initializer
+[DEBUG:INIT] lean_initialize() started
+[DEBUG:INIT] save_stack_info() done
+[DEBUG:INIT] initialize_util_module() done
+[DEBUG:INIT] About to initialize_Init...
+[DEBUG:INIT] initialize_Init() done
+[DEBUG:INIT] About to initialize_Std...
+[DEBUG:INIT] initialize_Std() done
+[DEBUG:INIT] About to initialize_Lean...
+[DEBUG:INIT] initialize_Lean() done
+[DEBUG:INIT] initialize_kernel_module() done
+[DEBUG:INIT] lean_initialize() completed successfully
+[DEBUG:C] lean::initializer completed successfully
+[DEBUG:D] About to call init_search_path()
+[DEBUG:D] init_search_path() completed successfully
+[DEBUG:E] lean_enable_initializer_execution completed
+[DEBUG:E] Creating shell options
+[DEBUG:E] Shell options created, processing command line
+[DEBUG:E] getopt_long returned: -1
+[DEBUG:E] About to call io_mark_end_initialization
+[DEBUG:E] Creating scoped_task_manager
+[DEBUG:E] scoped_task_manager created
+[DEBUG:E] About to call run_shell_main with argc=1
+[DEBUG:F] shell_main arg[0]=/work/FullCombinatorialSpineAudit.lean
+[DEBUG:F] Checking if input file exists: /work/FullCombinatorialSpineAudit.lean
+[DEBUG:F] Input file exists, size: 76918 bytes
+[DEBUG:F] Input file content (first 200 chars): import Std
+
+namespace CausalDagCgka
+
+/-- Extensional equality for predicates. -/
+theorem pred_ext {α : Type} {p q : α → Prop}
+    (h : ∀ x, p x ↔ q x) : p = q := by
+  funext x
+  exact propext (h x)
+
+/
+[DEBUG:G] run_shell_main entered, building args list
+[DEBUG:G] Args list built, preparing arguments...
+[DEBUG:G] Calling args.steal()...
+[DEBUG:G] args.steal() returned: 24534252
+[DEBUG:G] Calling shell_opts.to_obj_arg()...
+[DEBUG:G] shell_opts.to_obj_arg() returned: 24641804
+[DEBUG:G] Now calling lean_shell_main...
+[DEBUG:I] fileName = /work/FullCombinatorialSpineAudit.lean
+[DEBUG:I] Reading file contents
+[DEBUG:I] contents length = 75865
+[DEBUG:J] Loading module setup
+[DEBUG:J] setup? = false
+[DEBUG:J] mainModuleName = work.FullCombinatorialSpineAudit
+[DEBUG:K] Calling Elab.runFrontend
+[DEBUG:L] runFrontend entered
+[DEBUG:L] fileName = /work/FullCombinatorialSpineAudit.lean, mainModuleName = work.FullCombinatorialSpineAudit
+[DEBUG:N] About to run and report snapshots
+[DEBUG:IMPORT] Emscripten detected, using level = Lean.OLeanLevel.exported
+[DEBUG:PROGRESS] Loading 1112 modules...
+[DEBUG:PROGRESS] 1/1112: Init.Prelude
+[DEBUG:PROGRESS] 51/1112: Init.ByCases
+[DEBUG:PROGRESS] 101/1112: Init.Data.Nat.Order
+[DEBUG:PROGRESS] 151/1112: Init.Data.List.Range
+[DEBUG:PROGRESS] 201/1112: Init.Data.Int.Repr
+[DEBUG:PROGRESS] 251/1112: Init.Grind.Module.OfNatModule
+[DEBUG:PROGRESS] 301/1112: Init.Data.List.Nat.Prod
+[DEBUG:PROGRESS] 351/1112: Init.Data.Iterators.Lemmas.Combinators.Monadic.FilterMap
+[DEBUG:PROGRESS] 401/1112: Init.Data.Slice.Array.Basic
+[DEBUG:PROGRESS] 451/1112: Init.Data.Array.Int
+[DEBUG:PROGRESS] 501/1112: Init.Data.Option
+[DEBUG:PROGRESS] 551/1112: Init.Data.Iterators.Combinators.Monadic.ULift
+[DEBUG:PROGRESS] 601/1112: Init.ShareCommon
+[DEBUG:PROGRESS] 651/1112: Std.Data.Iterators.Producers.Monadic.Empty
+[DEBUG:PROGRESS] 701/1112: Std.Data.ExtTreeMap.Basic
+[DEBUG:PROGRESS] 751/1112: Std.Data.Iterators.Lemmas
+[DEBUG:PROGRESS] 801/1112: Std.Data.TreeMap.Raw.AdditionalOperations
+[DEBUG:PROGRESS] 851/1112: Std.Sat.CNF.Relabel
+[DEBUG:PROGRESS] 901/1112: Std.Time.Date.Unit.Basic
+[DEBUG:PROGRESS] 951/1112: Std.Tactic.BVDecide.Bitblast.BVExpr.Circuit.Impl.Carry
+[DEBUG:PROGRESS] 1001/1112: Std.Tactic.BVDecide.LRAT.Internal.Assignment
+[DEBUG:PROGRESS] 1051/1112: Std.Http.Data.Version
+[DEBUG:PROGRESS] 1101/1112: Std.Internal.Do.WP.Conjunctive
+[DEBUG:PROGRESS] 1112/1112: Std
+/work/FullCombinatorialSpineAudit.lean:1750:2: warning: Try `simp at memberActive` instead of `simpa using memberActive`
+
+Note: This linter can be disabled with `set_option linter.unnecessarySimpa false`
+/work/FullCombinatorialSpineAudit.lean:1772:34: warning: This simp argument is unused:
+  AuthorizationState.memberActive
+
+Hint: Omit it from the simp argument list.
+  simp [removalOnlyRejoinState, AuthorizationState.m̵e̵m̵b̵e̵r̵A̵c̵t̵i̵v̵e̵,̵
+  ̵ ̵ ̵ ̵ ̵ ̵ ̵A̵u̵t̵h̵o̵r̵i̵z̵a̵t̵i̵o̵n̵S̵t̵a̵t̵e̵.̵join, AuthorizationState.memberGrantDelta,
+        AuthorizationState.capabilityGrantDelta,
+  ̵  ̵ ̵ ̵ ̵ ̵AuthorizationState.memberRevokeObservedDelta,
+        AuthState.active, AuthState.join, AuthState.addDelta,
+  ̵  ̵ ̵ ̵ ̵ ̵AuthState.removeObservedDelta,
+  ̲  ̲ ̲ ̲ ̲ ̲AuthState.empty, hFresh]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/work/FullCombinatorialSpineAudit.lean:1776:6: warning: This simp argument is unused:
+  AuthState.active
+
+Hint: Omit it from the simp argument list.
+  simp [removalOnlyRejoinState, AuthorizationState.memberActive,
+  ̵  ̵ ̵ ̵ ̵ ̵AuthorizationState.join,
+  ̲  ̲ ̲ ̲ ̲ ̲AuthorizationState.memberGrantDelta,
+  ̵  ̵ ̵ ̵ ̵ ̵AuthorizationState.capabilityGrantDelta,
+        AuthorizationState.memberRevokeObservedDelta,
+  ̵  ̵ ̵ ̵ ̵ ̵AuthState.a̵c̵t̵i̵v̵e̵,̵ ̵A̵u̵t̵h̵S̵t̵a̵t̵e̵.̵join, AuthState.addDelta,
+        AuthState.removeObservedDelta, AuthState.empty, hFresh]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/work/FullCombinatorialSpineAudit.lean:1779:34: warning: This simp argument is unused:
+  AuthorizationState.capabilityActive
+
+Hint: Omit it from the simp argument list.
+  simp [removalOnlyRejoinState, A̵u̵t̵h̵o̵r̵i̵z̵a̵t̵i̵o̵n̵S̵t̵a̵t̵e̵.̵c̵a̵p̵a̵b̵i̵l̵i̵t̵y̵A̵c̵t̵i̵v̵e̵,̵AuthorizationState.join, AuthorizationState.memberGrantDelta,
+  ̲  ̲ ̲ ̲ ̲ ̲AuthorizationState.capabilityGrantDelta, AuthorizationState.memberRevokeObservedDelta,
+        AuthState.active, AuthState.join, AuthState.addDelta, AuthState.removeObservedDelta,
+        AuthState.empty]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/work/FullCombinatorialSpineAudit.lean:1783:6: warning: This simp argument is unused:
+  AuthState.active
+
+Hint: Omit it from the simp argument list.
+  simp [removalOnlyRejoinState, AuthorizationState.capabilityActive,
+  ̵  ̵ ̵ ̵ ̵ ̵AuthorizationState.join,
+  ̲  ̲ ̲ ̲ ̲ ̲AuthorizationState.memberGrantDelta,
+  ̵  ̵ ̵ ̵ ̵ ̵AuthorizationState.capabilityGrantDelta,
+        AuthorizationState.memberRevokeObservedDelta,
+  ̵  ̵ ̵ ̵ ̵ ̵AuthState.a̵c̵t̵i̵v̵e̵,̵ ̵A̵u̵t̵h̵S̵t̵a̵t̵e̵.̵join, AuthState.addDelta,
+        AuthState.removeObservedDelta, AuthState.empty]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/work/FullCombinatorialSpineAudit.lean:1818:2: warning: Try `simp at active` instead of `simpa using active`
+
+Note: This linter can be disabled with `set_option linter.unnecessarySimpa false`
+/work/FullCombinatorialSpineAudit.lean:1855:2: warning: Try `simp at active` instead of `simpa using active`
+
+Note: This linter can be disabled with `set_option linter.unnecessarySimpa false`
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.pred_ext' depends on axioms: [propext, Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.predUnion_comm' depends on axioms: [propext, Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.predUnion_assoc' depends on axioms: [propext, Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.predUnion_idem' depends on axioms: [propext, Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.predUnion_empty_left' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.predUnion_empty_right' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.AuthState.ext' depends on axioms: [propext, Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.AuthState.join_comm' depends on axioms: [propext, Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.AuthState.join_assoc' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.AuthState.join_idem' depends on axioms: [propext, Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.AuthState.join_empty_left' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.AuthState.join_empty_right' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.AuthState.applyAll_swap' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.AuthState.applyAll_perm' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.AuthState.fresh_add_survives_observed_remove' does not depend on any axioms
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.AuthState.observed_tag_is_tombstoned' does not depend on any axioms
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.AuthState.observed_only_tag_is_inactive' does not depend on any axioms
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.AuthState.inactive_when_all_tags_removed' does not depend on any axioms
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.AuthorizationState.ext' does not depend on any axioms
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.AuthorizationState.join_comm' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.AuthorizationState.join_assoc' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.AuthorizationState.join_idem' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.AuthorizationState.applyAll_swap' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.AuthorizationState.applyAll_perm' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.AuthorizationState.fresh_capability_grant_survives_unseen_revoke' does not depend on any axioms
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.AuthorizationState.observed_capability_tag_is_tombstoned' does not depend on any axioms
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.AuthorizationState.observed_only_capability_grant_is_inactive' does not depend on any axioms
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.CapabilityOperation.valid_operation_attributable' does not depend on any axioms
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.CapabilityOperation.valid_operation_unique_author' does not depend on any axioms
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.CapabilityOperation.validity_requires_membership' does not depend on any axioms
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.CapabilityOperation.validity_requires_capability' does not depend on any axioms
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.AccountableState.ext' does not depend on any axioms
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.AccountableState.join_comm' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.AccountableState.join_assoc' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.AccountableState.join_idem' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.AccountableState.applyAll_swap' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.AccountableState.applyAll_perm' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.AccountableState.valid_operation_survives_concurrent_revoke' does not depend on any axioms
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.AccountableState.visible_revoke_blocks_later_operation' does not depend on any axioms
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.AccountableState.detection_and_eviction_preserves_evidence' does not depend on any axioms
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.antichain_every_region_is_ideal' does not depend on any axioms
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.ideal_intersection_is_prefix' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.finite_ideal_intersection_is_prefix' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.kappaExposure_mono' does not depend on any axioms
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.kappaProtection_antitone' does not depend on any axioms
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.eventually_exposed_under_unbounded_retention' does not depend on any axioms
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.admissible_for_large_implies_admissible_for_small' does not depend on any axioms
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.contentExposure_mono_kappa' does not depend on any axioms
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.erase_history_shrinks_exposure' does not depend on any axioms
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.admissible_when_unexposed' does not depend on any axioms
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.admissibility_antitone_kappa' does not depend on any axioms
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.PunctureSet.join_comm' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.PunctureSet.join_assoc' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.PunctureSet.join_idem' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.PunctureSet.concurrent_punctures_commute' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.PunctureSet.no_resurrection' does not depend on any axioms
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.PunctureSet.readability_monotone' does not depend on any axioms
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.PunctureSet.merged_public_state_cannot_restore' does not depend on any axioms
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.PublicState.ext' does not depend on any axioms
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.PublicState.join_comm' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.PublicState.join_assoc' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.PublicState.join_idem' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.PublicState.applyAll_swap' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.PublicState.applyAll_perm' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.PublicState.strong_eventual_consistency_pair' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.PrefixRegion.cover_exact' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.PrefixRegion.cover_length_le_depth_plus_one' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.PrefixRegion.coverMany_length_le' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.PrefixRegion.coverMany_exact' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.SegmentGrant.coverPrefix_exact' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.SegmentGrant.coverPrefix_length_le' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.SegmentGrant.cover_exact' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.SegmentGrant.cover_length_le' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.live_history_steps_commute' does not depend on any axioms
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.runHistory_preserves_live' does not depend on any axioms
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.AuthorizationLifecycle.removal_only_blocks_while_membership_inactive' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.AuthorizationLifecycle.removal_only_same_identity_rejoin_revives_capability' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.AuthorizationLifecycle.coupled_removal_prevents_same_identity_capability_revival' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.AuthorizationLifecycle.fresh_incarnation_does_not_inherit_old_capability' depends on axioms: [propext,
+ Quot.sound]
+'_private.work.FullCombinatorialSpineAudit.0.CausalDagCgka.combinatorial_spine_checked' does not depend on any axioms
+[DEBUG:N] Reporting complete, hasErrors = false
