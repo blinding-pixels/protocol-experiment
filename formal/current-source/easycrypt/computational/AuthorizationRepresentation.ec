@@ -81,6 +81,13 @@ pred lean_capability_active
        model.`lora_capability_added member required tag
     /\ ! model.`lora_capability_removed tag.
 
+pred lean_operation_authorized
+    (model : lean_observed_remove_authorization)
+    (member : principal)
+    (required : capability) =
+     lean_member_active model member
+  /\ lean_capability_active model member required.
+
 lemma project_authorization_state_represents
     (state : authorization_state) :
   authorization_state_represents_lean
@@ -112,6 +119,20 @@ proof.
   rewrite /lean_capability_active /project_authorization_state
     /capability_active /principal_matches /defense_enabled.
   smt().
+qed.
+
+lemma projected_operation_authorized_is_exact
+    (state : authorization_state)
+    (member : principal)
+    (required : capability) :
+  lean_operation_authorized
+      (project_authorization_state state) member required <=>
+     member_active Production state member
+  /\ capability_active Production state member required.
+proof.
+  by rewrite /lean_operation_authorized
+    projected_member_active_is_exact
+    projected_capability_active_is_exact.
 qed.
 
 pred lean_observed_remove_state_of_facts

@@ -1,9 +1,12 @@
-require import AuthorizationRepresentation AuthorizationAncestry UnauthorizedFactReduction UnauthorizedSignatureReduction UnauthorizedHashReduction MutationProofs.
+require import CausalClosureRepresentation AuthorizationRepresentation AuthorizationAncestry UnauthorizedFactReduction UnauthorizedSignatureReduction UnauthorizedHashReduction MutationProofs.
 
 (* Active Deliverable A checker entry point.  Every new unauthorized-game or
    reduction theorem is imported here while it is under development, so a red
    proof cannot be hidden behind the already-green general checkpoint. *)
+print CausalClosureRepresentation.acceptance_preserves_causal_representation.
+print CausalClosureRepresentation.represented_exact_predecessor_closure.
 print AuthorizationRepresentation.policy_ancestry_has_observed_remove_projection.
+print AuthorizationRepresentation.projected_operation_authorized_is_exact.
 print AuthorizationRepresentation.projected_member_active_is_exact.
 print AuthorizationRepresentation.projected_capability_active_is_exact.
 print AuthorizationAncestry.normalize_success_implies_policy_ancestry.
