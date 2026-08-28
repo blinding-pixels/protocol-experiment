@@ -1,8 +1,9 @@
-require import MutationHistoryProofs MutationPolicyProofs MutationEditProofs MutationGameProofs ValidatorCharacterization UnauthorizedIdeal CausalClosureRepresentation AuthorizationRepresentation AuthorizationAncestry UnauthorizedFactReduction UnauthorizedSignatureReduction UnauthorizedHashReduction MutationProofs.
+require import PrimitiveControlProofs MutationHistoryProofs MutationPolicyProofs MutationEditProofs MutationGameProofs ValidatorCharacterization UnauthorizedIdeal CausalClosureRepresentation AuthorizationRepresentation AuthorizationAncestry UnauthorizedFactReduction UnauthorizedSignatureReduction UnauthorizedHashReduction MutationProofs.
 
 (* Active Deliverable A checker entry point.  Every new unauthorized-game or
    reduction theorem is imported here while it is under development, so a red
    proof cannot be hidden behind the already-green general checkpoint. *)
+print PrimitiveControlProofs.test_signature_multi_user_eufcma_probability_one.
 print MutationHistoryProofs.mutation_segment_wins_probability_one.
 print MutationHistoryProofs.mutation_region_wins_probability_one.
 print MutationHistoryProofs.mutation_merge_wins_probability_one.
