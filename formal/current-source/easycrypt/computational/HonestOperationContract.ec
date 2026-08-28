@@ -295,10 +295,10 @@ proof.
 
   rcondf 10; first by
     auto=> />;
-    exact witness_honest_closure_matches_fact_ids.
+    smt(witness_honest_closure_matches_fact_ids).
   rcondf 10; first by
     auto=> />;
-    exact witness_honest_observed_context_matches_fact_ids.
+    smt(witness_honest_observed_context_matches_fact_ids).
   rcondt 10; first by auto; rewrite /validation_success.
 
   wp.
