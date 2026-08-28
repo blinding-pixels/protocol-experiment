@@ -1,8 +1,13 @@
-require import MutationEditProofs MutationGameProofs ValidatorCharacterization UnauthorizedIdeal CausalClosureRepresentation AuthorizationRepresentation AuthorizationAncestry UnauthorizedFactReduction UnauthorizedSignatureReduction UnauthorizedHashReduction MutationProofs.
+require import MutationPolicyProofs MutationEditProofs MutationGameProofs ValidatorCharacterization UnauthorizedIdeal CausalClosureRepresentation AuthorizationRepresentation AuthorizationAncestry UnauthorizedFactReduction UnauthorizedSignatureReduction UnauthorizedHashReduction MutationProofs.
 
 (* Active Deliverable A checker entry point.  Every new unauthorized-game or
    reduction theorem is imported here while it is under development, so a red
    proof cannot be hidden behind the already-green general checkpoint. *)
+print MutationPolicyProofs.mutation_predecessor_wins_probability_one.
+print MutationPolicyProofs.mutation_digest_wins_probability_one.
+print MutationPolicyProofs.mutation_context_wins_probability_one.
+print MutationPolicyProofs.mutation_capability_wins_probability_one.
+print MutationPolicyProofs.mutation_body_wins_probability_one.
 print MutationEditProofs.mutation_domain_wins_probability_one.
 print MutationEditProofs.mutation_document_wins_probability_one.
 print MutationEditProofs.mutation_incarnation_wins_probability_one.
