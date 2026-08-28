@@ -1,6 +1,7 @@
 require import AllCore List FSet.
 require import ProtocolTypes CanonicalEncoding ProtocolPrimitives.
 require PrimitiveGames.
+clone import PrimitiveGames as PG.
 require import UnauthorizedReduction.
 
 (* EasyCrypt-level canonical encoding is injective by construction.  This is
@@ -22,19 +23,19 @@ module UnauthorizedA1HashEvidence(
   S : SIGNATURE_SCHEME,
   H : NODE_HASH
 ) = {
-  module HLog = PrimitiveGames.LoggedNodeHash(H)
+  module HLog = PG.LoggedNodeHash(H)
   module O = CandidateUnauthorizedEnvironment(S, HLog)
   module A = A(O)
 
   proc main(initial_state : protocol_state) : bool * bool = {
-    var queries : PrimitiveGames.node_hash_query list;
-    var found : PrimitiveGames.node_collision option;
+    var queries : PG.node_hash_query list;
+    var found : PG.node_collision option;
 
     HLog.init();
     O.init(initial_state);
     A.attack();
     queries <@ HLog.get_queries();
-    found <- PrimitiveGames.find_node_collision_pair queries;
+    found <- PG.find_node_collision_pair queries;
 
     return (O.unauthorized_accepted, found <> None);
   }
@@ -48,19 +49,19 @@ module UnauthorizedA1HashEvidence(
 module BHash(
   A : ADAPTIVE_UNAUTHORIZED_ADVERSARY,
   S : SIGNATURE_SCHEME
-)(O : PrimitiveGames.LOGGED_NODE_HASH_ORACLE) = {
+)(O : PG.LOGGED_NODE_HASH_ORACLE) = {
   module E = CandidateUnauthorizedEnvironment(S, O)
   module A = A(E)
 
-  proc collide(initial_state : protocol_state) : PrimitiveGames.node_collision = {
-    var queries : PrimitiveGames.node_hash_query list;
-    var found : PrimitiveGames.node_collision option;
-    var pair : PrimitiveGames.node_collision;
+  proc collide(initial_state : protocol_state) : PG.node_collision = {
+    var queries : PG.node_hash_query list;
+    var found : PG.node_collision option;
+    var pair : PG.node_collision;
 
     E.init(initial_state);
     A.attack();
     queries <@ O.get_queries();
-    found <- PrimitiveGames.find_node_collision_pair queries;
+    found <- PG.find_node_collision_pair queries;
     pair <- if found = None then (witness, witness) else oget found;
     return pair;
   }
@@ -77,7 +78,7 @@ section A1ExactReduction.
       res.`2
     ] =
     Pr[
-      PrimitiveGames.NodeCollisionGame(BHash(A, S), H).main(initial_state) @ &m :
+      PG.NodeCollisionGame(BHash(A, S), H).main(initial_state) @ &m :
       res
     ].
   proof.
