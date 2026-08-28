@@ -343,72 +343,48 @@ proof.
     try rewrite witness_base_view_facts witness_base_state_creator;
     auto.
   + rcondf 1; first by auto.
-    rcondf 1; first by
-      auto;
-      rewrite witness_honest_authorization_digest
-        /defense_enabled /validation_success.
-    rcondf 1; first by
-      auto;
-      rewrite witness_honest_author_key_binding
-        /defense_enabled /validation_success.
-    rcondt 1; first by
-      auto;
-      rewrite /defense_enabled /validation_success.
-    rcondf 5; first by
-      auto;
-      rewrite witness_honest_signature_bytes.
+    rcondf 1; first by auto.
+    rcondf 1; first by auto.
+    rcondt 1; first by auto.
+    rcondf 5; first by auto.
 
     sp 4.
     rcondf 1; first by
-      auto;
-      rewrite witness_honest_author
+      auto=> />;
+      try rewrite witness_honest_author
         witness_bob_old_member_active_state_7
-        /validation_success.
+        /validation_success;
+      auto.
     rcondf 1; first by
-      auto;
-      rewrite witness_honest_author
+      auto=> />;
+      try rewrite witness_honest_author
         witness_honest_required_capability_field
         witness_bob_old_edit_active_state_7
-        /validation_success.
+        /validation_success;
+      auto.
     rcondf 1; first by
-      auto;
-      rewrite witness_honest_required_capability_field
+      auto=> />;
+      try rewrite witness_honest_required_capability_field
         witness_honest_required_capability
-        /defense_enabled /validation_success.
+        /defense_enabled /validation_success;
+      auto.
     rcondf 1; first by
-      auto;
-      rewrite witness_honest_operation_body_valid
-        /defense_enabled /validation_success.
+      auto=> />;
+      try rewrite witness_honest_operation_body_valid
+        /defense_enabled /validation_success;
+      auto.
 
-    rcondf 1; first by
-      auto;
-      rewrite witness_honest_operation_kind /validation_success.
-    rcondf 1; first by
-      auto;
-      rewrite witness_honest_operation_kind /validation_success.
-    rcondf 1; first by
-      auto;
-      rewrite witness_honest_operation_kind /validation_success.
-    rcondf 1; first by
-      auto;
-      rewrite witness_honest_operation_kind /validation_success.
-    rcondf 1; first by
-      auto;
-      rewrite witness_honest_operation_kind /validation_success.
-    rcondf 1; first by
-      auto;
-      rewrite witness_honest_operation_kind /validation_success.
-    rcondf 1; first by
-      auto;
-      rewrite witness_honest_operation_kind /validation_success.
-    rcondf 1; first by
-      auto;
-      rewrite witness_honest_operation_kind /validation_success.
-    rcondf 1; first by
-      auto;
-      rewrite witness_honest_operation_kind /validation_success.
+    rcondf 1; first by auto.
+    rcondf 1; first by auto.
+    rcondf 1; first by auto.
+    rcondf 1; first by auto.
+    rcondf 1; first by auto.
+    rcondf 1; first by auto.
+    rcondf 1; first by auto.
+    rcondf 1; first by auto.
+    rcondf 1; first by auto.
 
-    by auto; rewrite /validation_success.
+    by auto.
 qed.
 
 (* The final theorem uses the public production entry point, so the canonical
