@@ -440,7 +440,12 @@ proof.
   proc.
   inline TestSignature.verify.
   islossless.
-  exact normalize_test_signature_lossless.
+  while (true) (size remaining).
+  - move=> z.
+    inline TestSignature.verify.
+    auto => />.
+    smt(size_behead size_ge0).
+  - by auto; smt(size_ge0).
 qed.
 
 lemma witness_honest_validate_lossless :
@@ -448,7 +453,12 @@ lemma witness_honest_validate_lossless :
 proof.
   proc.
   islossless.
-  exact witness_honest_validate_decoded_lossless.
+  while (true) (size remaining).
+  - move=> z.
+    inline TestSignature.verify.
+    auto => />.
+    smt(size_behead size_ge0).
+  - by auto; smt(size_ge0).
 qed.
 
 (* The final theorem uses the public production entry point, so the canonical
