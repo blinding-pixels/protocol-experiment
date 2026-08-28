@@ -60,18 +60,28 @@ section A5ValidatorSoundness.
      normalization is related to pure policy replay by the checked A3 ancestry
      contract; acceptance of every subsequent guard then establishes the exact
      ideal authorization predicate. *)
-  lemma validate_decoded_acceptance_implies_ideal_authorization :
+  lemma validate_decoded_acceptance_implies_ideal_authorization
+      (input_operation : signed_operation)
+      (input_envelope : operation_envelope)
+      (input_view : public_view)
+      (input_state : protocol_state) :
     hoare [ValidateOperation(S).validate_decoded :
-      mode = Production ==>
+         mode = Production
+      /\ signed_operation = input_operation
+      /\ envelope = input_envelope
+      /\ view = input_view
+      /\ state = input_state
+      ==>
       res.`vr_accepted =>
-        ideal_decoded_authorized signed_operation envelope view state].
+        ideal_decoded_authorized
+          input_operation input_envelope input_view input_state].
   proof.
     proc.
     wp.
     call (_ : true ==> true).
     wp.
     call (normalize_success_implies_policy_ancestry
-      view.`pv_facts state.`ps_creator).
+      input_view.`pv_facts input_state.`ps_creator).
     auto=> />.
     rewrite /ideal_decoded_authorized /ideal_authorization_state
       /authorization_ancestry_valid /defense_enabled
@@ -82,14 +92,22 @@ section A5ValidatorSoundness.
   (* The public validator adds decoding and canonical re-encoding before the
      decoded suffix.  Thus this is the complete A5 semantic bridge for an
      arbitrary candidate, not a theorem about a copied or weakened validator. *)
-  lemma validate_acceptance_implies_ideal_authorization :
+  lemma validate_acceptance_implies_ideal_authorization
+      (input_operation : signed_operation)
+      (input_view : public_view)
+      (input_state : protocol_state) :
     hoare [ValidateOperation(S).validate :
-      mode = Production ==>
+         mode = Production
+      /\ signed_operation = input_operation
+      /\ view = input_view
+      /\ state = input_state
+      ==>
       res.`vr_accepted =>
-        ideal_authorized_candidate signed_operation view state].
+        ideal_authorized_candidate input_operation input_view input_state].
   proof.
     proc.
-    call (validate_decoded_acceptance_implies_ideal_authorization).
+    call (validate_decoded_acceptance_implies_ideal_authorization
+      input_operation envelope input_view input_state).
     auto=> />.
     rewrite /ideal_authorized_candidate /defense_enabled
       /validation_success /validation_error.
