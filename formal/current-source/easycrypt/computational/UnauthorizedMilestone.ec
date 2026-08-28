@@ -1,8 +1,10 @@
-require import UnauthorizedIdeal CausalClosureRepresentation AuthorizationRepresentation AuthorizationAncestry UnauthorizedFactReduction UnauthorizedSignatureReduction UnauthorizedHashReduction MutationProofs.
+require import ValidatorCharacterization UnauthorizedIdeal CausalClosureRepresentation AuthorizationRepresentation AuthorizationAncestry UnauthorizedFactReduction UnauthorizedSignatureReduction UnauthorizedHashReduction MutationProofs.
 
 (* Active Deliverable A checker entry point.  Every new unauthorized-game or
    reduction theorem is imported here while it is under development, so a red
    proof cannot be hidden behind the already-green general checkpoint. *)
+print ValidatorCharacterization.base_edit_validate_characterization.
+print ValidatorCharacterization.base_edit_validate_decoded_characterization.
 print UnauthorizedIdeal.ideal_unauthorized_probability_zero.
 print UnauthorizedIdeal.ideal_main_never_unauthorized.
 print UnauthorizedIdeal.ideal_submit_preserves_no_unauthorized.
