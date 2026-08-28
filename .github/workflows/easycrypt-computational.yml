@@ -27,12 +27,12 @@ concurrency:
 
 jobs:
   computational-proof:
-    name: Check full computational proof
+    name: Check active unauthorized reduction
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
       EASYCRYPT_IMAGE: ghcr.io/easycrypt/ec-test-box@sha256:84980006e8b01fe6497bbd0ecd67deeb5e7361d8ad17e27d24924122d368e0fc
-      CHECK_EC: ComputationalProof.ec
+      CHECK_EC: UnauthorizedMilestone.ec
     steps:
       - name: Check out exact proof source
         uses: actions/checkout@v4
@@ -83,7 +83,7 @@ jobs:
             --format '{{json .RepoDigests}}' \
             | tee "$evidence/image-repo-digests.txt"
 
-      - name: Compile full computational proof
+      - name: Compile active unauthorized reduction
         shell: bash
         run: |
           set -euo pipefail
