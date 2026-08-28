@@ -1,7 +1,7 @@
 require import AllCore List FSet.
 require import ProtocolTypes CanonicalEncoding ProtocolPrimitives AuthorizationState.
 require import ProtocolChecks ProtocolOracles UnauthorizedGame WitnessFixtures MutationWitnesses.
-require import AuthorizationWitnessTrace AuthorizationNormalizerContract HonestFixtureContract.
+require import AuthorizationWitnessTrace AuthorizationNormalizerContract AuthorizationNormalizerWitness HonestFixtureContract.
 
 (* Exact deterministic objects used by [HonestEditAcceptanceWitness.main].
    Keeping them named prevents later validator proofs from rebuilding the
