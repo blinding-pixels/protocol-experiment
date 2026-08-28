@@ -1,5 +1,5 @@
 require import AllCore List FSet.
-require import ProtocolTypes AuthorizationState AuthorizationAncestry.
+require import ProtocolTypes CanonicalEncoding AuthorizationState AuthorizationAncestry.
 
 (* Representation mapping for the observed-remove authorization mathematics.
 
