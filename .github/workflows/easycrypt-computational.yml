@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - formal/easycrypt-computational-m1
+      - formal/easycrypt-unauthorized-reduction
     paths:
       - '.github/workflows/easycrypt-computational.yml'
       - 'formal/current-source/easycrypt/computational/**'

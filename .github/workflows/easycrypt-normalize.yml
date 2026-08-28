@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - formal/easycrypt-computational-m1
+      - formal/easycrypt-unauthorized-reduction
     paths:
       - 'tools/easycrypt/normalize_easycrypt_syntax.py'
   workflow_dispatch:
@@ -23,7 +24,7 @@ jobs:
       - name: Check out branch
         uses: actions/checkout@v4
         with:
-          ref: formal/easycrypt-computational-m1
+          ref: ${{ github.ref_name }}
           fetch-depth: 0
 
       - name: Apply deterministic syntax normalization
