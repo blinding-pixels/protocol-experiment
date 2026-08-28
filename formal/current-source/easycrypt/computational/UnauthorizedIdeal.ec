@@ -12,11 +12,11 @@ op ideal_authorization_state
     (state : protocol_state) : authorization_state option =
   authorization_policy_replay state.`ps_creator view.`pv_facts.
 
-pred ideal_decoded_authorized
+op ideal_decoded_authorized
     (operation : signed_operation)
     (envelope : operation_envelope)
     (view : public_view)
-    (state : protocol_state) =
+    (state : protocol_state) : bool =
      envelope.`oe_protocol_domain = expected_protocol_domain
   /\ envelope.`oe_protocol_version = expected_protocol_version
   /\ envelope.`oe_document_id = state.`ps_document_id
@@ -44,10 +44,10 @@ pred ideal_decoded_authorized
          envelope.`oe_operation_kind envelope.`oe_operation_body
   /\ operation_body_valid_for_envelope envelope.
 
-pred ideal_authorized_candidate
+op ideal_authorized_candidate
     (operation : signed_operation)
     (view : public_view)
-    (state : protocol_state) =
+    (state : protocol_state) : bool =
      decode_operation operation.`so_raw <> None
   /\ canonical_reencoding operation.`so_raw
   /\ ideal_decoded_authorized
