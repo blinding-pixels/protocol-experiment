@@ -409,6 +409,48 @@ proof.
     by auto.
 qed.
 
+(* Lift the decoded contract through the public wire-validation prefix in
+   ordinary Hoare logic.  This keeps semantic correctness separate from the
+   termination argument used only to obtain the exact probability-one claim. *)
+lemma witness_honest_validate :
+  hoare [ValidateOperation(TestSignature).validate :
+       mode = Production
+    /\ signed_operation = witness_honest_edit_operation
+    /\ view = witness_base_view_exact
+    /\ state = witness_base_state_exact
+    ==>
+    res.`vr_accepted].
+proof.
+  proc.
+  rcondf 10; first by
+    auto;
+    rewrite witness_honest_edit_decodes /validation_success.
+  rcondf 11; first by
+    auto;
+    rewrite witness_honest_edit_is_canonical
+      /defense_enabled /validation_success.
+  rcondt 11; first by auto; rewrite /validation_success.
+  call (witness_honest_validate_decoded).
+  auto; rewrite witness_honest_edit_decodes.
+qed.
+
+lemma witness_honest_validate_decoded_lossless :
+  islossless ValidateOperation(TestSignature).validate_decoded.
+proof.
+  proc.
+  inline TestSignature.verify.
+  call normalize_test_signature_lossless.
+  auto.
+qed.
+
+lemma witness_honest_validate_lossless :
+  islossless ValidateOperation(TestSignature).validate.
+proof.
+  proc.
+  call witness_honest_validate_decoded_lossless.
+  auto.
+qed.
+
 (* The final theorem uses the public production entry point, so the canonical
    decoding and re-encoding prefix is checked before the decoded contract. *)
 lemma witness_honest_operation_accepted &m :
@@ -430,15 +472,7 @@ proof.
        ==>
        res.`vr_accepted)
     => //.
-  proc.
-  rcondf 10; first by
-    auto;
-    rewrite witness_honest_edit_decodes /validation_success.
-  rcondf 11; first by
-    auto;
-    rewrite witness_honest_edit_is_canonical
-      /defense_enabled /validation_success.
-  rcondt 11; first by auto; rewrite /validation_success.
-  call (witness_honest_validate_decoded).
-  auto; rewrite witness_honest_edit_decodes.
+  conseq (: _ ==> true) (: _ ==> res.`vr_accepted) => //.
+  + exact witness_honest_validate.
+  conseq witness_honest_validate_lossless => //.
 qed.
