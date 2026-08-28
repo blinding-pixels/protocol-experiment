@@ -50,17 +50,20 @@ pred authorization_ancestry_valid
 section A3PolicyAncestry.
   declare module S <: SIGNATURE_SCHEME.
 
-  lemma normalize_success_implies_policy_ancestry :
+  lemma normalize_success_implies_policy_ancestry
+      (input_facts : signed_authorization_fact list)
+      (input_creator : principal) :
     hoare [NormalizeAuthorization(S).normalize :
-      true ==>
-      res.`1 => authorization_ancestry_valid creator facts res.`2].
+      facts = input_facts /\ creator = input_creator ==>
+      res.`1 =>
+        authorization_ancestry_valid input_creator input_facts res.`2].
   proof.
     proc.
     while
       (valid =>
         authorization_policy_replay_from
           current snapshots creator remaining =
-        authorization_policy_replay creator facts).
+        authorization_policy_replay input_creator input_facts).
     + wp.
       call (_ : true ==> true).
       auto=> /> &hr.
