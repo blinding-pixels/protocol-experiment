@@ -58,6 +58,82 @@ module EUFCMAGame(
   }
 }.
 
+(* Node identity hashes the complete production transcript together with the
+   operation signature.  The collision game therefore logs [node_material],
+   not only the transcript component. *)
+type node_hash_query = node_material * node_id.
+type node_collision = node_material * node_material.
+
+op find_collision_with
+    (material : node_material)
+    (digest : node_id)
+    (queries : node_hash_query list) : node_material option =
+  with queries = [] => None
+  with query :: rest =>
+    if query.`2 = digest /\ query.`1 <> material
+    then Some query.`1
+    else find_collision_with material digest rest.
+
+op find_node_collision_pair
+    (queries : node_hash_query list) : node_collision option =
+  with queries = [] => None
+  with query :: rest =>
+    let other = find_collision_with query.`1 query.`2 rest in
+    if other = None
+    then find_node_collision_pair rest
+    else Some (query.`1, oget other).
+
+module type LOGGED_NODE_HASH_ORACLE = {
+  proc hash(material : node_material) : node_id
+  proc get_queries() : node_hash_query list
+}.
+
+module LoggedNodeHash(H : NODE_HASH) : LOGGED_NODE_HASH_ORACLE = {
+  var queries : node_hash_query list
+
+  proc init() : unit = {
+    queries <- [];
+  }
+
+  proc hash(material : node_material) : node_id = {
+    var digest : node_id;
+    digest <@ H.hash(material);
+    queries <- rcons queries (material, digest);
+    return digest;
+  }
+
+  proc get_queries() : node_hash_query list = {
+    return queries;
+  }
+}.
+
+module type NODE_COLLISION_ADVERSARY(O : LOGGED_NODE_HASH_ORACLE) = {
+  proc collide(initial_state : protocol_state) : node_collision
+}.
+
+module NodeCollisionGame(
+  A : NODE_COLLISION_ADVERSARY,
+  H : NODE_HASH
+) = {
+  module O = LoggedNodeHash(H)
+  module A = A(O)
+
+  proc main(initial_state : protocol_state) : bool = {
+    var pair : node_collision;
+    var queries : node_hash_query list;
+    var found : node_collision option;
+
+    O.init();
+    pair <@ A.collide(initial_state);
+    queries <@ O.get_queries();
+    found <- find_node_collision_pair queries;
+
+    return found <> None /\ pair = oget found;
+  }
+}.
+
+(* Retained transcript-only game for compatibility with the initial executable
+   skeleton.  Deliverable A reductions use [NodeCollisionGame]. *)
 module type COLLISION_ADVERSARY = {
   proc collide() : operation_transcript * operation_transcript
 }.
