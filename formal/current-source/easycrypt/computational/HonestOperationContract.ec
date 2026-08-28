@@ -259,6 +259,32 @@ proof.
     /witness_honest_edit_envelope /witness_edit_envelope.
 qed.
 
+lemma witness_honest_signature_bytes :
+  witness_honest_edit_operation.`so_signature.`sig_bytes =
+    SignatureBytes
+      (operation_signature_message Production witness_honest_edit_envelope).
+proof.
+  by rewrite /witness_honest_edit_operation.
+qed.
+
+lemma witness_honest_author :
+  witness_honest_edit_envelope.`oe_author = witness_bob_old.
+proof.
+  by rewrite /witness_honest_edit_envelope /witness_edit_envelope.
+qed.
+
+lemma witness_honest_required_capability_field :
+  witness_honest_edit_envelope.`oe_required_capability = CapEdit.
+proof.
+  by rewrite /witness_honest_edit_envelope /witness_edit_envelope.
+qed.
+
+lemma witness_honest_operation_kind :
+  witness_honest_edit_envelope.`oe_operation_kind = OpEdit.
+proof.
+  by rewrite /witness_honest_edit_envelope /witness_edit_envelope.
+qed.
+
 (* First discharge the decoded production suffix.  The proof follows the
    honest branch of every executable check, then uses the separately checked
    seven-fact normalizer contract at the only remaining procedure call. *)
@@ -303,21 +329,85 @@ proof.
       witness_base_view_facts witness_base_fact_ids.
   rcondt 10; first by auto; rewrite /validation_success.
 
-  wp.
-  call (normalize_witness_base_signed_facts).
-  auto;
-  rewrite witness_honest_authorization_digest
-    witness_honest_author_key_binding
-    witness_bob_old_member_active_state_7
-    witness_bob_old_edit_active_state_7
-    witness_honest_required_capability
-    witness_honest_operation_body_valid
-    /witness_base_view_exact /witness_public_view
-    /witness_base_state_exact /witness_protocol_state
-    /witness_honest_edit_operation
-    /witness_honest_edit_envelope /witness_edit_envelope
-    /witness_edit_body_one
-    /defense_enabled /validation_success /validation_error.
+  seq 10 :
+    (result = validation_success /\
+     authorization_valid = true /\
+     authorization = witness_authorization_state_7 /\
+     mode = Production /\
+     signed_operation = witness_honest_edit_operation /\
+     envelope = witness_honest_edit_envelope /\
+     view = witness_base_view_exact /\
+     state = witness_base_state_exact).
+  + call (normalize_witness_base_signed_facts).
+    auto;
+    rewrite witness_base_view_facts witness_base_state_creator.
+  + rcondf 1; first by auto.
+    rcondf 1; first by
+      auto;
+      rewrite witness_honest_authorization_digest
+        /defense_enabled /validation_success.
+    rcondf 1; first by
+      auto;
+      rewrite witness_honest_author_key_binding
+        /defense_enabled /validation_success.
+    rcondt 1; first by
+      auto;
+      rewrite /defense_enabled /validation_success.
+    rcondf 5; first by
+      auto;
+      rewrite witness_honest_signature_bytes.
+
+    sp 4.
+    rcondf 1; first by
+      auto;
+      rewrite witness_honest_author
+        witness_bob_old_member_active_state_7
+        /validation_success.
+    rcondf 1; first by
+      auto;
+      rewrite witness_honest_author
+        witness_honest_required_capability_field
+        witness_bob_old_edit_active_state_7
+        /validation_success.
+    rcondf 1; first by
+      auto;
+      rewrite witness_honest_required_capability_field
+        witness_honest_required_capability
+        /defense_enabled /validation_success.
+    rcondf 1; first by
+      auto;
+      rewrite witness_honest_operation_body_valid
+        /defense_enabled /validation_success.
+
+    rcondf 1; first by
+      auto;
+      rewrite witness_honest_operation_kind /validation_success.
+    rcondf 1; first by
+      auto;
+      rewrite witness_honest_operation_kind /validation_success.
+    rcondf 1; first by
+      auto;
+      rewrite witness_honest_operation_kind /validation_success.
+    rcondf 1; first by
+      auto;
+      rewrite witness_honest_operation_kind /validation_success.
+    rcondf 1; first by
+      auto;
+      rewrite witness_honest_operation_kind /validation_success.
+    rcondf 1; first by
+      auto;
+      rewrite witness_honest_operation_kind /validation_success.
+    rcondf 1; first by
+      auto;
+      rewrite witness_honest_operation_kind /validation_success.
+    rcondf 1; first by
+      auto;
+      rewrite witness_honest_operation_kind /validation_success.
+    rcondf 1; first by
+      auto;
+      rewrite witness_honest_operation_kind /validation_success.
+
+    by auto; rewrite /validation_success.
 qed.
 
 (* The final theorem uses the public production entry point, so the canonical
