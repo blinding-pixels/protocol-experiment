@@ -439,6 +439,7 @@ lemma witness_honest_validate_decoded_lossless :
 proof.
   proc.
   inline TestSignature.verify.
+  wp.
   call normalize_test_signature_lossless.
   auto.
 qed.
