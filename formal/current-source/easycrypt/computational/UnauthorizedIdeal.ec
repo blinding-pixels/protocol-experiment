@@ -195,8 +195,8 @@ section A5IdealZero.
   declare module S <: SIGNATURE_SCHEME.
   declare module H <: NODE_HASH.
 
-  local module OI = IdealCandidateEnvironment(S, H).
-  local module GI = UnauthorizedA5Ideal(A, S, H).
+  module OI = IdealCandidateEnvironment(S, H).
+  module GI = UnauthorizedA5Ideal(A, S, H).
 
   lemma ideal_submit_preserves_no_unauthorized :
     hoare [OI.submit :
