@@ -1,6 +1,7 @@
 require import AllCore List FSet.
 require import ProtocolTypes CanonicalEncoding ProtocolPrimitives AuthorizationState.
 require import ProtocolChecks ProtocolOracles UnauthorizedGame HonestOperationContract.
+require import AuthorizationWitnessTrace.
 
 (* The unauthorized-operation event is computed only from values produced by
    the production path: [authorization_valid] is returned by the concrete
