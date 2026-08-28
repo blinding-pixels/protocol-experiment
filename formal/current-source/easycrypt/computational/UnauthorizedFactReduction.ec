@@ -2,6 +2,8 @@ require import AllCore List FSet.
 require import ProtocolTypes CanonicalEncoding ProtocolPrimitives AuthorizationState.
 require import UnauthorizedSignatureReduction UnauthorizedReduction.
 
+import PG.
+
 (* Accepted public views are traversed inside the reduction environment.  This
    file deliberately reuses the [PG] clone exported by
    [UnauthorizedSignatureReduction].  Creating a second clone would create a
