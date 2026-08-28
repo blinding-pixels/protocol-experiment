@@ -339,8 +339,9 @@ proof.
      view = witness_base_view_exact /\
      state = witness_base_state_exact).
   + call (normalize_witness_base_signed_facts).
-    auto;
-    rewrite witness_base_view_facts witness_base_state_creator.
+    auto=> />;
+    try rewrite witness_base_view_facts witness_base_state_creator;
+    auto.
   + rcondf 1; first by auto.
     rcondf 1; first by
       auto;
