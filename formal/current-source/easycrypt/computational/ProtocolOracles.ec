@@ -2,6 +2,17 @@ require import AllCore List FSet.
 require import ProtocolTypes CanonicalEncoding ProtocolPrimitives AuthorizationState ProtocolChecks.
 
 module ValidateOperation(S : SIGNATURE_SCHEME) = {
+  (* Evidence from the exact validator invocation.  The surrounding games read
+     these fields after [validate] returns instead of re-running normalization
+     or signature verification. *)
+  var last_decoded_envelope : operation_envelope option
+  var last_fact_ids : fact_id fset
+  var last_closure : fact_id fset option
+  var last_authorization_valid : bool
+  var last_authorization : authorization_state
+  var last_signature_checked : bool
+  var last_signature_valid : bool
+
   (* The decoded suffix is the production validator after the wire-level
      decoding and canonicality prefix.  It is invoked only by [validate]. *)
   proc validate_decoded(
@@ -26,6 +37,14 @@ module ValidateOperation(S : SIGNATURE_SCHEME) = {
     authorization <- empty_authorization_state;
     signature_valid <- false;
     target_option <- None;
+
+    last_decoded_envelope <- Some envelope;
+    last_fact_ids <- fset0;
+    last_closure <- None;
+    last_authorization_valid <- false;
+    last_authorization <- empty_authorization_state;
+    last_signature_checked <- false;
+    last_signature_valid <- false;
 
     if (result.`vr_accepted /\
         defense_enabled mode DefenseDomainVersion /\
@@ -56,6 +75,8 @@ module ValidateOperation(S : SIGNATURE_SCHEME) = {
       closure_option <-
         exact_predecessor_closure state envelope.`oe_direct_predecessors;
       fact_ids <- fact_ids_of_signed_facts view.`pv_facts;
+      last_closure <- closure_option;
+      last_fact_ids <- fact_ids;
     }
 
     if (result.`vr_accepted /\
@@ -74,6 +95,8 @@ module ValidateOperation(S : SIGNATURE_SCHEME) = {
     if (result.`vr_accepted) {
       (authorization_valid, authorization) <@
         NormalizeAuthorization(S).normalize(view.`pv_facts, state.`ps_creator);
+      last_authorization_valid <- authorization_valid;
+      last_authorization <- authorization;
       if (! authorization_valid) {
         result <- validation_error FailureAuthorizationFacts;
       }
@@ -95,11 +118,13 @@ module ValidateOperation(S : SIGNATURE_SCHEME) = {
 
     if (result.`vr_accepted /\
         defense_enabled mode DefenseOperationSignature) {
+      last_signature_checked <- true;
       signature_valid <@ S.verify(
         signed_operation.`so_signature.`sig_verification_key,
         operation_signature_message mode envelope,
         signed_operation.`so_signature.`sig_bytes
       );
+      last_signature_valid <- signature_valid;
       if (! signature_valid) {
         result <- validation_error FailureOperationSignature;
       }
@@ -234,6 +259,14 @@ module ValidateOperation(S : SIGNATURE_SCHEME) = {
     signature_valid <- false;
     target_option <- None;
 
+    last_decoded_envelope <- None;
+    last_fact_ids <- fset0;
+    last_closure <- None;
+    last_authorization_valid <- false;
+    last_authorization <- empty_authorization_state;
+    last_signature_checked <- false;
+    last_signature_valid <- false;
+
     envelope_option <- decode_operation signed_operation.`so_raw;
     if (envelope_option = None) {
       result <- validation_error FailureCanonicalDecoding;
@@ -264,6 +297,8 @@ module type SUBMIT_OPERATION_ORACLE = {
 }.
 
 module ProtocolEnvironment(S : SIGNATURE_SCHEME, H : NODE_HASH) = {
+  module V = ValidateOperation(S)
+
   var mode : validator_mode
   var state : protocol_state
   var authorization_facts : signed_authorization_fact list
@@ -319,9 +354,13 @@ module ProtocolEnvironment(S : SIGNATURE_SCHEME, H : NODE_HASH) = {
       }
     }
 
-    result <@ ValidateOperation(S).validate(mode, operation, view, state);
+    result <@ V.validate(mode, operation, view, state);
 
     if (result.`vr_accepted) {
+      authorization_valid <- V.last_authorization_valid;
+      authorization <- V.last_authorization;
+      signature_valid <- V.last_signature_valid;
+
       node <@ H.hash(
         production_node_material envelope operation.`so_signature
       );
@@ -333,14 +372,6 @@ module ProtocolEnvironment(S : SIGNATURE_SCHEME, H : NODE_HASH) = {
            ao_capability = envelope.`oe_required_capability;
            ao_context = view.`pv_observed_fact_ids;
            ao_transcript = production_transcript envelope |};
-
-      (authorization_valid, authorization) <@
-        NormalizeAuthorization(S).normalize(view.`pv_facts, state.`ps_creator);
-      signature_valid <@ S.verify(
-        operation.`so_signature.`sig_verification_key,
-        operation_signature_message Production envelope,
-        operation.`so_signature.`sig_bytes
-      );
 
       semantic_unauthorized <-
            ! authorization_valid
