@@ -266,37 +266,40 @@ module BSignOriginOperationWitness(
   }
 }.
 
-section OperationWitnessPrimitiveGame.
+section OperationWitnessReductionAdversary.
   declare module A <: ADAPTIVE_ORIGIN_UNAUTHORIZED_ADVERSARY.
   declare module S <: SIGNATURE_SCHEME.
   declare module H <: NODE_HASH.
 
-  module R = PG.MultiUserEUFCMAGame(BSignOriginOperationWitness(A, H), S).
+  module SOR = PG.LoggedSignatureOracle(S).
+  module B = BSignOriginOperationWitness(A, H)(SOR).
 
-  (* Within the exact named primitive game, success is the A2 bad flag from
-     the same origin-aware production-validator execution.  This is the
-     non-decorative bridge needed before comparing A0 and EUF-CMA probabilities. *)
-  lemma operation_witness_eufcma_game_characterization
+  (* This theorem is stated before the primitive-game functor seals [B] to its
+     adversary interface.  Its public result carries the exact retained witness
+     and remains valid against the primitive oracle's final query logs. *)
+  lemma operation_witness_reduction_forge_characterization
       (initial : protocol_state) :
-    hoare [R.main :
+    hoare [B.forge :
       initial_state = initial ==>
-      res = R.A.O.Base.bad_operation_signature].
+      operation_forgery_witness_invariant
+        B.O.Base.unauthorized_accepted
+        B.O.Base.bad_operation_signature
+        res
+        SOR.sign_queries SOR.verify_queries].
   proof.
     proc.
-    inline R.A.forge
-      R.O.get_sign_queries R.O.get_verify_queries
-      R.A.O.init R.A.O.Base.init R.A.O.Base.Base.init R.O.init.
     call (_ :
       operation_forgery_witness_invariant
-        R.A.O.Base.unauthorized_accepted
-        R.A.O.Base.bad_operation_signature
-        R.A.O.operation_forgery
-        R.O.sign_queries R.O.verify_queries).
+        B.O.Base.unauthorized_accepted
+        B.O.Base.bad_operation_signature
+        B.O.operation_forgery
+        SOR.sign_queries SOR.verify_queries).
     + exact operation_witness_sign_operation_preserves_invariant.
     + exact operation_witness_sign_fact_preserves_invariant.
     + move=> input_operation input_view.
       exact (operation_witness_submit_preserves_invariant
         input_operation input_view).
-    auto; rewrite /operation_forgery_witness_invariant; smt().
+    inline B.O.init B.O.Base.init B.O.Base.Base.init.
+    auto; rewrite /operation_forgery_witness_invariant.
   qed.
-end section OperationWitnessPrimitiveGame.
+end section OperationWitnessReductionAdversary.
