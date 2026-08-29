@@ -32,8 +32,10 @@ op base_edit_decoded_accepts
           oget (exact_predecessor_closure
             witness_base_state_exact envelope.`oe_direct_predecessors)))
   /\ (! defense_enabled mode DefenseExactCausalContext \/
-       witness_base_view_exact.`pv_observed_fact_ids =
-         fact_ids_of_signed_facts witness_base_view_exact.`pv_facts)
+       (witness_base_view_exact.`pv_observed_fact_ids =
+          fact_ids_of_signed_facts witness_base_view_exact.`pv_facts
+        /\ fact_contents_match_state
+             witness_base_state_exact witness_base_view_exact.`pv_facts))
   /\ (! defense_enabled mode DefenseAuthorizationDigest \/
        envelope.`oe_authorization_digest =
          authorization_digest_of witness_authorization_state_7)
@@ -132,7 +134,8 @@ op base_facts_common_accepts
           oget (exact_predecessor_closure
             state envelope.`oe_direct_predecessors)))
   /\ (! defense_enabled mode DefenseExactCausalContext \/
-       view.`pv_observed_fact_ids = fact_ids_of_signed_facts view.`pv_facts)
+       (view.`pv_observed_fact_ids = fact_ids_of_signed_facts view.`pv_facts
+        /\ fact_contents_match_state state view.`pv_facts))
   /\ (! defense_enabled mode DefenseAuthorizationDigest \/
        envelope.`oe_authorization_digest =
          authorization_digest_of witness_authorization_state_7)

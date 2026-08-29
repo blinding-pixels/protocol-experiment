@@ -45,3 +45,33 @@ print MutationProofs.noncanonical_rejection_probability_one.
 print CausalClosureRepresentation.represented_fact_content_lookup.
 print AuthorizationState.authorization_digest_of_context_injective.
 print HonestOperationContract.witness_base_fact_contents_match.
+
+(* These typed aliases are proof-critical checker sentinels.  Unlike [print],
+   they cannot succeed when a referenced theorem is absent. *)
+lemma active_fact_content_representation
+    (state : protocol_state)
+    (records : fact_content_record list)
+    (candidate : fact_id) :
+  protocol_state_represents_fact_contents state records =>
+  state.`ps_fact_contents candidate =
+    fact_content_record_lookup records candidate.
+proof.
+  exact (CausalClosureRepresentation.represented_fact_content_lookup
+    state records candidate).
+qed.
+
+lemma active_authorization_digest_binding
+    (left right : authorization_state) :
+  authorization_digest_of left = authorization_digest_of right =>
+  left.`as_fact_ids = right.`as_fact_ids.
+proof.
+  exact (AuthorizationState.authorization_digest_of_context_injective
+    left right).
+qed.
+
+lemma active_honest_fact_content_binding :
+  fact_contents_match_state
+    witness_base_state_exact witness_base_view_exact.`pv_facts.
+proof.
+  exact HonestOperationContract.witness_base_fact_contents_match.
+qed.

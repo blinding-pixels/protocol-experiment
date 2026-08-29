@@ -29,6 +29,7 @@ op ideal_decoded_authorized
          state envelope.`oe_direct_predecessors)
   /\ view.`pv_observed_fact_ids =
        fact_ids_of_signed_facts view.`pv_facts
+  /\ fact_contents_match_state state view.`pv_facts
   /\ ideal_authorization_state view state <> None
   /\ envelope.`oe_authorization_digest =
        authorization_digest_of (oget (ideal_authorization_state view state))

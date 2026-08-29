@@ -12,6 +12,36 @@ type causal_record = {
   cr_context : fact_id fset
 }.
 
+type fact_content_record = {
+  fcr_id : fact_id;
+  fcr_fact : authorization_fact
+}.
+
+op fact_content_record_lookup
+    (records : fact_content_record list)
+    (candidate : fact_id) : authorization_fact option =
+  with records = [] => None
+  with records = record :: rest =>
+    if record.`fcr_id = candidate
+    then Some record.`fcr_fact
+    else fact_content_record_lookup rest candidate.
+
+pred protocol_state_represents_fact_contents
+    (state : protocol_state)
+    (records : fact_content_record list) =
+  forall candidate,
+    state.`ps_fact_contents candidate =
+      fact_content_record_lookup records candidate.
+
+lemma represented_fact_content_lookup
+    (state : protocol_state)
+    (records : fact_content_record list)
+    (candidate : fact_id) :
+  protocol_state_represents_fact_contents state records =>
+  state.`ps_fact_contents candidate =
+    fact_content_record_lookup records candidate.
+proof. by move=> representation; apply representation. qed.
+
 op causal_record_ids (records : causal_record list) : node_id fset =
   with records = [] => fset0
   with records = record :: rest =>

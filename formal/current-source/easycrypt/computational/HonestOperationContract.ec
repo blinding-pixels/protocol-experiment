@@ -157,6 +157,34 @@ proof.
     witness_base_view_observed_fact_ids witness_base_fact_ids.
 qed.
 
+lemma witness_base_fact_contents_match :
+  fact_contents_match_state
+    witness_base_state_exact witness_base_view_exact.`pv_facts.
+proof.
+  rewrite witness_base_view_facts
+    /fact_contents_match_state
+    /witness_base_state_exact /witness_protocol_state
+    /witness_fact_contents_for_node
+    /witness_extended_node /witness_rejoin_node
+    /witness_missing_revoke_node /witness_base_node.
+  rewrite /witness_base_signed_facts
+    !fact_contents_match_store_cons fact_contents_match_store_nil
+    /witness_signed_fact_1 /witness_signed_fact_2
+    /witness_signed_fact_3 /witness_signed_fact_4
+    /witness_signed_fact_5 /witness_signed_fact_6
+    /witness_signed_fact_7 /witness_signed_fact_of
+    /fact_content_map_of_authorization_facts
+    /witness_base_authorization_facts
+    !authorization_fact_lookup_cons authorization_fact_lookup_nil
+    /witness_fact_1 /witness_fact_2 /witness_fact_3
+    /witness_fact_4 /witness_fact_5 /witness_fact_6
+    /witness_fact_7
+    /witness_fact_id_1 /witness_fact_id_2 /witness_fact_id_3
+    /witness_fact_id_4 /witness_fact_id_5 /witness_fact_id_6
+    /witness_fact_id_7.
+  smt().
+qed.
+
 lemma witness_base_signed_facts_for_context :
   signed_facts_for_ids witness_base_signed_facts witness_context_7 =
     witness_base_signed_facts.
@@ -326,7 +354,8 @@ proof.
   rcondf 10; first by
     auto=> />;
     rewrite witness_base_view_observed_fact_ids
-      witness_base_view_facts witness_base_fact_ids.
+      witness_base_view_facts witness_base_fact_ids
+      witness_base_fact_contents_match.
   rcondt 10; first by auto; rewrite /validation_success.
 
   seq 10 :
