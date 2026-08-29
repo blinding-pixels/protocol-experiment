@@ -86,9 +86,10 @@ section OperationWitnessEnvironmentInvariant.
         W.operation_forgery
         SO.sign_queries SO.verify_queries].
   proof.
+    rewrite /operation_forgery_witness_invariant.
     proc.
     inline *.
-    auto; rewrite /operation_forgery_witness_invariant.
+    auto.
   qed.
 
   lemma operation_witness_sign_operation_preserves_invariant :
@@ -105,13 +106,12 @@ section OperationWitnessEnvironmentInvariant.
         W.operation_forgery
         SO.sign_queries SO.verify_queries].
   proof.
+    rewrite /operation_forgery_witness_invariant.
     proc.
     inline W.Base.sign_operation.
     if.
     + call (_ : true ==> true).
-      auto=> />.
-      rewrite /operation_forgery_witness_invariant in *.
-      smt().
+      auto.
     + auto.
   qed.
 
@@ -129,13 +129,12 @@ section OperationWitnessEnvironmentInvariant.
         W.operation_forgery
         SO.sign_queries SO.verify_queries].
   proof.
+    rewrite /operation_forgery_witness_invariant.
     proc.
     inline W.Base.sign_authorization_fact.
     if.
     + call (_ : true ==> true).
-      auto=> />.
-      rewrite /operation_forgery_witness_invariant in *.
-      smt().
+      auto.
     + auto.
   qed.
 
@@ -157,22 +156,15 @@ section OperationWitnessEnvironmentInvariant.
         W.operation_forgery
         SO.sign_queries SO.verify_queries].
   proof.
+    rewrite /operation_forgery_witness_invariant.
     proc.
     if.
     + call (origin_submit_preserves_bad_real_and_forgery
         (oget W.operation_forgery)).
-      auto=> />.
-      rewrite /operation_forgery_witness_invariant in *.
-      smt().
+      auto.
     + call (origin_submit_first_bad_operation_is_valid_forgery
         input_operation input_view).
-      if.
-      * auto=> />.
-        rewrite /operation_forgery_witness_invariant.
-        smt().
-      * auto=> />.
-        rewrite /operation_forgery_witness_invariant.
-        smt().
+      if; auto.
   qed.
 end section OperationWitnessEnvironmentInvariant.
 
