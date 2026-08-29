@@ -264,4 +264,68 @@ section AdaptiveOriginProbabilityAlgebra.
     rewrite !mu_or.
     smt(ge0_mu).
   qed.
+
+  lemma origin_real_probability_le_bad_union
+      &m (initial : protocol_state) :
+    Pr[GB.main(initial) @ &m : res.`opr_real] <=
+    Pr[
+      GB.main(initial) @ &m :
+        res.`opr_bad_operation \/ res.`opr_bad_fact \/ res.`opr_ideal
+    ].
+  proof.
+    have hpartition :
+      Pr[
+        GB.main(initial) @ &m :
+          ! origin_partition_holds
+              res.`opr_real
+              res.`opr_bad_operation
+              res.`opr_bad_fact
+              res.`opr_ideal
+      ] = 0%r.
+    + byphoare
+        (_ : initial_state = initial ==>
+          origin_partition_holds
+            res.`opr_real
+            res.`opr_bad_operation
+            res.`opr_bad_fact
+            res.`opr_ideal) => //=.
+      exact (origin_adaptive_main_partition initial).
+    have hsub :
+      Pr[GB.main(initial) @ &m : res.`opr_real] <=
+      Pr[
+        GB.main(initial) @ &m :
+          (res.`opr_bad_operation \/ res.`opr_bad_fact \/ res.`opr_ideal) \/
+          ! origin_partition_holds
+              res.`opr_real
+              res.`opr_bad_operation
+              res.`opr_bad_fact
+              res.`opr_ideal
+      ].
+    + rewrite Pr [mu_sub]=> /#.
+    have hunion :
+      Pr[
+        GB.main(initial) @ &m :
+          (res.`opr_bad_operation \/ res.`opr_bad_fact \/ res.`opr_ideal) \/
+          ! origin_partition_holds
+              res.`opr_real
+              res.`opr_bad_operation
+              res.`opr_bad_fact
+              res.`opr_ideal
+      ] <=
+        Pr[
+          GB.main(initial) @ &m :
+            res.`opr_bad_operation \/ res.`opr_bad_fact \/ res.`opr_ideal
+        ] +
+        Pr[
+          GB.main(initial) @ &m :
+            ! origin_partition_holds
+                res.`opr_real
+                res.`opr_bad_operation
+                res.`opr_bad_fact
+                res.`opr_ideal
+        ].
+    + rewrite Pr [mu_or].
+      smt(ge0_mu).
+    smt().
+  qed.
 end section AdaptiveOriginProbabilityAlgebra.
