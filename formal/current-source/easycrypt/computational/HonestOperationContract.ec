@@ -175,7 +175,7 @@ proof.
     /witness_signed_fact_7 /witness_signed_fact_of
     /fact_content_map_of_authorization_facts
     /witness_base_authorization_facts
-    !authorization_fact_lookup_cons authorization_fact_lookup_nil
+    !authorization_fact_lookup_cons
     /witness_fact_1 /witness_fact_2 /witness_fact_3
     /witness_fact_4 /witness_fact_5 /witness_fact_6
     /witness_fact_7
