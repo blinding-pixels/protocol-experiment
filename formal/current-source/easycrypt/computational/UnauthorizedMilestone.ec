@@ -89,3 +89,6 @@ lemma active_honest_fact_content_binding :
 proof.
   exact HonestOperationContract.witness_base_fact_contents_match.
 qed.
+
+(* Normal connector-authored checkpoint following the exact source restore.
+   This keeps both checker workflows eligible after the bot-token repair. *)
