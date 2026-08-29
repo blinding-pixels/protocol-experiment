@@ -77,9 +77,9 @@ qed.
 lemma active_authorization_digest_binding
     (state1 state2 : authorization_state) :
   authorization_digest_of state1 = authorization_digest_of state2 =>
-  state1.`as_fact_ids = state2.`as_fact_ids.
+  state1 = state2.
 proof.
-  exact (AuthorizationState.authorization_digest_of_context_injective
+  exact (AuthorizationState.authorization_digest_of_injective
     state1 state2).
 qed.
 

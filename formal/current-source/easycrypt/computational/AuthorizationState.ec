@@ -6,26 +6,6 @@ require import ProtocolTypes CanonicalEncoding ProtocolPrimitives.
    CausalDagCgka/Authorization.lean blob
    55b138aa423f46db69d50d4427d89d67636c6281. *)
 
-type member_grant_entry = {
-  mge_tag : member_tag;
-  mge_principal : principal
-}.
-
-type capability_grant_entry = {
-  cge_tag : capability_tag;
-  cge_principal : principal;
-  cge_capability : capability
-}.
-
-type authorization_state = {
-  as_member_grants : member_grant_entry fset;
-  as_removed_member_tags : member_tag fset;
-  as_capability_grants : capability_grant_entry fset;
-  as_removed_capability_tags : capability_tag fset;
-  as_retired_principals : principal fset;
-  as_fact_ids : fact_id fset
-}.
-
 type authorization_snapshot = {
   snapshot_context : fact_id fset;
   snapshot_state : authorization_state
@@ -300,21 +280,29 @@ op apply_authorization_fact
   then None
   else apply_authorization_fact_kind fact.`af_kind current fact.
 
-(* At the EasyCrypt abstraction boundary the authorization digest is the
-   canonical fact-id set itself, not an unconstrained integer code.  Combined
-   with immutable fact-content binding and deterministic policy replay, this
-   makes the digest an injective name for the accepted causal authorization
-   input.  Concrete Rust byte hashing remains a correspondence obligation. *)
+(* At the EasyCrypt abstraction boundary the authorization digest is an
+   injective constructor over the complete normalized public authorization
+   state.  This removes the previous gap where equal fact-id sets could name
+   different grant/tombstone states.  Concrete Rust byte hashing and
+   serialization remain explicit correspondence obligations. *)
 op authorization_digest_of
     (state : authorization_state) : authorization_digest =
-  ExactAuthorizationDigest state.`as_fact_ids.
+  ExactAuthorizationDigest state.
+
+lemma authorization_digest_of_injective
+    (left right : authorization_state) :
+  authorization_digest_of left = authorization_digest_of right =>
+  left = right.
+proof.
+  by rewrite /authorization_digest_of.
+qed.
 
 lemma authorization_digest_of_context_injective
     (left right : authorization_state) :
   authorization_digest_of left = authorization_digest_of right =>
   left.`as_fact_ids = right.`as_fact_ids.
 proof.
-  by rewrite /authorization_digest_of.
+  by move=> /authorization_digest_of_injective ->.
 qed.
 
 module NormalizeAuthorization(S : SIGNATURE_SCHEME) = {
