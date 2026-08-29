@@ -108,8 +108,7 @@ section ExactOperationVerificationLog.
       res.`vr_accepted =>
            decode_operation input_operation.`so_raw <> None
         /\ input_operation.`so_signature.`sig_verification_key =
-             (oget (decode_operation input_operation.`so_raw)).`oe_author.
-               `p_verification_key
+             (oget (decode_operation input_operation.`so_raw)).`oe_author.`p_verification_key
         /\ mem SO.verify_queries
              (input_operation.`so_signature.`sig_verification_key,
               operation_signature_message Production
@@ -146,8 +145,7 @@ section CandidateSubmitOperationVerificationLog.
       res =>
            decode_operation input_operation.`so_raw <> None
         /\ input_operation.`so_signature.`sig_verification_key =
-             (oget (decode_operation input_operation.`so_raw)).`oe_author.
-               `p_verification_key
+             (oget (decode_operation input_operation.`so_raw)).`oe_author.`p_verification_key
         /\ mem SO.verify_queries
              (input_operation.`so_signature.`sig_verification_key,
               operation_signature_message Production
