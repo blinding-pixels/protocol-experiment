@@ -328,36 +328,36 @@ proof.
   proc.
   inline TestSignature.verify.
 
-  rcondf 8; first by
+  rcondf 15; first by
     auto;
     rewrite /validation_success /defense_enabled;
     smt(witness_honest_domain_version).
-  rcondf 8; first by
+  rcondf 15; first by
     auto;
     rewrite /validation_success /defense_enabled;
     smt(witness_honest_document_binding).
-  rcondf 8; first by
+  rcondf 15; first by
     auto;
     rewrite /validation_success /defense_enabled;
     smt(witness_honest_freshness).
-  rcondf 8; first by
+  rcondf 15; first by
     auto;
     rewrite /validation_success;
     smt(witness_honest_predecessors_exist).
-  rcondt 8; first by auto; rewrite /validation_success.
+  rcondt 15; first by auto; rewrite /validation_success.
 
-  rcondf 10; first by
+  rcondf 19; first by
     auto=> />;
     rewrite witness_honest_exact_closure
       witness_base_view_facts witness_base_fact_ids.
-  rcondf 10; first by
+  rcondf 19; first by
     auto=> />;
     rewrite witness_base_view_observed_fact_ids
       witness_base_view_facts witness_base_fact_ids
       witness_base_fact_contents_match.
-  rcondt 10; first by auto; rewrite /validation_success.
+  rcondt 19; first by auto; rewrite /validation_success.
 
-  seq 10 :
+  seq 19 :
     (result = validation_success /\
      authorization_valid = true /\
      authorization = witness_authorization_state_7 /\
@@ -370,7 +370,8 @@ proof.
     auto=> />;
     try rewrite witness_base_view_facts witness_base_state_creator;
     auto.
-  + rcondf 1; first by auto.
+  + sp 2.
+    rcondf 1; first by auto.
     rcondf 1; first by
       auto=> />;
       exact witness_honest_authorization_digest.
@@ -378,11 +379,11 @@ proof.
       auto=> />;
       exact witness_honest_author_key_binding.
     rcondt 1; first by auto.
-    rcondf 5; first by
+    rcondf 7; first by
       auto=> />;
       exact witness_honest_signature_bytes.
 
-    sp 4.
+    sp 6.
     rcondf 1; first by
       auto=> />;
       try rewrite witness_honest_author
