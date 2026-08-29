@@ -1,10 +1,11 @@
+require import AllCore List FSet.
 require import PrimitiveControlProofs MutationHistoryProofs MutationPolicyProofs MutationEditProofs MutationGameProofs ValidatorCharacterization UnauthorizedIdeal CausalClosureRepresentation AuthorizationRepresentation AuthorizationAncestry UnauthorizedFactReduction UnauthorizedSignatureReduction UnauthorizedHashReduction MutationProofs.
 require import ProtocolTypes ProtocolChecks AuthorizationState HonestOperationContract CausalClosureRepresentation.
 
 (* Active Deliverable A checker entry point.  Every new unauthorized-game or
    reduction theorem is imported here while it is under development, so a red
    proof cannot be hidden behind the already-green general checkpoint. *)
-print PrimitiveControlProofs.test_signature_multi_user_eufcma_probability_one.
+print PrimitiveControofs.test_signature_multi_user_eufcma_probability_one.
 print MutationHistoryProofs.mutation_segment_wins_probability_one.
 print MutationHistoryProofs.mutation_region_wins_probability_one.
 print MutationHistoryProofs.mutation_merge_wins_probability_one.
@@ -47,7 +48,7 @@ print CausalClosureRepresentation.represented_fact_content_lookup.
 print AuthorizationState.authorization_digest_of_context_injective.
 print HonestOperationContract.witness_base_fact_contents_match.
 
-(* These typed aliases are proof-critical checker sentinels.  Unlike [print],
+** These typed aliases are proof-critical checker sentinels.  Unlike [print],
    they cannot succeed when a referenced theorem is absent. *)
 lemma active_fact_content_representation
     (state : protocol_state)
