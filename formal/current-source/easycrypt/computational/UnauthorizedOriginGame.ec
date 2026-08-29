@@ -254,13 +254,18 @@ module OriginTrackedCandidateEnvironment(
         origin_unauthorized_acceptance_condition
           operation envelope view state_before sign_queries;
 
+      (* The named bad events classify only a real winning submission.  An
+         irrelevant unoriginated signature cannot change the A0 experiment. *)
       bad_operation_signature <-
-        bad_operation_signature \/ ! operation_originated;
+        bad_operation_signature \/
+        (semantic_unauthorized /\ ! operation_originated);
       bad_fact_signature <-
-        bad_fact_signature \/ ! facts_originated;
+        bad_fact_signature \/
+        (semantic_unauthorized /\ operation_originated /\ ! facts_originated);
       ideal_unauthorized <-
         ideal_unauthorized \/
-        ! ideal_decoded_authorized operation envelope view state_before;
+        (semantic_unauthorized /\ operation_originated /\ facts_originated /\
+         ! ideal_decoded_authorized operation envelope view state_before);
       unauthorized_accepted <-
         unauthorized_accepted \/ semantic_unauthorized;
     }
