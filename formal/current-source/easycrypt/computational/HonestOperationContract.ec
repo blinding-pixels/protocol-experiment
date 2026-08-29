@@ -352,9 +352,8 @@ proof.
       witness_base_view_facts witness_base_fact_ids.
   rcondf 19; first by
     auto=> />;
-    rewrite witness_base_view_observed_fact_ids
-      witness_base_view_facts witness_base_fact_ids
-      witness_base_fact_contents_match.
+    smt(witness_honest_observed_context_matches_fact_ids
+        witness_base_fact_contents_match).
   rcondt 19; first by auto; rewrite /validation_success.
 
   seq 19 :
