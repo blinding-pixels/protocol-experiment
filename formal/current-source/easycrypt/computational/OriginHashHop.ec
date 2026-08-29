@@ -1,6 +1,6 @@
 require import AllCore List FSet.
 require import ProtocolTypes ProtocolPrimitives UnauthorizedSignatureReduction.
-require import UnauthorizedOriginPartition UnauthorizedOriginHashReduction.
+require import UnauthorizedOriginGame UnauthorizedOriginPartition UnauthorizedOriginHashReduction.
 
 import PG.
 
