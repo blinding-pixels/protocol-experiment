@@ -146,6 +146,7 @@ module OriginTrackedCandidateEnvironment(
 
   var accepted_operation_signatures : PG.signature_forgery list
   var accepted_fact_signatures : PG.signature_forgery list
+  var operation_forgery : PG.signature_forgery option
   var bad_operation_signature : bool
   var bad_fact_signature : bool
   var ideal_unauthorized : bool
@@ -155,6 +156,7 @@ module OriginTrackedCandidateEnvironment(
     Base.init(initial_state);
     accepted_operation_signatures <- [];
     accepted_fact_signatures <- [];
+    operation_forgery <- None;
     bad_operation_signature <- false;
     bad_fact_signature <- false;
     ideal_unauthorized <- false;
@@ -253,6 +255,15 @@ module OriginTrackedCandidateEnvironment(
       semantic_unauthorized <-
         origin_unauthorized_acceptance_condition
           operation envelope view state_before sign_queries;
+
+      (* Retain the first actual A2 witness at the transition that raises the
+         protocol bad flag.  This is internal ghost state and does not change
+         the adversary-facing oracle behavior. *)
+      operation_forgery <-
+        if ! bad_operation_signature /\
+           semantic_unauthorized /\ ! operation_originated
+        then Some operation_candidate
+        else operation_forgery;
 
       (* The named bad events classify only a real winning submission.  An
          irrelevant unoriginated signature cannot change the A0 experiment. *)
