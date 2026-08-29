@@ -243,3 +243,25 @@ section AdaptiveOriginIdealZero.
     exact (origin_adaptive_main_never_ideal initial).
   qed.
 end section AdaptiveOriginIdealZero.
+
+section AdaptiveOriginProbabilityAlgebra.
+  declare module A <: ADAPTIVE_ORIGIN_UNAUTHORIZED_ADVERSARY.
+  declare module S <: SIGNATURE_SCHEME.
+  declare module H <: NODE_HASH.
+
+  module GB = UnauthorizedOriginPartitionGame(A, S, H).
+
+  lemma origin_bad_union_probability_le_sum
+      &m (initial : protocol_state) :
+    Pr[
+      GB.main(initial) @ &m :
+        res.`opr_bad_operation \/ res.`opr_bad_fact \/ res.`opr_ideal
+    ] <=
+      Pr[GB.main(initial) @ &m : res.`opr_bad_operation] +
+      Pr[GB.main(initial) @ &m : res.`opr_bad_fact] +
+      Pr[GB.main(initial) @ &m : res.`opr_ideal].
+  proof.
+    rewrite !mu_or.
+    smt(ge0_mu).
+  qed.
+end section AdaptiveOriginProbabilityAlgebra.
