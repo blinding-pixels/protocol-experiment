@@ -1,6 +1,6 @@
 require import AllCore List FSet.
 require import ProtocolTypes CanonicalEncoding ProtocolPrimitives AuthorizationState.
-require import UnathorizedSignatureReduction UnauthorizedOriginGame.
+require import UnathorizedSignatureReduction UnathorizedOriginGame.
 
 import PG.
 
@@ -117,7 +117,7 @@ section OriginIdealInvariant.
   declare module H <: NODE_HASH.
 
   module SOI = PG.LoggedSignatureOracle(S).
-  module OI = OriginTrackedCandidateEnvironment(SOE, H).
+  module OI = OriginTrackedCandidateEnvironment(SOI, H).
 
   lemma origin_sign_operation_preserves_no_ideal :
     hoare [OI.sign_operation :
@@ -168,7 +168,7 @@ module UnauthorizedOriginPartitionGame(
 ) = {
   module SO = PG.LoggedSignatureOracle(S)
   module O = OriginTrackedCandidateEnvironment(SO, H)
-  module A = A(O)
+  module L = A(O)
 
   proc main(initial_state : protocol_state) : origin_partition_result = {
     SO.init();
@@ -184,7 +184,7 @@ module UnauthorizedOriginPartitionGame(
 
 section AdaptiveOriginPartition.
   declare module A <: ADAPTIVE_ORIGIN_UNAUTHORIZED_ADVERSARY.
-  declare module S <: SIGNATURE_SCHEMEI.
+  declare module S <: SIGNATURE_SCHEME.
   declare module H <: NODE_HASH.
 
   module G = UnauthorizedOriginPartitionGame(A, S, H).
@@ -192,7 +192,7 @@ section AdaptiveOriginPartition.
   lemma origin_adaptive_main_partition
       (initial : protocol_state) :
     hoare [G.main :
-      initial_state = initial ==>
+      initial_state = initial =>
       origin_partition_holds
         res.`opr_real
         res.`opr_bad_operation
