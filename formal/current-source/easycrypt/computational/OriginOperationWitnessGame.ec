@@ -247,3 +247,56 @@ section AdaptiveOperationWitnessInvariant.
     auto; rewrite /operation_forgery_witness_invariant; smt().
   qed.
 end section AdaptiveOperationWitnessInvariant.
+
+(* The reduction adversary returns the retained first operation forgery from
+   the same adaptive execution that sets the A2 bad flag.  The primitive game,
+   not the reduction, rechecks the candidate against the exact sign and verify
+   logs after the attack. *)
+module BSignOriginOperationWitness(
+  A : ADAPTIVE_ORIGIN_UNAUTHORIZED_ADVERSARY,
+  H : NODE_HASH
+)(SO : PG.LOGGED_SIGNATURE_ORACLE) = {
+  module O = OriginOperationWitnessEnvironment(SO, H)
+  module A = A(O)
+
+  proc forge(initial_state : protocol_state) : PG.signature_forgery option = {
+    O.init(initial_state);
+    A.attack();
+    return O.operation_forgery;
+  }
+}.
+
+section OperationWitnessPrimitiveGame.
+  declare module A <: ADAPTIVE_ORIGIN_UNAUTHORIZED_ADVERSARY.
+  declare module S <: SIGNATURE_SCHEME.
+  declare module H <: NODE_HASH.
+
+  module R = PG.MultiUserEUFCMAGame(BSignOriginOperationWitness(A, H), S).
+
+  (* Within the exact named primitive game, success is the A2 bad flag from
+     the same origin-aware production-validator execution.  This is the
+     non-decorative bridge needed before comparing A0 and EUF-CMA probabilities. *)
+  lemma operation_witness_eufcma_game_characterization
+      (initial : protocol_state) :
+    hoare [R.main :
+      initial_state = initial ==>
+      res = R.A.O.Base.bad_operation_signature].
+  proof.
+    proc.
+    inline R.A.forge
+      R.O.get_sign_queries R.O.get_verify_queries
+      R.A.O.init R.A.O.Base.init R.A.O.Base.Base.init R.O.init.
+    call (_ :
+      operation_forgery_witness_invariant
+        R.A.O.Base.unauthorized_accepted
+        R.A.O.Base.bad_operation_signature
+        R.A.O.operation_forgery
+        R.O.sign_queries R.O.verify_queries).
+    + exact operation_witness_sign_operation_preserves_invariant.
+    + exact operation_witness_sign_fact_preserves_invariant.
+    + move=> input_operation input_view.
+      exact (operation_witness_submit_preserves_invariant
+        input_operation input_view).
+    auto; rewrite /operation_forgery_witness_invariant; smt().
+  qed.
+end section OperationWitnessPrimitiveGame.
