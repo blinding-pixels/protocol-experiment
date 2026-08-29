@@ -4,9 +4,10 @@ require import ProtocolChecks ProtocolOracles UnauthorizedGame HonestOperationCo
 require import AuthorizationWitnessTrace.
 
 (* The unauthorized-operation event is computed only from values produced by
-   the production path: [authorization_valid] is returned by the concrete
-   normalizer and [signature_valid] is returned by verification of the exact
-   production transcript.  The adversary never supplies either Boolean. *)
+   the production path: [authorization_valid] and [authorization] are retained
+   by the concrete normalizer invocation inside the validator, and
+   [signature_valid] is retained by verification of that exact production
+   transcript.  The adversary never supplies any of these values. *)
 op unauthorized_acceptance_condition
     (operation : signed_operation)
     (envelope : operation_envelope)
@@ -65,6 +66,8 @@ module CandidateUnauthorizedEnvironment(
   S : SIGNATURE_SCHEME,
   H : NODE_HASH
 ) = {
+  module V = ValidateOperation(S)
+
   var state : protocol_state
   var accepted_operations : accepted_operation list
   var query_log : unauthorized_candidate_query list
@@ -103,7 +106,7 @@ module CandidateUnauthorizedEnvironment(
       envelope <- oget envelope_option;
     }
 
-    result <@ ValidateOperation(S).validate(
+    result <@ V.validate(
       Production,
       operation,
       view,
@@ -111,16 +114,9 @@ module CandidateUnauthorizedEnvironment(
     );
 
     if (result.`vr_accepted) {
-      (authorization_valid, authorization) <@
-        NormalizeAuthorization(S).normalize(
-          view.`pv_facts,
-          state.`ps_creator
-        );
-      signature_valid <@ S.verify(
-        operation.`so_signature.`sig_verification_key,
-        operation_signature_message Production envelope,
-        operation.`so_signature.`sig_bytes
-      );
+      authorization_valid <- V.last_authorization_valid;
+      authorization <- V.last_authorization;
+      signature_valid <- V.last_signature_valid;
       semantic_unauthorized <-
         unauthorized_acceptance_condition
           operation envelope authorization_valid authorization signature_valid;
