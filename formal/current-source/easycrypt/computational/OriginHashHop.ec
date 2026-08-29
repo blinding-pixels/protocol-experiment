@@ -94,7 +94,6 @@ section OriginHashHop.
       COLL.main(initial) @ &m : res
     ].
   proof.
-    exact (origin_bad_hash_exactly_reduces_to_node_collision
-      (A := A) (S := S) (H := H) &m initial).
+    exact (origin_bad_hash_exactly_reduces_to_node_collision &m initial).
   qed.
 end section OriginHashHop.
