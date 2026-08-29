@@ -107,3 +107,62 @@ section OriginEnvironmentPartition.
     + auto.
   qed.
 end section OriginEnvironmentPartition.
+
+type origin_partition_result = {
+  opr_real : bool;
+  opr_bad_operation : bool;
+  opr_bad_fact : bool;
+  opr_ideal : bool
+}.
+
+module UnauthorizedOriginPartitionGame(
+  A : ADAPTIVE_ORIGIN_UNAUTHORIZED_ADVERSARY,
+  S : SIGNATURE_SCHEME,
+  H : NODE_HASH
+) = {
+  module SO = PG.LoggedSignatureOracle(S)
+  module O = OriginTrackedCandidateEnvironment(SO, H)
+  module A = A(O)
+
+  proc main(initial_state : protocol_state) : origin_partition_result = {
+    SO.init();
+    O.init(initial_state);
+    A.attack();
+    return
+      {| opr_real = O.unauthorized_accepted;
+         opr_bad_operation = O.bad_operation_signature;
+         opr_bad_fact = O.bad_fact_signature;
+         opr_ideal = O.ideal_unauthorized |};
+  }
+}.
+
+section AdaptiveOriginPartition.
+  declare module A <: ADAPTIVE_ORIGIN_UNAUTHORIZED_ADVERSARY.
+  declare module S <: SIGNATURE_SCHEME.
+  declare module H <: NODE_HASH.
+
+  module G = UnauthorizedOriginPartitionGame(A, S, H).
+
+  lemma origin_adaptive_main_partition
+      (initial : protocol_state) :
+    hoare [G.main :
+      initial_state = initial ==>
+      origin_partition_holds
+        res.`opr_real
+        res.`opr_bad_operation
+        res.`opr_bad_fact
+        res.`opr_ideal].
+  proof.
+    proc.
+    call (_ :
+      origin_partition_holds
+        G.O.unauthorized_accepted
+        G.O.bad_operation_signature
+        G.O.bad_fact_signature
+        G.O.ideal_unauthorized).
+    + exact origin_sign_operation_preserves_partition.
+    + exact origin_sign_fact_preserves_partition.
+    + exact origin_submit_preserves_partition.
+    auto; rewrite /origin_partition_holds.
+  qed.
+end section AdaptiveOriginPartition.
