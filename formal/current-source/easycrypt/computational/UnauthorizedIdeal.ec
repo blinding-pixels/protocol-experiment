@@ -116,6 +116,38 @@ section A5ValidatorSoundness.
   qed.
 end section A5ValidatorSoundness.
 
+(* The A0 state-owning wrapper preserves the validator's exact pre-state long
+   enough to expose the same ideal-authorization consequence.  This lemma is
+   the bridge used by the origin-aware A5 game; it does not rerun validation or
+   recompute authorization evidence. *)
+section A5CandidateSubmitSoundness.
+  declare module S <: SIGNATURE_SCHEME.
+  declare module H <: NODE_HASH.
+
+  module OC = CandidateUnauthorizedEnvironment(S, H).
+
+  lemma candidate_submit_acceptance_implies_ideal_authorization
+      (input_operation : signed_operation)
+      (input_view : public_view)
+      (input_state : protocol_state) :
+    hoare [OC.submit :
+         operation = input_operation
+      /\ view = input_view
+      /\ OC.state = input_state
+      ==>
+      res =>
+        ideal_authorized_candidate
+          input_operation input_view input_state].
+  proof.
+    proc.
+    wp.
+    call (_ : true ==> true).
+    call (validate_acceptance_implies_ideal_authorization
+      input_operation input_view input_state).
+    auto=> />.
+  qed.
+end section A5CandidateSubmitSoundness.
+
 (* A5 executes the same production validator and state transition as A0.  The
    only change is the win predicate: after A1--A4 have excluded their named bad
    events, an accepted candidate is compared with the pure ideal predicate

@@ -1,6 +1,6 @@
 require import AllCore List FSet.
 require import ProtocolTypes CanonicalEncoding ProtocolPrimitives AuthorizationState.
-require import UnauthorizedSignatureReduction UnauthorizedOriginGame.
+require import UnathorizedSignatureReduction UnauthorizedOriginGame.
 
 import PG.
 
@@ -108,6 +108,52 @@ section OriginEnvironmentPartition.
   qed.
 end section OriginEnvironmentPartition.
 
+(* A5 is proved for the same origin-aware adversary interface as A0.  The
+   signing procedures cannot affect the ideal flag, while every accepted
+   submission inherits the public validator's checked ideal-authorization
+   postcondition from the exact pre-state. *)
+section OriginIdealInvariant.
+  declare module S <: SIGNATURE_SCHEME.
+  declare module H <: NODE_HASH.
+
+  module SOI = PG.LoggedSignatureOracle(S).
+  module OI = OriginTrackedCandidateEnvironment(SOE, H).
+
+  lemma origin_sign_operation_preserves_no_ideal :
+    hoare [OI.sign_operation :
+      ! OI.ideal_unauthorized ==> ! OI.ideal_unauthorized].
+  proof.
+    proc.
+    if; first by call (_ : true ==> true); auto.
+    auto.
+  qed.
+
+  lemma origin_sign_fact_preserves_no_ideal :
+    hoare [OI.sign_authorization_fact :
+      ! OI.ideal_unauthorized ==> ! OI.ideal_unauthorized].
+  proof.
+    proc.
+    if; first by call (_ : true ==> true); auto.
+    auto.
+  qed.
+
+  lemma origin_submit_preserves_no_ideal :
+    hoare [OI.submit :
+      ! OI.ideal_unauthorized ==> ! OI.ideal_unauthorized].
+  proof.
+    proc.
+    call (candidate_submit_acceptance_implies_ideal_authorization
+      operation view state_before).
+    if.
+    + call (_ : true ==> true).
+      while (! OI.ideal_unauthorized); first by auto.
+      auto=> />.
+      rewrite /ideal_authorized_candidate.
+      smt().
+    + auto.
+  qed.
+end section OriginIdealInvariant.
+
 type origin_partition_result = {
   opr_real : bool;
   opr_bad_operation : bool;
@@ -138,7 +184,7 @@ module UnauthorizedOriginPartitionGame(
 
 section AdaptiveOriginPartition.
   declare module A <: ADAPTIVE_ORIGIN_UNAUTHORIZED_ADVERSARY.
-  declare module S <: SIGNATURE_SCHEME.
+  declare module S <: SIGNATURE_SCHEMEI.
   declare module H <: NODE_HASH.
 
   module G = UnauthorizedOriginPartitionGame(A, S, H).
@@ -166,3 +212,34 @@ section AdaptiveOriginPartition.
     auto; rewrite /origin_partition_holds.
   qed.
 end section AdaptiveOriginPartition.
+
+section AdaptiveOriginIdealZero.
+  declare module A <: ADAPTIVE_ORIGIN_UNAUTHORIZED_ADVERSARY.
+  declare module S <: SIGNATURE_SCHEME.
+  declare module H <: NODE_HASH.
+
+  module GZ = UnauthorizedOriginPartitionGame(A, S, H).
+
+  lemma origin_adaptive_main_never_ideal
+      (initial : protocol_state) :
+    hoare [GZ.main :
+      initial_state = initial ==> ! res.`opr_ideal].
+  proof.
+    proc.
+    call (_ : ! GZ.O.ideal_unauthorized).
+    + exact origin_sign_operation_preserves_no_ideal.
+    + exact origin_sign_fact_preserves_no_ideal.
+    + exact origin_submit_preserves_no_ideal.
+    auto.
+  qed.
+
+  lemma origin_ideal_probability_zero
+      &m (initial : protocol_state) :
+    Pr[
+      GZ.main(initial) @ &m : res.`opr_ideal
+    ] = 0%r.
+  proof.
+    byphoare (_ : initial_state = initial ==> ! res.`opr_ideal) => //=.
+    exact (origin_adaptive_main_never_ideal initial).
+  qed.
+end section AdaptiveOriginIdealZero.
