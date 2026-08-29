@@ -1,7 +1,7 @@
 require import AllCore List FSet.
 require import ProtocolTypes ProtocolPrimitives UnauthorizedOriginGame UnauthorizedOriginPartition.
 require import UnauthorizedSignatureReduction OriginOperationDirectInvariant.
-require import OriginOperationDirectReduction.
+require import OriginOperationDirectReduction OriginFactVerificationEvidence.
 
 import PG.
 
