@@ -10,11 +10,11 @@ pred operation_forgery_witness_invariant
     (forgery : PG.signature_forgery option)
     (sign_queries : PG.signature_query list)
     (verify_queries : PG.signature_verification_query list) =
-  bad =>
-       real
-    /\ forgery <> None
-    /\ PG.signature_forgery_valid
-         (oget forgery) sign_queries verify_queries.
+     (bad <=> forgery <> None)
+  /\ (bad =>
+         real
+      /\ PG.signature_forgery_valid
+           (oget forgery) sign_queries verify_queries).
 
 (* This wrapper exposes exactly the protocol-shaped A0 oracle.  The extra
    witness is ghost state: the adversary cannot read it, and every public
