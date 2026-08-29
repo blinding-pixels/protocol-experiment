@@ -30,6 +30,7 @@ section ExistingForgeryPreservation.
   module N = NormalizeAuthorization(Scheme).
   module V = ValidateOperation(Scheme).
   module C = CandidateUnauthorizedEnvironment(Scheme, H).
+  module O = OriginTrackedCandidateEnvironment(SO, H).
 
   lemma signature_oracle_scheme_verify_preserves_forgery
       (candidate : PG.signature_forgery) :
@@ -113,5 +114,29 @@ section ExistingForgeryPreservation.
     call (_ : true ==> true).
     call (validate_preserves_existing_forgery candidate).
     auto.
+  qed.
+
+  (* The origin-aware wrapper performs no primitive signing during submit.  Its
+     only primitive effects are the verification queries already covered by
+     [candidate_submit_preserves_existing_forgery]. *)
+  lemma origin_submit_preserves_existing_forgery
+      (candidate : PG.signature_forgery) :
+    hoare [O.submit :
+      PG.signature_forgery_valid
+        candidate SO.sign_queries SO.verify_queries
+      ==>
+      PG.signature_forgery_valid
+        candidate SO.sign_queries SO.verify_queries].
+  proof.
+    proc.
+    call (candidate_submit_preserves_existing_forgery candidate).
+    if.
+    + inline SO.get_sign_queries.
+      while
+        (PG.signature_forgery_valid
+          candidate SO.sign_queries SO.verify_queries).
+      * auto.
+      * auto.
+    + auto.
   qed.
 end section ExistingForgeryPreservation.
