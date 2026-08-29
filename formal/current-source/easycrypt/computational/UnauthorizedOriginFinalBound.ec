@@ -16,6 +16,8 @@ section OriginFinalProbabilityBound.
   module GF = UnauthorizedOriginPartitionGame(A, S, H).
   module EUFOP =
     PG.MultiUserEUFCMAGame(BSignOriginOperationDirect(A, H), S).
+  module EUFFACT =
+    PG.MultiUserEUFCMAGame(BSignOriginFactWitness(A, H), S).
 
   lemma origin_real_probability_le_signature_bad_sum
       &m (initial : protocol_state) :
@@ -113,8 +115,6 @@ section OriginFinalProbabilityBound.
     smt().
   qed.
 
-  (* The left term is now connected to the exact named primitive experiment,
-     rather than to a post-hoc search over accepted candidates. *)
   lemma origin_real_probability_le_operation_eufcma_plus_fact_bad
       &m (initial : protocol_state) :
     Pr[GF.main(initial) @ &m : res.`opr_real] <=
@@ -124,6 +124,21 @@ section OriginFinalProbabilityBound.
     have hreal := origin_real_probability_le_signature_bad_sum &m initial.
     have hop :=
       origin_partition_bad_operation_exactly_multi_user_eufcma &m initial.
+    smt().
+  qed.
+
+  (* Both signature-origin branches are now concrete primitive experiments.
+     The ideal branch is probability zero by the same A0 execution invariant. *)
+  lemma origin_real_probability_le_operation_and_fact_eufcma
+      &m (initial : protocol_state) :
+    Pr[GF.main(initial) @ &m : res.`opr_real] <=
+      Pr[EUFOP.main(initial) @ &m : res] +
+      Pr[EUFFACT.main(initial) @ &m : res].
+  proof.
+    have hreal :=
+      origin_real_probability_le_operation_eufcma_plus_fact_bad &m initial.
+    have hfact :=
+      origin_partition_bad_fact_exactly_multi_user_eufcma &m initial.
     smt().
   qed.
 end section OriginFinalProbabilityBound.
