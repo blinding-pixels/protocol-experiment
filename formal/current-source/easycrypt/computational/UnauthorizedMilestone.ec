@@ -63,12 +63,12 @@ proof.
 qed.
 
 lemma active_authorization_digest_binding
-    (left right : authorization_state) :
-  authorization_digest_of left = authorization_digest_of right =>
-  left.`as_fact_ids = right.`as_fact_ids.
+    (state1 state2 : authorization_state) :
+  authorization_digest_of state1 = authorization_digest_of state2 =>
+  state1.`as_fact_ids = state2.`as_fact_ids.
 proof.
   exact (AuthorizationState.authorization_digest_of_context_injective
-    left right).
+    state1 state2).
 qed.
 
 lemma active_honest_fact_content_binding :
