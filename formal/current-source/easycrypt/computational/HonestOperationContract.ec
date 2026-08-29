@@ -222,10 +222,10 @@ proof.
 qed.
 
 lemma witness_honest_freshness :
-     witness_honest_edit_envelope.`oe_operation_id
-       \Xnotin witness_base_state_exact.`ps_seen_operation_ids
-  /\ witness_honest_edit_envelope.`oe_nonce
-       \notin witness_base_state_exact.`ps_seen_nonces.
+     ! (witness_honest_edit_envelope.`oe_operation_id
+          \in witness_base_state_exact.`ps_seen_operation_ids)
+  /\ ! (witness_honest_edit_envelope.`oe_nonce
+          \in witness_base_state_exact.`ps_seen_nonces).
 proof.
   by rewrite /witness_honest_edit_envelope /witness_edit_envelope
     /witness_base_state_exact /witness_protocol_state !inE.
@@ -312,7 +312,7 @@ proof.
   by rewrite /witness_honest_edit_envelope /witness_edit_envelope.
 qed.
 
-* First discharge the decoded production suffix.  The proof follows the
+(* First discharge the decoded production suffix.  The proof follows the
    honest branch of every executable check, then uses the separately checked
    seven-fact normalizer contract at the only remaining procedure call. *)
 lemma witness_honest_validate_decoded :
@@ -430,11 +430,14 @@ proof.
     rcondf 1; first by
       auto=> />;
       smt(witness_honest_operation_kind).
+    rcondf 1; first by
+      auto=> />;
+      smt(witness_honest_operation_kind).
 
     by auto.
 qed.
 
-* Lift the decoded contract through the public wire-validation prefix in
+(* Lift the decoded contract through the public wire-validation prefix in
    ordinary Hoare logic.  This keeps semantic correctness separate from the
    termination argument used only to obtain the exact probability-one claim. *)
 lemma witness_honest_validate :
@@ -495,7 +498,7 @@ lemma witness_honest_operation_accepted &m :
       witness_honest_edit_operation,
       witness_base_view_exact,
       witness_base_state_exact
-   ) @ &m :
+    ) @ &m :
     res.`vr_accepted
   ] = 1%r.
 proof.
