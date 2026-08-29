@@ -217,4 +217,33 @@ section AdaptiveOperationWitnessInvariant.
     inline G.O.init G.O.Base.init G.O.Base.Base.init G.SO.init.
     auto; rewrite /operation_forgery_witness_invariant.
   qed.
+
+  (* The actual adaptive A2 bad flag is exactly the primitive-game success
+     predicate for the retained first forgery.  In particular, [None] cannot
+     witness a bad event, and a retained [Some] value cannot be spurious. *)
+  lemma operation_witness_adaptive_main_characterization
+      (initial : protocol_state) :
+    hoare [G.main :
+      initial_state = initial ==>
+      res =
+        (G.O.operation_forgery <> None /\
+         PG.signature_forgery_valid
+           (oget G.O.operation_forgery)
+           G.SO.sign_queries G.SO.verify_queries)].
+  proof.
+    proc.
+    call (_ :
+      operation_forgery_witness_invariant
+        G.O.Base.unauthorized_accepted
+        G.O.Base.bad_operation_signature
+        G.O.operation_forgery
+        G.SO.sign_queries G.SO.verify_queries).
+    + exact operation_witness_sign_operation_preserves_invariant.
+    + exact operation_witness_sign_fact_preserves_invariant.
+    + move=> input_operation input_view.
+      exact (operation_witness_submit_preserves_invariant
+        input_operation input_view).
+    inline G.O.init G.O.Base.init G.O.Base.Base.init G.SO.init.
+    auto; rewrite /operation_forgery_witness_invariant; smt().
+  qed.
 end section AdaptiveOperationWitnessInvariant.
