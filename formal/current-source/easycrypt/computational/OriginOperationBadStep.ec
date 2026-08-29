@@ -25,11 +25,12 @@ section FirstBadOperationStep.
       /\ ! O.bad_operation_signature
       ==>
       O.bad_operation_signature =>
-        PG.signature_forgery_valid
-          (operation_signature_forgery_candidate
-            input_operation
-            (oget (decode_operation input_operation.`so_raw)))
-          SO.sign_queries SO.verify_queries].
+           O.unauthorized_accepted
+        /\ PG.signature_forgery_valid
+             (operation_signature_forgery_candidate
+               input_operation
+               (oget (decode_operation input_operation.`so_raw)))
+             SO.sign_queries SO.verify_queries].
   proof.
     proc.
     call (candidate_submit_acceptance_logs_exact_operation_verification
