@@ -1,6 +1,6 @@
 require import AllCore List FSet.
 require import ProtocolTypes CanonicalEncoding ProtocolPrimitives AuthorizationState.
-require import UnauthorizedOriginGame OriginOperationWitnessGame.
+require import UnauthorizedSignatureReduction UnauthorizedOriginGame OriginOperationWitnessGame.
 
 import PG.
 
