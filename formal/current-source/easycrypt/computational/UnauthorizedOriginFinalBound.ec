@@ -2,6 +2,7 @@ require import AllCore List FSet.
 require import ProtocolTypes ProtocolPrimitives UnauthorizedOriginGame UnauthorizedOriginPartition.
 require import UnauthorizedSignatureReduction OriginOperationDirectInvariant.
 require import OriginOperationDirectReduction OriginFactVerificationEvidence OriginFactSelection OriginFactBadStep OriginFactWitnessGame OriginFactReductionWitness.
+require import OriginHashHop.
 
 import PG.
 
@@ -14,10 +15,12 @@ section OriginFinalProbabilityBound.
   declare module H <: ProtocolPrimitives.NODE_HASH.
 
   module GF = UnauthorizedOriginPartitionGame(A, S, H).
+  module GH = UnauthorizedOriginA1HashEvidence(A, S, H).
   module EUFOP =
     PG.MultiUserEUFCMAGame(BSignOriginOperationDirect(A, H), S).
   module EUFFACT =
     PG.MultiUserEUFCMAGame(BSignOriginFactWitness(A, H), S).
+  module COLL = PG.NodeCollisionGame(BHashOrigin(A, S), H).
 
   lemma origin_real_probability_le_signature_bad_sum
       &m (initial : protocol_state) :
@@ -127,8 +130,8 @@ section OriginFinalProbabilityBound.
     smt().
   qed.
 
-  (* Both signature-origin branches are now concrete primitive experiments.
-     The ideal branch is probability zero by the same A0 execution invariant. *)
+  (* Both signature-origin branches are concrete primitive experiments.  The
+     ideal branch is probability zero by the same A0 execution invariant. *)
   lemma origin_real_probability_le_operation_and_fact_eufcma
       &m (initial : protocol_state) :
     Pr[GF.main(initial) @ &m : res.`opr_real] <=
@@ -139,6 +142,33 @@ section OriginFinalProbabilityBound.
       origin_real_probability_le_operation_eufcma_plus_fact_bad &m initial.
     have hfact :=
       origin_partition_bad_fact_exactly_multi_user_eufcma &m initial.
+    smt().
+  qed.
+
+  (* Full A0--A5 computational bound.  A0 is split from A1 on the concrete
+     collision event in the exact production hash transcript; A2 and A3 are
+     the two exact multi-user EUF-CMA reductions; A5 contributes zero. *)
+  lemma origin_unauthorized_probability_bound
+      &m (initial : protocol_state) :
+    Pr[GF.main(initial) @ &m : res.`opr_real] <=
+        Pr[EUFOP.main(initial) @ &m : res]
+      + Pr[EUFFACT.main(initial) @ &m : res]
+      + Pr[COLL.main(initial) @ &m : res].
+  proof.
+    have hreal_hash :=
+      origin_partition_real_exactly_hash_evidence_real
+        (A := A) (S := S) (H := H) &m initial.
+    have hsplit :=
+      origin_hash_evidence_real_le_safe_plus_bad
+        (A := A) (S := S) (H := H) &m initial.
+    have hsafe :=
+      origin_hash_safe_real_le_partition_real
+        (A := A) (S := S) (H := H) &m initial.
+    have hsignatures :=
+      origin_real_probability_le_operation_and_fact_eufcma &m initial.
+    have hcollision :=
+      origin_hash_bad_probability_exactly_collision
+        (A := A) (S := S) (H := H) &m initial.
     smt().
   qed.
 end section OriginFinalProbabilityBound.
