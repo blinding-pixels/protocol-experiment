@@ -98,8 +98,8 @@ qed.
    the corresponding concrete primitive game without changing adversaries. *)
 section ActiveOriginProbabilityBound.
   declare module A <: ADAPTIVE_ORIGIN_UNAUTHORIZED_ADVERSARY.
-  declare module S <: SIGNATURE_SCHEME.
-  declare module H <: NODE_HASH.
+  declare module S <: ProtocolPrimitives.SIGNATURE_SCHEME.
+  declare module H <: ProtocolPrimitives.NODE_HASH.
 
   module G = UnauthorizedOriginPartitionGame(A, S, H).
 
