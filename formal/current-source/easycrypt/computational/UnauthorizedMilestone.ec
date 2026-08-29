@@ -1,5 +1,5 @@
 require import AllCore List FSet.
-require import PrimitiveControlProofs MutationHistoryProofs MutationPolicyProofs MutationEditProofs MutationGameProofs ValidatorCharacterization ValidatorEvidence UnauthorizedOriginGame UnauthorizedOriginReduction UnauthorizedOriginHashReduction UnauthorizedOriginPartition UnauthorizedIdeal CausalClosureRepresentation AuthorizationRepresentation AuthorizationAncestry UnauthorizedFactReduction UnauthorizedSignatureReduction UnauthorizedHashReduction MutationProofs.
+require import PrimitiveControlProofs MutationHistoryProofs MutationPolicyProofs MutationEditProofs MutationGameProofs ValidatorCharacterization ValidatorEvidence UnauthorizedOriginGame UnauthorizedOriginReduction UnauthorizedOriginHashReduction UnauthorizedOriginPartition UnauthorizedOriginFinalBound UnauthorizedIdeal CausalClosureRepresentation AuthorizationRepresentation AuthorizationAncestry UnauthorizedFactReduction UnauthorizedSignatureReduction UnauthorizedHashReduction MutationProofs.
 require import ProtocolTypes ProtocolChecks AuthorizationState HonestOperationContract CausalClosureRepresentation.
 
 (* Active Deliverable A checker entry point.  Every new unauthorized-game or
@@ -33,6 +33,7 @@ print UnauthorizedOriginPartition.origin_sign_fact_preserves_partition.
 print UnauthorizedOriginPartition.origin_submit_preserves_partition.
 print UnauthorizedOriginPartition.origin_adaptive_main_partition.
 print UnauthorizedOriginPartition.origin_ideal_probability_zero.
+print UnauthorizedOriginFinalBound.origin_real_probability_le_signature_bad_sum.
 print ValidatorCharacterization.base_facts_history_validate_characterization.
 print ValidatorCharacterization.base_facts_edit_validate_characterization.
 print ValidatorCharacterization.base_edit_validate_characterization.
@@ -90,37 +91,6 @@ lemma active_honest_fact_content_binding :
 proof.
   exact HonestOperationContract.witness_base_fact_contents_match.
 qed.
-
-(* First connected probability bound: A0's real origin-aware win event is
-   bounded by the two signature-origin bad events after the checked A5 ideal
-   event is eliminated at probability zero.  This is deliberately stated over
-   the single partition experiment; the next bridge relates each bad flag to
-   the corresponding concrete primitive game without changing adversaries. *)
-section ActiveOriginProbabilityBound.
-  declare module A <: ADAPTIVE_ORIGIN_UNAUTHORIZED_ADVERSARY.
-  declare module S <: ProtocolPrimitives.SIGNATURE_SCHEME.
-  declare module H <: ProtocolPrimitives.NODE_HASH.
-
-  module G = UnauthorizedOriginPartitionGame(A, S, H).
-
-  lemma active_origin_real_probability_le_signature_bad_sum
-      &m (initial : protocol_state) :
-    Pr[G.main(initial) @ &m : res.`opr_real] <=
-      Pr[G.main(initial) @ &m : res.`opr_bad_operation] +
-      Pr[G.main(initial) @ &m : res.`opr_bad_fact].
-  proof.
-    have hreal :=
-      UnauthorizedOriginPartition.origin_real_probability_le_bad_union
-        &m initial.
-    have hunion :=
-      UnauthorizedOriginPartition.origin_bad_union_probability_le_sum
-        &m initial.
-    have hzero :=
-      UnauthorizedOriginPartition.origin_ideal_probability_zero
-        &m initial.
-    smt().
-  qed.
-end section ActiveOriginProbabilityBound.
 
 (* Normal connector-authored checkpoint following the exact source restore.
    This keeps both checker workflows eligible after the bot-token repair. *)
