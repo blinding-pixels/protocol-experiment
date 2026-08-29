@@ -223,7 +223,7 @@ qed.
 
 lemma witness_honest_freshness :
      witness_honest_edit_envelope.`oe_operation_id
-       \notin witness_base_state_exact.`ps_seen_operation_ids
+       \Xnotin witness_base_state_exact.`ps_seen_operation_ids
   /\ witness_honest_edit_envelope.`oe_nonce
        \notin witness_base_state_exact.`ps_seen_nonces.
 proof.
@@ -312,7 +312,7 @@ proof.
   by rewrite /witness_honest_edit_envelope /witness_edit_envelope.
 qed.
 
-(* First discharge the decoded production suffix.  The proof follows the
+* First discharge the decoded production suffix.  The proof follows the
    honest branch of every executable check, then uses the separately checked
    seven-fact normalizer contract at the only remaining procedure call. *)
 lemma witness_honest_validate_decoded :
@@ -430,14 +430,11 @@ proof.
     rcondf 1; first by
       auto=> />;
       smt(witness_honest_operation_kind).
-    rcondf 1; first by
-      auto=> />;
-      smt(witness_honest_operation_kind).
 
     by auto.
 qed.
 
-(* Lift the decoded contract through the public wire-validation prefix in
+* Lift the decoded contract through the public wire-validation prefix in
    ordinary Hoare logic.  This keeps semantic correctness separate from the
    termination argument used only to obtain the exact probability-one claim. *)
 lemma witness_honest_validate :
@@ -450,14 +447,14 @@ lemma witness_honest_validate :
     res.`vr_accepted].
 proof.
   proc.
-  rcondf 10; first by
+  rcondf 17; first by
     auto;
     rewrite witness_honest_edit_decodes /validation_success.
-  rcondf 11; first by
+  rcondf 18; first by
     auto;
     rewrite witness_honest_edit_is_canonical
       /defense_enabled /validation_success.
-  rcondt 11; first by auto; rewrite /validation_success.
+  rcondt 18; first by auto; rewrite /validation_success.
   call (witness_honest_validate_decoded).
   auto; rewrite witness_honest_edit_decodes.
 qed.
@@ -498,7 +495,7 @@ lemma witness_honest_operation_accepted &m :
       witness_honest_edit_operation,
       witness_base_view_exact,
       witness_base_state_exact
-    ) @ &m :
+   ) @ &m :
     res.`vr_accepted
   ] = 1%r.
 proof.
