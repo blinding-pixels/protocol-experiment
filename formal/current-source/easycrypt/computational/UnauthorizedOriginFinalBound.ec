@@ -156,19 +156,15 @@ section OriginFinalProbabilityBound.
       + Pr[COLL.main(initial) @ &m : res].
   proof.
     have hreal_hash :=
-      origin_partition_real_exactly_hash_evidence_real
-        (A := A) (S := S) (H := H) &m initial.
+      origin_partition_real_exactly_hash_evidence_real &m initial.
     have hsplit :=
-      origin_hash_evidence_real_le_safe_plus_bad
-        (A := A) (S := S) (H := H) &m initial.
+      origin_hash_evidence_real_le_safe_plus_bad &m initial.
     have hsafe :=
-      origin_hash_safe_real_le_partition_real
-        (A := A) (S := S) (H := H) &m initial.
+      origin_hash_safe_real_le_partition_real &m initial.
     have hsignatures :=
       origin_real_probability_le_operation_and_fact_eufcma &m initial.
     have hcollision :=
-      origin_hash_bad_probability_exactly_collision
-        (A := A) (S := S) (H := H) &m initial.
+      origin_hash_bad_probability_exactly_collision &m initial.
     smt().
   qed.
 end section OriginFinalProbabilityBound.
