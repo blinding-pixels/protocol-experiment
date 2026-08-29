@@ -34,17 +34,19 @@ section OriginEnvironmentPartition.
   module SO = PG.LoggedSignatureOracle(S).
   module O = OriginTrackedCandidateEnvironment(SO, H).
 
-  pred origin_environment_partition =
-    origin_partition_holds
-      O.unauthorized_accepted
-      O.bad_operation_signature
-      O.bad_fact_signature
-      O.ideal_unauthorized.
-
   lemma origin_sign_operation_preserves_partition :
     hoare [O.sign_operation :
-      origin_environment_partition ==>
-      origin_environment_partition].
+      origin_partition_holds
+        O.unauthorized_accepted
+        O.bad_operation_signature
+        O.bad_fact_signature
+        O.ideal_unauthorized
+      ==>
+      origin_partition_holds
+        O.unauthorized_accepted
+        O.bad_operation_signature
+        O.bad_fact_signature
+        O.ideal_unauthorized].
   proof.
     proc.
     if; first by call (_ : true ==> true); auto.
@@ -53,8 +55,17 @@ section OriginEnvironmentPartition.
 
   lemma origin_sign_fact_preserves_partition :
     hoare [O.sign_authorization_fact :
-      origin_environment_partition ==>
-      origin_environment_partition].
+      origin_partition_holds
+        O.unauthorized_accepted
+        O.bad_operation_signature
+        O.bad_fact_signature
+        O.ideal_unauthorized
+      ==>
+      origin_partition_holds
+        O.unauthorized_accepted
+        O.bad_operation_signature
+        O.bad_fact_signature
+        O.ideal_unauthorized].
   proof.
     proc.
     if; first by call (_ : true ==> true); auto.
@@ -63,17 +74,30 @@ section OriginEnvironmentPartition.
 
   lemma origin_submit_preserves_partition :
     hoare [O.submit :
-      origin_environment_partition ==>
-      origin_environment_partition].
+      origin_partition_holds
+        O.unauthorized_accepted
+        O.bad_operation_signature
+        O.bad_fact_signature
+        O.ideal_unauthorized
+      ==>
+      origin_partition_holds
+        O.unauthorized_accepted
+        O.bad_operation_signature
+        O.bad_fact_signature
+        O.ideal_unauthorized].
   proof.
     proc.
     call (_ : true ==> true).
     if.
     + call (_ : true ==> true).
-      while (origin_environment_partition).
+      while
+        (origin_partition_holds
+          O.unauthorized_accepted
+          O.bad_operation_signature
+          O.bad_fact_signature
+          O.ideal_unauthorized).
       + auto.
       + auto=> />.
-        rewrite /origin_environment_partition.
         apply origin_partition_update.
         * assumption.
         * move=> semantic.
