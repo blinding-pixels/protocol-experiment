@@ -156,4 +156,33 @@ section DirectOperationWitnessEnvironment.
         smt().
     + auto.
   qed.
+
+  lemma origin_direct_submit_preserves_operation_witness
+      (input_operation : signed_operation)
+      (input_view : public_view) :
+    hoare [O.submit :
+         operation = input_operation
+      /\ view = input_view
+      /\ operation_forgery_witness_invariant
+           O.unauthorized_accepted
+           O.bad_operation_signature
+           O.operation_forgery
+           SO.sign_queries SO.verify_queries
+      ==>
+      operation_forgery_witness_invariant
+        O.unauthorized_accepted
+        O.bad_operation_signature
+        O.operation_forgery
+        SO.sign_queries SO.verify_queries].
+  proof.
+    case (O.bad_operation_signature).
+    + conseq (origin_direct_submit_preserves_existing_operation_witness
+        (oget O.operation_forgery)) => //.
+      rewrite /operation_forgery_witness_invariant.
+      smt().
+    + conseq (origin_direct_submit_from_clean_establishes_operation_witness
+        input_operation input_view) => //.
+      rewrite /operation_forgery_witness_invariant.
+      smt().
+  qed.
 end section DirectOperationWitnessEnvironment.
