@@ -122,8 +122,7 @@ section OriginFinalProbabilityBound.
   proof.
     have hreal := origin_real_probability_le_signature_bad_sum &m initial.
     have hop :=
-      origin_partition_bad_operation_exactly_multi_user_eufcma
-        (A := A) (S := S) (H := H) &m initial.
+      origin_partition_bad_operation_exactly_multi_user_eufcma &m initial.
     smt().
   qed.
 end section OriginFinalProbabilityBound.
