@@ -186,3 +186,94 @@ section DirectOperationWitnessEnvironment.
       smt().
   qed.
 end section DirectOperationWitnessEnvironment.
+
+module UnauthorizedOriginDirectOperationWitnessGame(
+  A : ADAPTIVE_ORIGIN_UNAUTHORIZED_ADVERSARY,
+  S : SIGNATURE_SCHEME,
+  H : NODE_HASH
+) = {
+  module SO = PG.LoggedSignatureOracle(S)
+  module O = OriginTrackedCandidateEnvironment(SO, H)
+  module A = A(O)
+
+  proc main(initial_state : protocol_state) : bool = {
+    SO.init();
+    O.init(initial_state);
+    A.attack();
+    return O.bad_operation_signature;
+  }
+}.
+
+section DirectAdaptiveOperationWitness.
+  declare module A <: ADAPTIVE_ORIGIN_UNAUTHORIZED_ADVERSARY.
+  declare module S <: SIGNATURE_SCHEME.
+  declare module H <: NODE_HASH.
+
+  module G = UnauthorizedOriginDirectOperationWitnessGame(A, S, H).
+
+  lemma origin_direct_adaptive_main_operation_witness
+      (initial : protocol_state) :
+    hoare [G.main :
+      initial_state = initial ==>
+      operation_forgery_witness_invariant
+        G.O.unauthorized_accepted
+        res
+        G.O.operation_forgery
+        G.SO.sign_queries G.SO.verify_queries].
+  proof.
+    proc.
+    call (_ :
+      operation_forgery_witness_invariant
+        G.O.unauthorized_accepted
+        G.O.bad_operation_signature
+        G.O.operation_forgery
+        G.SO.sign_queries G.SO.verify_queries).
+    + exact origin_direct_sign_operation_preserves_operation_witness.
+    + exact origin_direct_sign_fact_preserves_operation_witness.
+    + move=> input_operation input_view.
+      exact (origin_direct_submit_preserves_operation_witness
+        input_operation input_view).
+    inline G.O.init G.O.Base.init G.O.Base.Base.init G.SO.init.
+    auto; rewrite /operation_forgery_witness_invariant.
+  qed.
+
+  lemma origin_direct_adaptive_main_characterization
+      (initial : protocol_state) :
+    hoare [G.main :
+      initial_state = initial ==>
+      res =
+        (G.O.operation_forgery <> None /\
+         PG.signature_forgery_valid
+           (oget G.O.operation_forgery)
+           G.SO.sign_queries G.SO.verify_queries)].
+  proof.
+    proc.
+    call (_ :
+      operation_forgery_witness_invariant
+        G.O.unauthorized_accepted
+        G.O.bad_operation_signature
+        G.O.operation_forgery
+        G.SO.sign_queries G.SO.verify_queries).
+    + exact origin_direct_sign_operation_preserves_operation_witness.
+    + exact origin_direct_sign_fact_preserves_operation_witness.
+    + move=> input_operation input_view.
+      exact (origin_direct_submit_preserves_operation_witness
+        input_operation input_view).
+    inline G.O.init G.O.Base.init G.O.Base.Base.init G.SO.init.
+    auto; rewrite /operation_forgery_witness_invariant; smt().
+  qed.
+end section DirectAdaptiveOperationWitness.
+
+module BSignOriginOperationDirect(
+  A : ADAPTIVE_ORIGIN_UNAUTHORIZED_ADVERSARY,
+  H : NODE_HASH
+)(SO : PG.LOGGED_SIGNATURE_ORACLE) = {
+  module O = OriginTrackedCandidateEnvironment(SO, H)
+  module A = A(O)
+
+  proc forge(initial_state : protocol_state) : PG.signature_forgery option = {
+    O.init(initial_state);
+    A.attack();
+    return O.operation_forgery;
+  }
+}.
