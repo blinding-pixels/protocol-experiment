@@ -114,3 +114,33 @@ section OperationWitnessBridgeCharacterization.
     auto; rewrite /operation_forgery_witness_invariant; smt().
   qed.
 end section OperationWitnessBridgeCharacterization.
+
+section OperationWitnessPrimitiveEquality.
+  declare module A <: ADAPTIVE_ORIGIN_UNAUTHORIZED_ADVERSARY.
+  declare module S <: SIGNATURE_SCHEME.
+  declare module H <: NODE_HASH.
+
+  module BR = OriginOperationWitnessBridgeGame(A, S, H).
+  module EUF =
+    PG.MultiUserEUFCMAGame(BSignOriginOperationWitness(A, H), S).
+
+  (* Erasing the two ghost observations from the bridge leaves exactly the
+     named primitive game: identical oracle initialization, reduction call,
+     final query logs, optional-candidate check, and success predicate. *)
+  lemma operation_witness_bridge_win_exactly_eufcma
+      &m (initial : protocol_state) :
+    Pr[
+      BR.main(initial) @ &m : res.`owbr_win
+    ] =
+    Pr[
+      EUF.main(initial) @ &m : res
+    ].
+  proof.
+    byequiv
+      (_ : ={initial_state, glob A, glob S, glob H} ==>
+           res{1}.`owbr_win = res{2}) => //.
+    proc.
+    inline *.
+    sim.
+  qed.
+end section OperationWitnessPrimitiveEquality.
