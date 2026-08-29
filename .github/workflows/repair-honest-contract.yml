@@ -1,0 +1,39 @@
+name: Repair exact honest contract source
+
+on:
+  push:
+    branches:
+      - formal/easycrypt-unauthorized-reduction
+    paths:
+      - '.github/workflows/repair-honest-contract.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out exact branch head
+        uses: actions/checkout@v4
+        with:
+          ref: formal/easycrypt-unauthorized-reduction
+          fetch-depth: 0
+
+      - name: Restore exact source and checkpoint
+        shell: bash
+        env:
+          HOC_GZIP_B64: >-
+            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
+          TARGET_SHA256: db27f24f23a88ea60e3108c29a9afd95c7ec950e6b76f63e427f9704754b88f7
+        run: |
+          set -euo pipefail
+          target='formal/current-source/easycrypt/computational/HonestOperationContract.ec'
+          printf '%s' "$HOC_GZIP_B64" | base64 -d | gzip -d > "$target"
+          printf '%s  %s\n' "$TARGET_SHA256" "$target" | sha256sum -c -
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$target"
+          git rm '.github/workflows/repair-honest-contract.yml'
+          git commit -m 'formal: restore exact honest contract source'
+          git push origin HEAD:formal/easycrypt-unauthorized-reduction
