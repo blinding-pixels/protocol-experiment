@@ -66,7 +66,8 @@ module ValidateOperation(S : SIGNATURE_SCHEME) = {
 
     if (result.`vr_accepted /\
         defense_enabled mode DefenseExactCausalContext /\
-        view.`pv_observed_fact_ids <> fact_ids) {
+        (view.`pv_observed_fact_ids <> fact_ids \/
+         ! fact_contents_match_state state view.`pv_facts)) {
       result <- validation_error FailureExactCausalContext;
     }
 

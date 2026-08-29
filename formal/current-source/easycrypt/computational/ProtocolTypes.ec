@@ -8,7 +8,9 @@ type operation_id = [ OperationId of int ].
 type verification_key = [ VerificationKey of int ].
 type incarnation_nonce = [ IncarnationNonce of int ].
 type node_id = [ NodeId of int ].
+type fact_id = [ FactId of int ].
 type authorization_digest = [
+  | ExactAuthorizationDigest of fact_id fset
   | AuthorizationDigest of int
   | InvalidAuthorizationDigest of int
 ].
@@ -17,7 +19,6 @@ type payload = [ Payload of int ].
 type leaf_key = [ LeafKey of int ].
 type member_tag = [ MemberTag of int ].
 type capability_tag = [ CapabilityTag of int ].
-type fact_id = [ FactId of int ].
 type raw_bytes = [ RawBytes of int ].
 type beekem_path = [ BeeKemPath of int ].
 type merge_node = [ MergeNode of int ].
@@ -179,6 +180,7 @@ type history_expectation = {
 }.
 
 type closure_map = node_id -> fact_id fset option.
+type fact_content_map = fact_id -> authorization_fact option.
 type beekem_path_map = node_id fset -> beekem_path option.
 
 type protocol_state = {
@@ -186,6 +188,7 @@ type protocol_state = {
   ps_document_id : document_id;
   ps_nodes : node_id fset;
   ps_closures : closure_map;
+  ps_fact_contents : fact_content_map;
   ps_seen_operation_ids : operation_id fset;
   ps_seen_nonces : nonce fset;
   ps_beekem_paths : beekem_path_map;

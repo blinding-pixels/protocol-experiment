@@ -300,11 +300,22 @@ op apply_authorization_fact
   then None
   else apply_authorization_fact_kind fact.`af_kind current fact.
 
-op authorization_state_code : authorization_state -> int.
-
+(* At the EasyCrypt abstraction boundary the authorization digest is the
+   canonical fact-id set itself, not an unconstrained integer code.  Combined
+   with immutable fact-content binding and deterministic policy replay, this
+   makes the digest an injective name for the accepted causal authorization
+   input.  Concrete Rust byte hashing remains a correspondence obligation. *)
 op authorization_digest_of
     (state : authorization_state) : authorization_digest =
-  AuthorizationDigest (authorization_state_code state).
+  ExactAuthorizationDigest state.`as_fact_ids.
+
+lemma authorization_digest_of_context_injective
+    (left right : authorization_state) :
+  authorization_digest_of left = authorization_digest_of right =>
+  left.`as_fact_ids = right.`as_fact_ids.
+proof.
+  by rewrite /authorization_digest_of.
+qed.
 
 module NormalizeAuthorization(S : SIGNATURE_SCHEME) = {
   proc normalize(

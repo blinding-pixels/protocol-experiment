@@ -257,6 +257,40 @@ op witness_history_expectation : history_expectation =
      he_region = witness_region;
      he_cover = witness_cover |}.
 
+(* Exact immutable fact contents named by each fixture's causal closure.  The
+   alternatives sharing fact id 8 deliberately live in different fixture
+   states; a view cannot substitute one for another inside a fixed state. *)
+op witness_base_authorization_facts : authorization_fact list =
+  [witness_fact_1; witness_fact_2; witness_fact_3; witness_fact_4;
+   witness_fact_5; witness_fact_6; witness_fact_7].
+
+op witness_extended_authorization_facts : authorization_fact list =
+  rcons witness_base_authorization_facts witness_carol_grant_fact.
+
+op witness_rejoin_authorization_facts : authorization_fact list =
+  rcons
+    (rcons
+      (rcons witness_base_authorization_facts witness_bob_revoke_fact)
+      witness_bob_new_membership_fact)
+    witness_bob_new_edit_fact.
+
+op witness_missing_revoke_authorization_facts : authorization_fact list =
+  rcons witness_base_authorization_facts
+    witness_missing_capability_revoke_fact.
+
+op witness_fact_contents_for_node (node : node_id) : fact_content_map =
+  if node = witness_extended_node
+  then fact_content_map_of_authorization_facts
+         witness_extended_authorization_facts
+  else if node = witness_rejoin_node
+  then fact_content_map_of_authorization_facts
+         witness_rejoin_authorization_facts
+  else if node = witness_missing_revoke_node
+  then fact_content_map_of_authorization_facts
+         witness_missing_revoke_authorization_facts
+  else fact_content_map_of_authorization_facts
+         witness_base_authorization_facts.
+
 op witness_closure_map
     (node : node_id)
     (context : fact_id fset) : closure_map =
@@ -274,6 +308,7 @@ op witness_protocol_state
      ps_document_id = witness_document;
      ps_nodes = fset1 node;
      ps_closures = witness_closure_map node context;
+     ps_fact_contents = witness_fact_contents_for_node node;
      ps_seen_operation_ids = fset0;
      ps_seen_nonces = fset0;
      ps_beekem_paths =

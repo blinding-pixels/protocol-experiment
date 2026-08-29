@@ -19,6 +19,35 @@ op signed_facts_for_ids
     then signed_fact :: signed_facts_for_ids rest ids
     else signed_facts_for_ids rest ids.
 
+(* Immutable fact-content registry.  Causal closures continue to carry compact
+   fact identifiers, while this map binds every identifier to the exact public
+   authorization fact whose signature and policy are checked by normalization. *)
+op authorization_fact_lookup
+    (facts : authorization_fact list)
+    (candidate : fact_id) : authorization_fact option =
+  with facts = [] => None
+  with facts = fact :: rest =>
+    if fact.`af_id = candidate
+    then Some fact
+    else authorization_fact_lookup rest candidate.
+
+op fact_content_map_of_authorization_facts
+    (facts : authorization_fact list) : fact_content_map =
+  fun candidate => authorization_fact_lookup facts candidate.
+
+op fact_contents_match_store_list
+    (contents : fact_content_map)
+    (facts : signed_authorization_fact list) : bool =
+  with facts = [] => true
+  with facts = signed_fact :: rest =>
+       contents signed_fact.`saf_fact.`af_id = Some signed_fact.`saf_fact
+    /\ fact_contents_match_store_list contents rest.
+
+op fact_contents_match_state
+    (state : protocol_state)
+    (facts : signed_authorization_fact list) : bool =
+  fact_contents_match_store_list state.`ps_fact_contents facts.
+
 (* Public computation equations for the two recursive fact-list projections.
    These lemmas keep client proofs semantic: concrete witnesses can reduce one
    list constructor at a time without depending on cross-theory unfolding. *)
@@ -46,6 +75,33 @@ lemma signed_facts_for_ids_cons
     if signed_fact.`saf_fact.`af_id \in ids
     then signed_fact :: signed_facts_for_ids rest ids
     else signed_facts_for_ids rest ids.
+proof. by []. qed.
+
+lemma authorization_fact_lookup_nil (candidate : fact_id) :
+  authorization_fact_lookup [] candidate = None.
+proof. by []. qed.
+
+lemma authorization_fact_lookup_cons
+    (fact : authorization_fact)
+    (rest : authorization_fact list)
+    (candidate : fact_id) :
+  authorization_fact_lookup (fact :: rest) candidate =
+    if fact.`af_id = candidate
+    then Some fact
+    else authorization_fact_lookup rest candidate.
+proof. by []. qed.
+
+lemma fact_contents_match_store_nil (contents : fact_content_map) :
+  fact_contents_match_store_list contents [] = true.
+proof. by []. qed.
+
+lemma fact_contents_match_store_cons
+    (contents : fact_content_map)
+    (signed_fact : signed_authorization_fact)
+    (rest : signed_authorization_fact list) :
+  fact_contents_match_store_list contents (signed_fact :: rest) =
+       (contents signed_fact.`saf_fact.`af_id = Some signed_fact.`saf_fact)
+    /\ fact_contents_match_store_list contents rest.
 proof. by []. qed.
 
 op all_predecessors_exist_list
