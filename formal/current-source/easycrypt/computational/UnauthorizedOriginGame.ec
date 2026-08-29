@@ -32,7 +32,7 @@ op all_fact_signatures_originated
     (facts : signed_authorization_fact list)
     (sign_queries : PG.signature_query list) : bool =
   with facts = [] => true
-  with signed_fact :: rest =>
+  with facts = signed_fact :: rest =>
        fact_signature_originated signed_fact sign_queries
     /\ all_fact_signatures_originated rest sign_queries.
 
@@ -41,7 +41,7 @@ op originated_signed_facts
     (sign_queries : PG.signature_query list) :
     signed_authorization_fact list =
   with facts = [] => []
-  with signed_fact :: rest =>
+  with facts = signed_fact :: rest =>
     if fact_signature_originated signed_fact sign_queries
     then signed_fact :: originated_signed_facts rest sign_queries
     else originated_signed_facts rest sign_queries.
@@ -161,12 +161,18 @@ module OriginTrackedCandidateEnvironment(
     unauthorized_accepted <- false;
   }
 
+  (* Once the real win event has occurred, the game is closed.  Refusing later
+     signing queries prevents an adversary from laundering a recorded forgery
+     by asking for its exact message after the winning submission. *)
   proc sign_operation(envelope : operation_envelope) : signed_operation = {
     var sig : signature;
-    sig <@ SO.sign(
-      envelope.`oe_author.`p_verification_key,
-      operation_signature_message Production envelope
-    );
+    sig <- witness;
+    if (! unauthorized_accepted) {
+      sig <@ SO.sign(
+        envelope.`oe_author.`p_verification_key,
+        operation_signature_message Production envelope
+      );
+    }
     return
       {| so_raw = encode_operation envelope;
          so_signature = sig |};
@@ -176,10 +182,13 @@ module OriginTrackedCandidateEnvironment(
     fact : authorization_fact
   ) : signed_authorization_fact = {
     var sig : signature;
-    sig <@ SO.sign(
-      fact.`af_issuer.`p_verification_key,
-      fact_signature_message fact
-    );
+    sig <- witness;
+    if (! unauthorized_accepted) {
+      sig <@ SO.sign(
+        fact.`af_issuer.`p_verification_key,
+        fact_signature_message fact
+      );
+    }
     return {| saf_fact = fact; saf_signature = sig |};
   }
 
