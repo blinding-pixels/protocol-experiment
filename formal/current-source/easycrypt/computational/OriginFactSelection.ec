@@ -88,11 +88,8 @@ proof.
   move=> not_all all_logged.
   have selected :
     first_unoriginated_fact_forgery facts sign_queries <> None.
-  + move=> none.
-    have all_originated :=
-      (first_unoriginated_fact_forgery_none_iff_all_originated
-        facts sign_queries).`1 none.
-    contradiction.
+  + rewrite first_unoriginated_fact_forgery_none_iff_all_originated.
+    exact not_all.
   split; first exact selected.
   exact (first_unoriginated_fact_forgery_is_valid
     facts sign_queries verify_queries selected all_logged).
