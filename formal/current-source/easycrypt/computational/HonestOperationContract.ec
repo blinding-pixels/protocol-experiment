@@ -168,7 +168,7 @@ proof.
     /witness_extended_node /witness_rejoin_node
     /witness_missing_revoke_node /witness_base_node.
   rewrite /witness_base_signed_facts
-    !fact_contents_match_store_cons fact_contents_match_store_nil
+    !fact_contents_match_store_cons
     /witness_signed_fact_1 /witness_signed_fact_2
     /witness_signed_fact_3 /witness_signed_fact_4
     /witness_signed_fact_5 /witness_signed_fact_6
