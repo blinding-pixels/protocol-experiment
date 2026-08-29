@@ -139,4 +139,34 @@ section ExistingForgeryPreservation.
       * auto.
     + auto.
   qed.
+
+  (* Once A2 is already bad, both the real flag and its primitive witness are
+     monotone across later submissions.  Submit adds only verification-log
+     entries, so it cannot launder the witness by originating its message. *)
+  lemma origin_submit_preserves_bad_real_and_forgery
+      (candidate : PG.signature_forgery) :
+    hoare [O.submit :
+         O.bad_operation_signature
+      /\ O.unauthorized_accepted
+      /\ PG.signature_forgery_valid
+           candidate SO.sign_queries SO.verify_queries
+      ==>
+         O.bad_operation_signature
+      /\ O.unauthorized_accepted
+      /\ PG.signature_forgery_valid
+           candidate SO.sign_queries SO.verify_queries].
+  proof.
+    proc.
+    call (candidate_submit_preserves_existing_forgery candidate).
+    if.
+    + inline SO.get_sign_queries.
+      while
+        (O.bad_operation_signature /\
+         O.unauthorized_accepted /\
+         PG.signature_forgery_valid
+           candidate SO.sign_queries SO.verify_queries).
+      * auto.
+      * auto.
+    + auto.
+  qed.
 end section ExistingForgeryPreservation.
