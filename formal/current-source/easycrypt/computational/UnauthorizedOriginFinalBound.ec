@@ -1,5 +1,8 @@
 require import AllCore List FSet.
 require import ProtocolTypes ProtocolPrimitives UnauthorizedOriginGame UnauthorizedOriginPartition.
+require import UnauthorizedSignatureReduction OriginOperationDirectReduction.
+
+import PG.
 
 (* Probability composition for the exact origin-aware A0 experiment.  The
    partition invariant, A5-zero invariant, and union bounds are all proved over
@@ -10,6 +13,8 @@ section OriginFinalProbabilityBound.
   declare module H <: ProtocolPrimitives.NODE_HASH.
 
   module GF = UnauthorizedOriginPartitionGame(A, S, H).
+  module EUFOP =
+    PG.MultiUserEUFCMAGame(BSignOriginOperationDirect(A, H), S).
 
   lemma origin_real_probability_le_signature_bad_sum
       &m (initial : protocol_state) :
@@ -104,6 +109,21 @@ section OriginFinalProbabilityBound.
     + rewrite !mu_or.
       smt(ge0_mu).
 
+    smt().
+  qed.
+
+  (* The left term is now connected to the exact named primitive experiment,
+     rather than to a post-hoc search over accepted candidates. *)
+  lemma origin_real_probability_le_operation_eufcma_plus_fact_bad
+      &m (initial : protocol_state) :
+    Pr[GF.main(initial) @ &m : res.`opr_real] <=
+      Pr[EUFOP.main(initial) @ &m : res] +
+      Pr[GF.main(initial) @ &m : res.`opr_bad_fact].
+  proof.
+    have hreal := origin_real_probability_le_signature_bad_sum &m initial.
+    have hop :=
+      origin_partition_bad_operation_exactly_multi_user_eufcma
+        (A := A) (S := S) (H := H) &m initial.
     smt().
   qed.
 end section OriginFinalProbabilityBound.
