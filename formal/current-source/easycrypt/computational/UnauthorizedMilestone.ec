@@ -1,4 +1,5 @@
 require import PrimitiveControlProofs MutationHistoryProofs MutationPolicyProofs MutationEditProofs MutationGameProofs ValidatorCharacterization UnauthorizedIdeal CausalClosureRepresentation AuthorizationRepresentation AuthorizationAncestry UnauthorizedFactReduction UnauthorizedSignatureReduction UnauthorizedHashReduction MutationProofs.
+require import ProtocolTypes ProtocolChecks AuthorizationState HonestOperationContract CausalClosureRepresentation.
 
 (* Active Deliverable A checker entry point.  Every new unauthorized-game or
    reduction theorem is imported here while it is under development, so a red
