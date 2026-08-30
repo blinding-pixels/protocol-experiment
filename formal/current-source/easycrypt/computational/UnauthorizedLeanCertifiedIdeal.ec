@@ -1,6 +1,6 @@
 require import AllCore List FSet.
-require import ProtocolTypes CanonicalEncoding AuthorizationState AuthorizationRepresentation.
-require import UnauthorizedIdeal UnauthorizedLeanIdeal.
+require import ProtocolTypes CanonicalEncoding ProtocolPrimitives AuthorizationState AuthorizationRepresentation.
+require import ProtocolOracles UnauthorizedReduction UnauthorizedIdeal UnauthorizedLeanIdeal.
 require import AuthorizationLeanDeltaMapping AuthorizationLeanFullReplay.
 
 (* Policy validity remains part of A5: facts must replay through the same
@@ -153,3 +153,75 @@ proof.
   + exact (ideal_authorized_candidate_implies_lean_certified
       operation view state).
 qed.
+
+section LeanCertifiedValidatorSoundness.
+  declare module S <: SIGNATURE_SCHEME.
+
+  lemma validate_decoded_acceptance_implies_lean_certified_authorization
+      (input_operation : signed_operation)
+      (input_envelope : operation_envelope)
+      (input_view : public_view)
+      (input_state : protocol_state) :
+    hoare [ValidateOperation(S).validate_decoded :
+         mode = Production
+      /\ signed_operation = input_operation
+      /\ envelope = input_envelope
+      /\ view = input_view
+      /\ state = input_state
+      ==>
+      res.`vr_accepted =>
+        lean_certified_ideal_decoded_authorized
+          input_operation input_envelope input_view input_state].
+  proof.
+    conseq (validate_decoded_acceptance_implies_ideal_authorization
+      input_operation input_envelope input_view input_state) => //.
+    by rewrite lean_certified_ideal_decoded_authorized_iff.
+  qed.
+
+  lemma validate_acceptance_implies_lean_certified_authorization
+      (input_operation : signed_operation)
+      (input_view : public_view)
+      (input_state : protocol_state) :
+    hoare [ValidateOperation(S).validate :
+         mode = Production
+      /\ signed_operation = input_operation
+      /\ view = input_view
+      /\ state = input_state
+      ==>
+      res.`vr_accepted =>
+        lean_certified_ideal_authorized_candidate
+          input_operation input_view input_state].
+  proof.
+    conseq (validate_acceptance_implies_ideal_authorization
+      input_operation input_view input_state) => //.
+    by rewrite lean_certified_ideal_authorized_candidate_iff.
+  qed.
+end section LeanCertifiedValidatorSoundness.
+
+section LeanCertifiedCandidateSubmitSoundness.
+  declare module S <: SIGNATURE_SCHEME.
+  declare module H <: NODE_HASH.
+
+  module OC = CandidateUnauthorizedEnvironment(S, H).
+
+  lemma candidate_submit_acceptance_implies_lean_certified_authorization
+      (input_operation : signed_operation)
+      (input_view : public_view)
+      (input_state : protocol_state) :
+    hoare [OC.submit :
+         operation = input_operation
+      /\ view = input_view
+      /\ OC.state = input_state
+      ==>
+      res =>
+        lean_certified_ideal_authorized_candidate
+          input_operation input_view input_state].
+  proof.
+    proc.
+    wp.
+    call (_ : true ==> true).
+    call (validate_acceptance_implies_lean_certified_authorization
+      input_operation input_view input_state).
+    auto=> />.
+  qed.
+end section LeanCertifiedCandidateSubmitSoundness.
