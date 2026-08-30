@@ -152,6 +152,71 @@ jobs:
           cat "$evidence/audit-stderr.log" >&2
           exit "$status"
 
+      - name: Prove theorem-boundary audit mutation
+        if: github.ref == 'refs/heads/formal/easycrypt-beekem-interface' || github.head_ref == 'formal/easycrypt-beekem-interface'
+        shell: bash
+        run: |
+          set -euo pipefail
+          source_dir="$GITHUB_WORKSPACE/formal/current-source/easycrypt/computational"
+          mutant_dir="$RUNNER_TEMP/easycrypt-theorem-boundary-mutation"
+          evidence="$RUNNER_TEMP/easycrypt-full-evidence"
+          mkdir -p "$mutant_dir"
+          cp -R "$source_dir"/. "$mutant_dir"/
+
+          target="$mutant_dir/BeeKemKiInterface.eca"
+          sha256sum "$target" \
+            | tee "$evidence/theorem-boundary-mutation-source-sha256.txt"
+          python3 - "$target" <<'PY'
+          from pathlib import Path
+          import sys
+
+          path = Path(sys.argv[1])
+          text = path.read_text(encoding="utf-8")
+          needle = "    => exists (BNike <: BEEKEM_HKR_CKS_ADVERSARY),\n"
+          count = text.count(needle)
+          if count != 1:
+              raise SystemExit(
+                  f"expected exactly one BNike existential, found {count}"
+              )
+          path.write_text(
+              text.replace(needle, "    => true =>\n", 1),
+              encoding="utf-8",
+          )
+          PY
+          grep -F '=> true =>' "$target" \
+            | tee "$evidence/theorem-boundary-mutation-edit.txt"
+
+          set +e
+          python3 tools/easycrypt/audit_computational.py \
+            --root "$mutant_dir" \
+            >"$evidence/theorem-boundary-mutation-stdout.log" \
+            2>"$evidence/theorem-boundary-mutation-stderr.log"
+          status=$?
+          set -e
+          printf '%s\n' "$status" \
+            >"$evidence/theorem-boundary-mutation-raw-audit-status.txt"
+          cat "$evidence/theorem-boundary-mutation-stdout.log"
+          cat "$evidence/theorem-boundary-mutation-stderr.log" >&2
+
+          if [ "$status" -eq 0 ]; then
+            echo "theorem-boundary mutation unexpectedly passed audit" >&2
+            printf '1\n' \
+              >"$evidence/theorem-boundary-mutation-assertion-exit-status.txt"
+            exit 1
+          fi
+          if ! grep -Fq \
+              'must existentially produce the HKR-CKS reduction' \
+              "$evidence/theorem-boundary-mutation-stdout.log" \
+              "$evidence/theorem-boundary-mutation-stderr.log"; then
+            echo "theorem-boundary mutant failed for an unrelated reason" >&2
+            printf '1\n' \
+              >"$evidence/theorem-boundary-mutation-assertion-exit-status.txt"
+            exit 1
+          fi
+          printf '0\n' \
+            >"$evidence/theorem-boundary-mutation-assertion-exit-status.txt"
+          echo "theorem-boundary audit mutation rejected as expected"
+
       - name: Run executable reference suite
         shell: bash
         run: |
