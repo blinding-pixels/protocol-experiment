@@ -1,6 +1,9 @@
 require import AllCore List FSet Distr DBool.
 require import ProtocolTypes CanonicalEncoding ProtocolPrimitives AuthorizationState.
-require import ProtocolChecks ProtocolOracles.
+require import ProtocolChecks ProtocolOracles AuthorizationAncestry.
+require import PrimitiveGames UnauthorizedOriginGame.
+
+import PG.
 
 (* ------------------------------------------------------------------------- *)
 (* Deliverable L, checkpoint 1: executable application live-key experiment.   *)
@@ -439,6 +442,11 @@ op live_trace_admissible
 (* ------------------------------------------------------------------------- *)
 
 module type LIVE_PROTOCOL_ORACLE = {
+  proc sign_operation(envelope : operation_envelope) : signed_operation
+  proc sign_authorization_fact(
+    fact : authorization_fact
+  ) : signed_authorization_fact
+
   proc create_group(
     creator : principal,
     initial_members : principal fset
@@ -476,7 +484,10 @@ module type LIVE_PROTOCOL_ORACLE = {
     member : principal
   ) : beekem_snapshot option
 
-  proc submit_operation(operation : signed_operation) : bool
+  proc submit_operation(
+    operation : signed_operation,
+    view : public_view
+  ) : bool
 }.
 
 op live_query_kind_of_control
@@ -490,14 +501,12 @@ op live_query_kind_of_control
     LiveRemoveQuery expected_author (oget expected_target)
   with expected_kind = BeeUpdate => LiveUpdateQuery expected_author.
 
-module LiveProtocolEnvironment(
-  S : SIGNATURE_SCHEME,
-  H : NODE_HASH,
+module LiveProtocolCore(
+  Auth : ORIGIN_TRACKED_UNAUTHORIZED_ORACLE,
   B : BEEKEM_LIVE_RUNTIME,
   K : MULTI_DOMAIN_KEY_SCHEDULE,
   R : LIVE_KEY_SAMPLER
 ) = {
-  module Auth = ProtocolEnvironment(S, H)
 
   var hidden_bit : bool
   var kappa : int
@@ -520,33 +529,18 @@ module LiveProtocolEnvironment(
 
   proc init(
     initial_state : protocol_state,
-    initial_facts : signed_authorization_fact list,
     retention_kappa : int,
-    challenge_bit : bool
+    challenge_bit : bool,
+    initial_authorization_digest : authorization_digest
   ) : unit = {
-    var normalized_valid : bool;
-    var normalized_state : authorization_state;
-
-    normalized_valid <- false;
-    normalized_state <- empty_authorization_state;
-
-    Auth.init(Production, initial_state, initial_facts);
     B.init();
-    (normalized_valid, normalized_state) <@
-      NormalizeAuthorization(S).normalize(
-        initial_facts,
-        initial_state.`ps_creator
-      );
 
     hidden_bit <- challenge_bit;
     kappa <- retention_kappa;
     group_created <- false;
     creator <- initial_state.`ps_creator;
     public_state <- initial_state;
-    current_authorization_digest <-
-      if normalized_valid
-      then authorization_digest_of normalized_state
-      else InvalidAuthorizationDigest 0;
+    current_authorization_digest <- initial_authorization_digest;
     active_members <- empty_active_member_store;
     nodes <- fset0;
     controls <- empty_control_store;
@@ -615,6 +609,22 @@ module LiveProtocolEnvironment(
     }
 
     return installed;
+  }
+
+  proc sign_operation(
+    envelope : operation_envelope
+  ) : signed_operation = {
+    var operation : signed_operation;
+    operation <@ Auth.sign_operation(envelope);
+    return operation;
+  }
+
+  proc sign_authorization_fact(
+    fact : authorization_fact
+  ) : signed_authorization_fact = {
+    var signed_fact : signed_authorization_fact;
+    signed_fact <@ Auth.sign_authorization_fact(fact);
+    return signed_fact;
   }
 
   proc create_group(
@@ -890,7 +900,10 @@ module LiveProtocolEnvironment(
     return result;
   }
 
-  proc submit_operation(operation : signed_operation) : bool = {
+  proc submit_operation(
+    operation : signed_operation,
+    view : public_view
+  ) : bool = {
     var envelope_option : operation_envelope option;
     var operation_identifier : operation_id option;
     var accepted : bool;
@@ -901,11 +914,13 @@ module LiveProtocolEnvironment(
       then None
       else Some (oget envelope_option).`oe_operation_id;
 
-    accepted <@ Auth.submit(operation);
-    if (accepted) {
-      public_state <- Auth.state;
+    accepted <@ Auth.submit(operation, view);
+    if (accepted /\ envelope_option <> None) {
+      (* Production acceptance establishes equality between this signed field
+         and the normalized exact causal authorization state.  The origin-aware
+         validator remains the sole authority for that check. *)
       current_authorization_digest <-
-        authorization_digest_of Auth.V.last_authorization;
+        (oget envelope_option).`oe_authorization_digest;
     }
 
     queries <- rcons queries
@@ -930,7 +945,9 @@ module LiveReal(
   K : MULTI_DOMAIN_KEY_SCHEDULE,
   R : LIVE_KEY_SAMPLER
 ) = {
-  module O = LiveProtocolEnvironment(S, H, B, K, R)
+  module SO = PG.LoggedSignatureOracle(S)
+  module Auth = OriginTrackedCandidateEnvironment(SO, H)
+  module O = LiveProtocolCore(Auth, B, K, R)
   module A = A(O)
 
   proc main(
@@ -940,13 +957,32 @@ module LiveReal(
   ) : bool = {
     var challenge_bit : bool;
     var adversary_guess : bool;
+    var normalized_valid : bool;
+    var normalized_state : authorization_state;
+    var initial_digest : authorization_digest;
+
+    normalized_valid <- false;
+    normalized_state <- empty_authorization_state;
+    initial_digest <- InvalidAuthorizationDigest 0;
+
+    SO.init();
+    Auth.init(initial_state);
+    (normalized_valid, normalized_state) <@
+      NormalizeAuthorization(Auth.Scheme).normalize(
+        initial_facts,
+        initial_state.`ps_creator
+      );
+    initial_digest <-
+      if normalized_valid
+      then authorization_digest_of normalized_state
+      else InvalidAuthorizationDigest 0;
 
     challenge_bit <$ {0,1};
     O.init(
       initial_state,
-      initial_facts,
       retention_kappa,
-      challenge_bit
+      challenge_bit,
+      initial_digest
     );
     A.attack();
     adversary_guess <@ A.guess();
@@ -958,9 +994,9 @@ module LiveReal(
   }
 }.
 
-(* Fixed-bit projections are retained for adjacent-hop proofs.  They execute
-   the same environment and adversary; only the hidden bit sampler is replaced
-   by a fixed bit. *)
+(* Fixed-bit projections execute the same origin-aware authentication oracle,
+   live environment, and adversary.  Only the hidden-bit sampler is replaced
+   by the procedure argument. *)
 module LiveRealBit(
   A : LIVE_KEY_ADVERSARY,
   S : SIGNATURE_SCHEME,
@@ -969,7 +1005,9 @@ module LiveRealBit(
   K : MULTI_DOMAIN_KEY_SCHEDULE,
   R : LIVE_KEY_SAMPLER
 ) = {
-  module O = LiveProtocolEnvironment(S, H, B, K, R)
+  module SO = PG.LoggedSignatureOracle(S)
+  module Auth = OriginTrackedCandidateEnvironment(SO, H)
+  module O = LiveProtocolCore(Auth, B, K, R)
   module A = A(O)
 
   proc main(
@@ -979,12 +1017,31 @@ module LiveRealBit(
     challenge_bit : bool
   ) : bool = {
     var adversary_guess : bool;
+    var normalized_valid : bool;
+    var normalized_state : authorization_state;
+    var initial_digest : authorization_digest;
+
+    normalized_valid <- false;
+    normalized_state <- empty_authorization_state;
+    initial_digest <- InvalidAuthorizationDigest 0;
+
+    SO.init();
+    Auth.init(initial_state);
+    (normalized_valid, normalized_state) <@
+      NormalizeAuthorization(Auth.Scheme).normalize(
+        initial_facts,
+        initial_state.`ps_creator
+      );
+    initial_digest <-
+      if normalized_valid
+      then authorization_digest_of normalized_state
+      else InvalidAuthorizationDigest 0;
 
     O.init(
       initial_state,
-      initial_facts,
       retention_kappa,
-      challenge_bit
+      challenge_bit,
+      initial_digest
     );
     A.attack();
     adversary_guess <@ A.guess();

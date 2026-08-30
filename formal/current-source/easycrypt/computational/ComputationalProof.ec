@@ -3,6 +3,7 @@ require import PrimitiveControlProofs MutationHistoryProofs MutationPolicyProofs
 require import MutationEditProofs MutationGameProofs MutationProofs.
 require import HonestOperationContract UnauthorizedOriginPartition.
 require import AuthorizationLeanFullReplay CausalClosureRepresentation.
+require import LiveKeyGame LiveKeyWitnesses LiveAuthenticationReduction.
 require import LiveKeyGame LiveKeyWitnesses.
 
 (* Authoritative Deliverable A entry point.
@@ -49,3 +50,9 @@ print LiveKeyWitnesses.honest_live_trace_reaches_admissible_challenge.
 print LiveKeyWitnesses.previously_revealed_live_node_cannot_be_challenged.
 print LiveKeyWitnesses.single_challenge_without_compromise_is_bee_safe.
 print LiveKeyWitnesses.immediate_same_node_compromise_is_not_bee_safe.
+
+(* Deliverable L checkpoint 2: the exact live execution is installed inside
+   Deliverable A's origin-tracked validator environment. *)
+print LiveAuthenticationReduction.live_success_le_authenticated_plus_origin_failure.
+print LiveAuthenticationReduction.live_authentication_failure_exactly_deliverable_a.
+print LiveAuthenticationReduction.live_authentication_failure_bound.

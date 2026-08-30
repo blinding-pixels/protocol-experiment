@@ -1,6 +1,8 @@
 require import AllCore List FSet.
 require import ProtocolTypes CanonicalEncoding ProtocolPrimitives AuthorizationState.
-require import ProtocolChecks LiveKeyGame.
+require import ProtocolChecks PrimitiveGames UnauthorizedOriginGame LiveKeyGame.
+
+import PG.
 
 op live_witness_creator : principal =
   {| p_verification_key = VerificationKey 700;
@@ -63,9 +65,10 @@ proof.
 qed.
 
 module HonestLiveTrace = {
-  module O = LiveProtocolEnvironment(
-    TestSignature,
-    TestNodeHash,
+  module SO = PG.LoggedSignatureOracle(TestSignature)
+  module Auth = OriginTrackedCandidateEnvironment(SO, TestNodeHash)
+  module O = LiveProtocolCore(
+    Auth,
     TestBeeKemLiveRuntime,
     TestMultiDomainKeySchedule,
     TestLiveKeySampler
@@ -76,7 +79,14 @@ module HonestLiveTrace = {
     var updated : node_id option;
     var challenge : live_application_key option;
 
-    O.init(live_witness_protocol_state, [], 1, true);
+    SO.init();
+    Auth.init(live_witness_protocol_state);
+    O.init(
+      live_witness_protocol_state,
+      1,
+      true,
+      authorization_digest_of empty_authorization_state
+    );
     created <@ O.create_group(live_witness_creator, fset0);
     updated <@ O.send_beekem_update(live_witness_creator);
     challenge <@ O.challenge_live(live_witness_creator, NodeId 2);
@@ -115,9 +125,10 @@ proof.
 qed.
 
 module RevealThenChallengeTrace = {
-  module O = LiveProtocolEnvironment(
-    TestSignature,
-    TestNodeHash,
+  module SO = PG.LoggedSignatureOracle(TestSignature)
+  module Auth = OriginTrackedCandidateEnvironment(SO, TestNodeHash)
+  module O = LiveProtocolCore(
+    Auth,
     TestBeeKemLiveRuntime,
     TestMultiDomainKeySchedule,
     TestLiveKeySampler
@@ -129,7 +140,14 @@ module RevealThenChallengeTrace = {
     var revealed : live_application_key option;
     var challenge : live_application_key option;
 
-    O.init(live_witness_protocol_state, [], 1, true);
+    SO.init();
+    Auth.init(live_witness_protocol_state);
+    O.init(
+      live_witness_protocol_state,
+      1,
+      true,
+      authorization_digest_of empty_authorization_state
+    );
     created <@ O.create_group(live_witness_creator, fset0);
     updated <@ O.send_beekem_update(live_witness_creator);
     revealed <@ O.reveal_live_key(live_witness_creator, NodeId 2);
