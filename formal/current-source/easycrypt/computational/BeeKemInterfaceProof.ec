@@ -65,7 +65,7 @@ print beekem_mu_cpa_advantage.
 print BeeKemNikeSymmetryGame.
 print BeeKemSeCorrectnessGame.
 
-** Exact imported BeeKEM Theorem 1 boundary under the uniform centered-bias
+(* Exact imported BeeKEM Theorem 1 boundary under the uniform centered-bias
    interpretation required by Appendix B's hybrid inequalities. *)
 print beekem_is_ceil_log2.
 print beekem_theorem1_loss.
@@ -79,7 +79,7 @@ print beekem_witness_random_branch_reachable.
 print beekem_witness_wrong_guess_changes_result.
 print beekem_witness_game_wins_probability_one.
 
-** Correct-but-insecure primitive controls through the named HKR-CKS and
+(* Correct-but-insecure primitive controls through the named HKR-CKS and
    multi-user CPA games. *)
 print beekem_insecure_nike_real_branch_wins.
 print beekem_insecure_nike_random_branch_wins.
