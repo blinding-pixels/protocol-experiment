@@ -8,7 +8,7 @@ require import LivePrfControls.
 require import LivePrfIdealControls.
 
 require import LivePrfDomainSeparationControls.
+require import LivePrfCapabilityDomainSeparationControls.
 
 (* Public aggregation point for the application multi-domain PRF checkpoint.
    The authoritative BeeKEM adapter remains an explicit later obligation. *)
-
