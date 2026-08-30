@@ -315,11 +315,11 @@ module BeeKemMuCpaOracles(S : BEEKEM_SYMMETRIC_ENCRYPTION) = {
         (oget registration).`bsr_key,
         selected_message
       );
-      challenge_count <- challene_count + 1;
+      challenge_count <- challenge_count + 1;
       if (hidden_bit) {
         left_challenge_count <- left_challenge_count + 1;
       } else {
-        right_challenge_count <- right_challene_count + 1;
+        right_challenge_count <- right_challenge_count + 1;
       }
     }
     query_log <- rcons query_log
