@@ -8,13 +8,13 @@ op prf_control_live_label : live_key_label =
   {| lkl_protocol_version = expected_protocol_version;
      lkl_document_id = DocumentId 903;
      lkl_node_id = NodeId 904;
-     lkl_authorization_digest = AuthorizationDigest fset0 |}.
+     lkl_authorization_digest = AuthorizationDigest 906 |}.
 
 op prf_control_history_label : history_key_label =
   {| hkl_protocol_version = expected_protocol_version;
      hkl_document_id = DocumentId 903;
      hkl_segment_id = SegmentId 905;
-     hkl_authorization_digest = AuthorizationDigest fset0 |}.
+     hkl_authorization_digest = AuthorizationDigest 906 |}.
 
 op prf_control_key_guesses_real (key : live_application_key) : bool =
   with key = LiveApplicationKey material label => 0 <= material.
