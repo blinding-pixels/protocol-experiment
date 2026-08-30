@@ -1,0 +1,130 @@
+name: Fix live query pattern matches
+
+on:
+  push:
+    branches:
+      - formal/easycrypt-live-key-reduction
+    paths:
+      - '.github/workflows/fix-live-query-match.yml'
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out exact branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+
+      - name: Patch, audit, commit, push, and dispatch checker
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('formal/current-source/easycrypt/computational/LiveKeyGame.ec')
+          text = path.read_text(encoding='utf-8')
+          old = '''op query_is_update_by
+              (query : live_query)
+              (member : principal) : bool =
+            with query.`lq_kind = LiveUpdateQuery updater => updater = member
+            with query.`lq_kind = _ => false.
+
+          op query_is_challenge (query : live_query) : bool =
+            with query.`lq_kind = LiveChallengeQuery member => true
+            with query.`lq_kind = _ => false.
+
+          op query_is_compromise_of
+              (query : live_query)
+              (member : principal) : bool =
+            with query.`lq_kind = LiveCompromiseQuery compromised =>
+              compromised = member
+            with query.`lq_kind = _ => false.
+
+          op query_challenge_member (query : live_query) : principal option =
+            with query.`lq_kind = LiveChallengeQuery member => Some member
+            with query.`lq_kind = _ => None.
+
+          op query_compromise_member (query : live_query) : principal option =
+            with query.`lq_kind = LiveCompromiseQuery member => Some member
+            with query.`lq_kind = _ => None.
+          '''
+          new = '''op query_kind_is_update_by
+              (kind : live_query_kind)
+              (member : principal) : bool =
+            with kind = LiveUpdateQuery updater => updater = member
+            with kind = _ => false.
+
+          op query_is_update_by
+              (query : live_query)
+              (member : principal) : bool =
+            query_kind_is_update_by query.`lq_kind member.
+
+          op query_kind_is_challenge (kind : live_query_kind) : bool =
+            with kind = LiveChallengeQuery member => true
+            with kind = _ => false.
+
+          op query_is_challenge (query : live_query) : bool =
+            query_kind_is_challenge query.`lq_kind.
+
+          op query_kind_is_compromise_of
+              (kind : live_query_kind)
+              (member : principal) : bool =
+            with kind = LiveCompromiseQuery compromised => compromised = member
+            with kind = _ => false.
+
+          op query_is_compromise_of
+              (query : live_query)
+              (member : principal) : bool =
+            query_kind_is_compromise_of query.`lq_kind member.
+
+          op query_kind_challenge_member
+              (kind : live_query_kind) : principal option =
+            with kind = LiveChallengeQuery member => Some member
+            with kind = _ => None.
+
+          op query_challenge_member (query : live_query) : principal option =
+            query_kind_challenge_member query.`lq_kind.
+
+          op query_kind_compromise_member
+              (kind : live_query_kind) : principal option =
+            with kind = LiveCompromiseQuery member => Some member
+            with kind = _ => None.
+
+          op query_compromise_member (query : live_query) : principal option =
+            query_kind_compromise_member query.`lq_kind.
+          '''
+          count = text.count(old)
+          if count != 1:
+              raise SystemExit(f'expected one live-query match block, found {count}')
+          path.write_text(text.replace(old, new), encoding='utf-8')
+          PY
+
+          rm .github/workflows/fix-live-query-match.yml
+          python3 tools/easycrypt/audit_computational.py
+          python3 -m unittest discover \
+            -s formal/current-source/easycrypt/computational \
+            -p 'test_*.py' -v
+
+          git config user.name 'blinding-pixels'
+          git config user.email 'blindingpixels@protonmail.com'
+          git add -A
+          git commit -m 'fix: make live query matches parser-safe'
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+
+          curl --fail --silent --show-error --location \
+            --request POST \
+            --header 'Accept: application/vnd.github+json' \
+            --header "Authorization: Bearer ${GH_TOKEN}" \
+            --header 'X-GitHub-Api-Version: 2022-11-28' \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/easycrypt-computational.yml/dispatches" \
+            --data "{\"ref\":\"${GITHUB_REF_NAME}\"}"
