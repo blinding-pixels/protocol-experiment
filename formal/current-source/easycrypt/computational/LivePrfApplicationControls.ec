@@ -4,8 +4,6 @@ require import AuthorizationState AuthorizationAncestry UnauthorizedOriginGame.
 require import LiveKeyGame LiveKeyWitnesses.
 require import LivePrfTypes LivePrfGame LivePrfApplicationReduction LivePrfControls.
 
-import PG.
-
 type application_prf_trace_control_result = {
   aptc_evidence : mdprf_game_evidence;
   aptc_reveal_real : bool;
