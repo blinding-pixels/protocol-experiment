@@ -33,7 +33,7 @@ jobs:
     timeout-minutes: 90
     env:
       EASYCRYPT_IMAGE: ghcr.io/easycrypt/ec-test-box@sha256:84980006e8b01fe6497bbd0ecd67deeb5e7361d8ad17e27d24924122d368e0fc
-      CHECK_EC: ComputationalProof.ec
+      CHECK_EC: ${{ (github.ref == 'refs/heads/formal/easycrypt-beekem-interface' || github.head_ref == 'formal/easycrypt-beekem-interface') && 'BeeKemInterfaceProof.ec' || 'ComputationalProof.ec' }}
       BEEKEM_PDF_SHA256: 129a819400898536455cabe4ba104c02d902384ea802b4900a388e8e9c0e4fb3
     steps:
       - name: Check out exact proof source
