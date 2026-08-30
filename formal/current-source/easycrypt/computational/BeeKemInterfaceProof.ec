@@ -1,4 +1,4 @@
-require import BeeKemTypes BeeKemQueryLog BeeKemProtocol BeeKemSafety BeeKemKiGame.
+require import BeeKemTypes BeeKemQueryLog BeeKemProtocol BeeKemSafety BeeKemKiGame BeeKemPrimitiveGames.
 require import BeeKemSafetyProofs BeeKemProtocolSemanticsProofs.
 
 (* Public closure for the executable Figure 8 oracle environment and exact
@@ -51,3 +51,11 @@ print beekem_retention_requires_positive_kappa.
    adversary guess. *)
 print beekem_ki_evidence.
 print beekem_normalized_ki_advantage.
+
+(* Named primitive games used by the imported BeeKEM reduction. *)
+print beekem_nike_registration_for.
+print beekem_hkr_cks_evidence.
+print beekem_hkr_cks_advantage.
+print beekem_se_registration_for.
+print beekem_mu_cpa_evidence.
+print beekem_mu_cpa_advantage.
