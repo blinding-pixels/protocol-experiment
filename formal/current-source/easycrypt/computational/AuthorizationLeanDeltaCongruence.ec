@@ -32,11 +32,11 @@ proof.
 qed.
 
 lemma lean_authorization_join_respects_equiv
-    (left right delta : lean_observed_remove_authorization) :
+    (left right addition : lean_observed_remove_authorization) :
   lean_authorization_equiv left right =>
   lean_authorization_equiv
-    (lean_authorization_join left delta)
-    (lean_authorization_join right delta).
+    (lean_authorization_join left addition)
+    (lean_authorization_join right addition).
 proof.
   rewrite /lean_authorization_equiv /lean_authorization_join.
   smt().
