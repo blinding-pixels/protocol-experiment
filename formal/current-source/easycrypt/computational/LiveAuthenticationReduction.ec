@@ -83,7 +83,38 @@ module LiveAuthenticationGame(
 ) = {
   module SO = PG.LoggedSignatureOracle(S)
   module O = OriginTrackedCandidateEnvironment(SO, H)
-  module BA = BLiveAuthentication(A, B, K, R, O)
+
+  (* Keep [O] concrete and observable by the enclosing game while exposing to
+     the live adversary only the exact three-procedure Deliverable A oracle.
+     Every adapter procedure is a transparent one-call forwarding wrapper. *)
+  module Forward = {
+    proc sign_operation(
+      envelope : operation_envelope
+    ) : signed_operation = {
+      var operation : signed_operation;
+      operation <@ O.sign_operation(envelope);
+      return operation;
+    }
+
+    proc sign_authorization_fact(
+      fact : authorization_fact
+    ) : signed_authorization_fact = {
+      var signed_fact : signed_authorization_fact;
+      signed_fact <@ O.sign_authorization_fact(fact);
+      return signed_fact;
+    }
+
+    proc submit(
+      operation : signed_operation,
+      view : public_view
+    ) : bool = {
+      var accepted : bool;
+      accepted <@ O.submit(operation, view);
+      return accepted;
+    }
+  }
+
+  module BA = BLiveAuthentication(A, B, K, R, Forward)
 
   proc main() : live_authentication_result = {
     SO.init();
