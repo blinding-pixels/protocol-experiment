@@ -12,6 +12,27 @@ require import BeeKemPrimitiveContracts BeeKemTheorem1Math BeeKemConstruction.
    already at ceil(log2(1)) = 0.  This boundary therefore uses one uniform
    centered-bias convention for all three games.  Multiplying every advantage
    by two would leave the stated reduction factors unchanged. *)
+(* Appendix B gives reductions as constructions from the challenged
+   ki-DCGKA adversary and the exact BeeKEM[SE, NIKE] instance.  These
+   higher-order module types make those dependencies part of the public
+   EasyCrypt type instead of accepting unrelated primitive adversaries.  The
+   reduction bodies remain imported paper evidence, exactly like Theorem 1. *)
+module type BEEKEM_THEOREM1_NIKE_REDUCTION(
+  A : BEEKEM_KI_ADVERSARY,
+  I : BEEKEM_PAPER_INSTANCE,
+  O : BEEKEM_HKR_CKS_ORACLES
+) = {
+  proc distinguish() : bool
+}.
+
+module type BEEKEM_THEOREM1_SE_REDUCTION(
+  A : BEEKEM_KI_ADVERSARY,
+  I : BEEKEM_PAPER_INSTANCE,
+  O : BEEKEM_MU_CPA_ORACLES
+) = {
+  proc distinguish() : bool
+}.
+
 section BeeKemTheorem1ImportedBoundary.
   declare module A <: BEEKEM_KI_ADVERSARY.
   declare module PaperInstance <: BEEKEM_PAPER_INSTANCE.
@@ -23,18 +44,21 @@ section BeeKemTheorem1ImportedBoundary.
   module NikeKeySampler = BeeKemNikeSamplerOfPaperInstance(PaperInstance).
   module Se = BeeKemSeOfPaperInstance(PaperInstance).
 
-  (* These are the named Appendix-B witness reductions B and C.  Their
-     existence and construction are part of the imported paper theorem; the
-     surrounding primitive games they attack are executable definitions. *)
-  declare module BNike <: BEEKEM_HKR_CKS_ADVERSARY.
-  declare module BSe <: BEEKEM_MU_CPA_ADVERSARY.
+  (* These are the Skolemized Appendix-B constructors B(A,Pi) and C(A,Pi).
+     They are not arbitrary standalone primitive adversaries: applying the
+     first two arguments yields exactly the adversary functor consumed by the
+     corresponding named primitive game. *)
+  declare module BNike <: BEEKEM_THEOREM1_NIKE_REDUCTION.
+  declare module BSe <: BEEKEM_THEOREM1_SE_REDUCTION.
+  module ConstructedBNike = BNike(A, PaperInstance).
+  module ConstructedBSe = BSe(A, PaperInstance).
 
   module PaperGame =
     BeeKemKiGame(A, PaperBeeKem).
   module NikeReductionGame =
-    BeeKemHkrCksGame(BNike, Nike, NikeKeySampler).
+    BeeKemHkrCksGame(ConstructedBNike, Nike, NikeKeySampler).
   module SeReductionGame =
-    BeeKemMuCpaGame(BSe, Se).
+    BeeKemMuCpaGame(ConstructedBSe, Se).
   module NikeSymmetryGame =
     BeeKemNikeSymmetryGame(Nike).
   module SeCorrectnessGame =
