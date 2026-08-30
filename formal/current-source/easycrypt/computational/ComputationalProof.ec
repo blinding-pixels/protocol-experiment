@@ -8,7 +8,7 @@ require import LiveBeeKemControl LiveBeeKemDerived.
 require import LiveBeeKemOracle LiveBeeKemReduction.
 require import LivePrfReduction.
 require import LivePrfTypes LivePrfGame LivePrfApplicationReduction.
-require import LivePrfIdeal LivePrfControls.
+require import LivePrfIdeal LivePrfControls LivePrfIdealControls.
 
 (* Authoritative Deliverable A entry point.
 
@@ -70,6 +70,7 @@ print LivePrfTypes.mdprf_live_domain_is_not_history_capability_domain.
 print LivePrfGame.mdprf_hidden_bit_normalization.
 print LivePrfIdeal.application_ideal_fixed_bit_one_event_equal.
 print LivePrfIdeal.application_ideal_live_key_advantage_zero.
+print LivePrfIdealControls.ideal_control_reaches_all_domains.
 print LivePrfControls.prf_control_fixed_real.
 print LivePrfControls.prf_control_fixed_random.
 print LivePrfControls.insecure_test_kdf_prf_game_probability_one.
