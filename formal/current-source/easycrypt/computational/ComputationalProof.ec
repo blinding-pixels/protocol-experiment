@@ -12,6 +12,7 @@ require import LivePrfIdeal LivePrfControls LivePrfIdealControls.
 require import LivePrfApplicationHop LivePrfApplicationControls.
 require import LivePrfDomainSeparationControls.
 require import LivePrfCapabilityDomainSeparationControls.
+require import LiveChallengeExclusionMutation.
 
 (* Authoritative Deliverable A entry point.
 
@@ -97,3 +98,9 @@ print LivePrfCapabilityDomainSeparationControls.collapsed_live_capability_applic
 print LivePrfCapabilityDomainSeparationControls.collapsed_live_capability_application_fixed_random.
 print LivePrfCapabilityDomainSeparationControls.collapsed_live_capability_application_game_probability_one.
 print LivePrfCapabilityDomainSeparationControls.collapsed_live_capability_application_normalized_advantage_half.
+
+(* Prior-live-reveal challenge-exclusion mutation control. *)
+print LiveChallengeExclusionMutation.reveal_exclusion_removed_fixed_real.
+print LiveChallengeExclusionMutation.reveal_exclusion_removed_fixed_random.
+print LiveChallengeExclusionMutation.reveal_exclusion_removed_game_probability_one.
+print LiveChallengeExclusionMutation.reveal_exclusion_removed_normalized_advantage_half.
