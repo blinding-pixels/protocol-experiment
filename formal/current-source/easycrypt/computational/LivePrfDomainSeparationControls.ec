@@ -1,5 +1,5 @@
 require import AllCore List FSet Distr.
-require import ProtocolTypes ProtocolChecks CanonicalEncoding.
+require import ProtocolTypes ProtocolChecks CanonicalEncoding ProtocolPrimitives.
 require import AuthorizationState AuthorizationAncestry.
 require import LiveKeyGame LiveKeyWitnesses.
 require import LivePrfTypes LivePrfGame LivePrfApplicationReduction.
