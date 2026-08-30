@@ -32,10 +32,16 @@ jobs:
           from pathlib import Path
 
           path = Path('formal/current-source/easycrypt/computational/LiveKeyGame.ec')
-          text = path.read_text(encoding='utf-8')
+          lines = path.read_text(encoding='utf-8').splitlines(keepends=True)
 
-          module_marker = 'module LiveProtocolEnvironment(\n'
-          operator = '''op live_query_kind_of_control
+          module_matches = [
+              index for index, line in enumerate(lines)
+              if line.strip() == 'module LiveProtocolEnvironment('
+          ]
+          if len(module_matches) != 1:
+              raise SystemExit(f'expected one live environment module, found {len(module_matches)}')
+
+          operator_lines = '''op live_query_kind_of_control
               (expected_kind : beekem_control_kind)
               (expected_author : principal)
               (expected_target : principal option) : live_query_kind =
@@ -46,23 +52,39 @@ jobs:
               LiveRemoveQuery expected_author (oget expected_target)
             with expected_kind = BeeUpdate => LiveUpdateQuery expected_author.
 
-          '''
-          if 'op live_query_kind_of_control' in text:
-              raise SystemExit('live_query_kind_of_control already exists')
-          module_index = text.index(module_marker)
-          text = text[:module_index] + operator + text[module_index:]
+          '''.splitlines(keepends=True)
+          module_index = module_matches[0]
+          lines[module_index:module_index] = operator_lines
 
-          start_marker = '''      query_kind <-
-                with expected_kind = BeeCreate => LiveCreateQuery expected_author
-          '''
-          end_marker = '''        with expected_kind = BeeUpdate => LiveUpdateQuery expected_author;'''
-          start = text.index(start_marker)
-          end = text.index(end_marker, start) + len(end_marker)
-          replacement = '''      query_kind <-
-                live_query_kind_of_control
-                  expected_kind expected_author expected_target;'''
-          text = text[:start] + replacement + text[end:]
-          path.write_text(text, encoding='utf-8')
+          start_matches = [
+              index for index in range(len(lines) - 1)
+              if lines[index].strip() == 'query_kind <-'
+              and lines[index + 1].strip().startswith(
+                  'with expected_kind = BeeCreate =>'
+              )
+          ]
+          if len(start_matches) != 1:
+              raise SystemExit(f'expected one inline control match, found {len(start_matches)}')
+          start = start_matches[0]
+
+          end = None
+          for index in range(start + 1, len(lines)):
+              if lines[index].strip() == (
+                  'with expected_kind = BeeUpdate => '
+                  'LiveUpdateQuery expected_author;'
+              ):
+                  end = index
+                  break
+          if end is None:
+              raise SystemExit('inline control match terminator not found')
+
+          replacement = [
+              '      query_kind <-\n',
+              '        live_query_kind_of_control\n',
+              '          expected_kind expected_author expected_target;\n',
+          ]
+          lines[start:end + 1] = replacement
+          path.write_text(''.join(lines), encoding='utf-8')
           PY
 
           rm .github/workflows/fix-live-control-match.yml
