@@ -149,9 +149,9 @@ proof.
     rewrite /lean_ideal_authorization_witness.
     rewrite /ideal_decoded_authorized in ideal.
     smt().
-  rewrite /lean_ideal_decoded_authorized
-    /ideal_decoded_authorized in ideal *.
-  smt().
+  rewrite /lean_ideal_decoded_authorized.
+  rewrite /ideal_decoded_authorized in ideal.
+  smt(witness_exists).
 qed.
 
 lemma ideal_authorized_candidate_implies_lean_ideal
