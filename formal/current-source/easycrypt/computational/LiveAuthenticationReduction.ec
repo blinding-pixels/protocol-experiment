@@ -70,10 +70,7 @@ module BLiveAuthentication(
 
 type live_authentication_result = {
   lar_live_success : bool;
-  lar_authentication_failure : bool;
-  lar_bad_operation : bool;
-  lar_bad_fact : bool;
-  lar_ideal : bool
+  lar_authentication_failure : bool
 }.
 
 module LiveAuthenticationGame(
@@ -95,10 +92,7 @@ module LiveAuthenticationGame(
 
     return
       {| lar_live_success = BA.live_success;
-         lar_authentication_failure = O.unauthorized_accepted;
-         lar_bad_operation = O.bad_operation_signature;
-         lar_bad_fact = O.bad_fact_signature;
-         lar_ideal = O.ideal_unauthorized |};
+         lar_authentication_failure = O.unauthorized_accepted |};
   }
 }.
 
