@@ -1,5 +1,5 @@
 require import AllCore List Distr DBool.
-require import LiveKeyGame LivePrfTypes.
+require import ProtocolTypes CanonicalEncoding LiveKeyGame LivePrfTypes.
 
 (* The primitive hidden bit changes only the live domain.  Permitted history
    and constrained-capability queries are always answered by the same real

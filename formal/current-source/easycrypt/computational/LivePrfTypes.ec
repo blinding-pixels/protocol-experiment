@@ -1,5 +1,5 @@
 require import AllCore List FSet.
-require import LiveKeyGame.
+require import ProtocolTypes CanonicalEncoding LiveKeyGame.
 
 (* Typed transcript of the multi-domain key schedule.  The constructors keep
    the live, history, and constrained-history domains disjoint in the logic;
