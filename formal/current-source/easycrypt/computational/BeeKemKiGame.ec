@@ -197,6 +197,10 @@ module BeeKemKiOracles(
   }
 }.
 
+op beekem_ki_final_win
+    (safe protocol_failure adversary_guess hidden_bit : bool) : bool =
+  safe /\ (protocol_failure \/ adversary_guess = hidden_bit).
+
 type beekem_ki_evidence = {
   bke_hidden_bit : bool;
   bke_adversary_guess : bool;
@@ -245,11 +249,11 @@ module BeeKemKiGame(
     protocol_failure <- O.Environment.protocol_consistency_failure;
 
     (* Figure 8 sets win on either a protocol-consistency failure or a correct
-       final guess, and then clears it when the complete query trace is unsafe. *)
-    win <- protocol_failure \/ (guess = hidden_bit);
-    if (! safe) {
-      win <- false;
-    }
+       final guess, and then clears it when the complete query trace is unsafe.
+       Mutation games reuse this same operator and change only their named
+       safety condition. *)
+    win <- beekem_ki_final_win
+      safe protocol_failure guess hidden_bit;
 
     last_evidence <-
       {| bke_hidden_bit = hidden_bit;

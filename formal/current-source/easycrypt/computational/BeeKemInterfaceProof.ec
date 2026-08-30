@@ -52,6 +52,7 @@ print beekem_retention_requires_positive_kappa.
 (* KI-DCGKA public game boundary.  Importing BeeKemKiGame checks the hidden-bit
    challenger, the complete adversary oracle interface, and use of the final
    adversary guess. *)
+print beekem_ki_final_win.
 print beekem_ki_evidence.
 print beekem_normalized_ki_advantage.
 
