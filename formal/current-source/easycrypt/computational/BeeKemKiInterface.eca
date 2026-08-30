@@ -3,67 +3,36 @@ require import BeeKemTypes BeeKemProtocol BeeKemKiGame BeeKemPrimitiveGames.
 require import BeeKemPrimitiveContracts BeeKemTheorem1Math BeeKemConstruction.
 
 (* Imported boundary for Yen et al., BeeKEM, Theorem 1.  The executable games,
-   log, safety predicate, counters, primitive games, and correctness games are
-   outside this axiom.  What remains imported is Appendix B's cryptographic
-   reduction, the concrete BeeKEM construction relation, and its two witness
-   adversaries.  The displayed definition immediately above Theorem 1 writes
-   raw game-success probability, but Appendix B bounds absolute differences of
-   neighboring game probabilities.  Raw success would make the theorem false
-   already at ceil(log2(1)) = 0.  This boundary therefore uses one uniform
-   centered-bias convention for all three games.  Multiplying every advantage
-   by two would leave the stated reduction factors unchanged. *)
-(* Appendix B gives reductions as constructions from the challenged
-   ki-DCGKA adversary and the exact BeeKEM[SE, NIKE] instance.  These
-   higher-order module types make those dependencies part of the public
-   EasyCrypt type instead of accepting unrelated primitive adversaries.  The
-   reduction bodies remain imported paper evidence, exactly like Theorem 1. *)
-module type BEEKEM_THEOREM1_NIKE_REDUCTION(
-  A : BEEKEM_KI_ADVERSARY,
-  I : BEEKEM_PAPER_INSTANCE,
-  O : BEEKEM_HKR_CKS_ORACLES
-) = {
-  proc distinguish() : bool
-}.
-
-module type BEEKEM_THEOREM1_SE_REDUCTION(
-  A : BEEKEM_KI_ADVERSARY,
-  I : BEEKEM_PAPER_INSTANCE,
-  O : BEEKEM_MU_CPA_ORACLES
-) = {
-  proc distinguish() : bool
-}.
-
+   query log, safety predicate, counters, primitive games, and correctness games
+   are checker-verified outside this axiom.  The imported Appendix-B content is
+   exactly the existence of the two reductions and the resulting inequality. *)
+(* The displayed definition immediately above Theorem 1 writes raw game-success
+   probability, while Appendix B bounds absolute differences of neighboring
+   games.  Raw success would make the theorem false already when
+   ceil(log2(1)) = 0.  This boundary therefore uses one centered-bias convention
+   for all three games; multiplying all advantages by two leaves the reduction
+   factors unchanged. *)
 section BeeKemTheorem1ImportedBoundary.
   declare module A <: BEEKEM_KI_ADVERSARY.
   declare module PaperInstance <: BEEKEM_PAPER_INSTANCE.
 
-  (* Every game adapter is definitionally backed by the same imported paper
-     instance; protocol and primitive modules cannot be varied independently. *)
+  (* Protocol and both primitive adapters are definitionally backed by the same
+     BeeKEM[SE, NIKE] paper instance. *)
   module PaperBeeKem = BeeKemProtocolOfPaperInstance(PaperInstance).
   module Nike = BeeKemNikeOfPaperInstance(PaperInstance).
   module NikeKeySampler = BeeKemNikeSamplerOfPaperInstance(PaperInstance).
   module Se = BeeKemSeOfPaperInstance(PaperInstance).
 
-  (* These are the Skolemized Appendix-B constructors B(A,Pi) and C(A,Pi).
-     They are not arbitrary standalone primitive adversaries: applying the
-     first two arguments yields exactly the adversary functor consumed by the
-     corresponding named primitive game. *)
-  declare module BNike <: BEEKEM_THEOREM1_NIKE_REDUCTION.
-  declare module BSe <: BEEKEM_THEOREM1_SE_REDUCTION.
-  module ConstructedBNike = BNike(A, PaperInstance).
-  module ConstructedBSe = BSe(A, PaperInstance).
+  module PaperGame = BeeKemKiGame(A, PaperBeeKem).
+  module NikeSymmetryGame = BeeKemNikeSymmetryGame(Nike).
+  module SeCorrectnessGame = BeeKemSeCorrectnessGame(Se).
 
-  module PaperGame =
-    BeeKemKiGame(A, PaperBeeKem).
-  module NikeReductionGame =
-    BeeKemHkrCksGame(ConstructedBNike, Nike, NikeKeySampler).
-  module SeReductionGame =
-    BeeKemMuCpaGame(ConstructedBSe, Se).
-  module NikeSymmetryGame =
-    BeeKemNikeSymmetryGame(Nike).
-  module SeCorrectnessGame =
-    BeeKemSeCorrectnessGame(Se).
-
+  (* Quantifier order is load-bearing: after the section is closed, [A] and
+     [PaperInstance] are universal parameters, while [BNike] and [BSe] are
+     existential witnesses inside the conclusion.  Thus the primitive-game
+     adversaries may depend on the challenged KI adversary and the exact paper
+     instance, matching Appendix B's B(A, Pi) and C(A, Pi), rather than being
+     unrelated universally quantified modules. *)
   axiom beekem_theorem1_imported_normalized
       &m
       (users : beekem_user list)
@@ -87,13 +56,20 @@ section BeeKemTheorem1ImportedBoundary.
            res.`bke_challenge_count <= c /\
            res.`bke_member_addition_count <= n
        ] = 1%r
-    => beekem_normalized_ki_advantage
-         (Pr[
-            PaperGame.main(users, group, kappa, membership) @ &m : res
-          ])
-       <= beekem_theorem1_loss c h *
-          (beekem_hkr_cks_advantage
-             (Pr[NikeReductionGame.main() @ &m : res]) +
-           beekem_mu_cpa_advantage
-             (Pr[SeReductionGame.main() @ &m : res])).
+    => exists (BNike <: BEEKEM_HKR_CKS_ADVERSARY),
+       exists (BSe <: BEEKEM_MU_CPA_ADVERSARY),
+         beekem_normalized_ki_advantage
+           (Pr[
+              PaperGame.main(users, group, kappa, membership) @ &m : res
+            ])
+         <= beekem_theorem1_loss c h *
+            (beekem_hkr_cks_advantage
+               (Pr[
+                  BeeKemHkrCksGame(BNike, Nike, NikeKeySampler).main()
+                  @ &m : res
+                ]) +
+             beekem_mu_cpa_advantage
+               (Pr[
+                  BeeKemMuCpaGame(BSe, Se).main() @ &m : res
+                ])).
 end section BeeKemTheorem1ImportedBoundary.

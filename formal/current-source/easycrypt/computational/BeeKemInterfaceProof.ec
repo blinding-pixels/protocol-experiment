@@ -1,5 +1,6 @@
 require import BeeKemTypes BeeKemQueryLog BeeKemProtocol BeeKemSafety BeeKemKiGame BeeKemPrimitiveGames BeeKemPrimitiveContracts BeeKemTheorem1Math BeeKemConstruction.
-require import BeeKemKiInterface.
+require BeeKemKiInterface.
+clone import BeeKemKiInterface as BKI.
 require import BeeKemSafetyProofs BeeKemSafetyMutations BeeKemProtocolSemanticsProofs BeeKemGameWitnesses BeeKemQueryCounterProofs BeeKemCounterMutationProofs BeeKemMutationGameProofs BeeKemForkGameWitnesses BeeKemForkMutationProofs BeeKemRevealMutationProofs BeeKemRetentionMutationProofs BeeKemPrimitiveWitnesses.
 
 (* Public closure for the executable Figure 8 oracle environment and exact
@@ -96,8 +97,6 @@ print BeeKemSeCorrectnessGame.
    The theorem otherwise uses the uniform centered-bias
    interpretation required by Appendix B's hybrid inequalities. *)
 print BEEKEM_PAPER_INSTANCE.
-print BEEKEM_THEOREM1_NIKE_REDUCTION.
-print BEEKEM_THEOREM1_SE_REDUCTION.
 print BeeKemProtocolOfPaperInstance.
 print BeeKemNikeOfPaperInstance.
 print BeeKemNikeSamplerOfPaperInstance.
@@ -106,7 +105,7 @@ print beekem_is_ceil_log2.
 print beekem_theorem1_loss.
 print beekem_ceil_log2_one.
 print beekem_ceil_log2_two.
-print beekem_theorem1_imported_normalized.
+print BKI.beekem_theorem1_imported_normalized.
 
 (* Checker-reachable non-vacuity controls for the exact KI game. *)
 print beekem_witness_real_branch_reachable.
