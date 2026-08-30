@@ -2,7 +2,7 @@
 
 Status: provisional application-side record, based on read-only inspection of
 `formal/easycrypt-beekem-interface` at
-`898414a9574049bc72ed4169f73cafdb9b6e06a9`.
+`a0a6a769e8a419b63341227cc53154266da66d5a`.
 
 This branch does not import, merge, cherry-pick, restate, or replace the parallel
 BeeKEM foundation. `BeeKemKiInterface.eca`, `LiveBeeKemControl.ec`,
@@ -11,6 +11,24 @@ provisional scaffolding. They are not the paper-authoritative KI-DCGKA game or
 `bee_safe_kappa` definition, and no Deliverable L completion claim may depend on
 them until the obligations below are discharged against the finished parallel
 branch.
+
+## Read-only coordination refresh
+
+The requested public files were inspected at the commit above. Between the
+previously inspected safety-mutation checkpoint
+`f509271bcc61d934b4881af39b503ba0654ee885` and this refresh, the parallel branch
+added KI-game-connected mutation controls in `BeeKemMutationGameProofs.ec` and a
+reserved-identifier parser repair in `BeeKemInterfaceProof.ec`; the requested
+public types, protocol, safety predicate, KI game, imported interface, and
+assumption manifest did not change.
+
+The new mutation controls execute the actual KI game and then recompute the
+final win bit after changing only a named safety clause. They exhibit concrete
+traces where dropping the FSU update-chain condition, the PCS healing-update
+condition, or compromise-log accounting turns an unsafe losing trace into a
+mutated winning trace. These are foundation-side controls, not application-side
+adapter proofs. They strengthen the requirement that the final adapter preserve
+the complete authoritative log and use the exact imported safety gate.
 
 ## Authoritative surface observed on the parallel branch
 
