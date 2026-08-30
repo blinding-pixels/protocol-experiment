@@ -6,6 +6,7 @@ on:
       - formal/easycrypt-computational-m1
       - formal/easycrypt-unauthorized-reduction
       - formal/easycrypt-beekem-interface
+      - formal/easycrypt-live-key-reduction
     paths:
       - '.github/workflows/easycrypt-computational.yml'
       - 'formal/current-source/easycrypt/computational/**'
