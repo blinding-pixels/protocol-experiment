@@ -68,6 +68,22 @@ module BLiveAuthentication(
   }
 }.
 
+(* Restrict the concrete live construction to Deliverable A's exact public
+   adversary interface before supplying it to the existing reduction functors.
+   The wrapper forwards the sole procedure and introduces no event or premise. *)
+module BLiveOriginAdversary(
+  A : LIVE_KEY_ADVERSARY,
+  B : BEEKEM_LIVE_RUNTIME,
+  K : MULTI_DOMAIN_KEY_SCHEDULE,
+  R : LIVE_KEY_SAMPLER
+)(Auth : ORIGIN_TRACKED_UNAUTHORIZED_ORACLE) = {
+  module Core = BLiveAuthentication(A, B, K, R, Auth)
+
+  proc attack() : unit = {
+    Core.attack();
+  }
+}.
+
 type live_authentication_result = {
   lar_live_success : bool;
   lar_authentication_failure : bool
@@ -137,16 +153,16 @@ section LiveAuthenticationHop.
 
   module LAG = LiveAuthenticationGame(A, S, H, B, K, R).
   module GP = UnauthorizedOriginPartitionGame(
-    BLiveAuthentication(A, B, K, R), S, H
+    BLiveOriginAdversary(A, B, K, R), S, H
   ).
   module EUFOP = PG.MultiUserEUFCMAGame(
-    BSignOriginOperationDirect(BLiveAuthentication(A, B, K, R), H), S
+    BSignOriginOperationDirect(BLiveOriginAdversary(A, B, K, R), H), S
   ).
   module EUFFACT = PG.MultiUserEUFCMAGame(
-    BSignOriginFactWitness(BLiveAuthentication(A, B, K, R), H), S
+    BSignOriginFactWitness(BLiveOriginAdversary(A, B, K, R), H), S
   ).
   module COLL = PG.NodeCollisionGame(
-    BHashOrigin(BLiveAuthentication(A, B, K, R), S), H
+    BHashOrigin(BLiveOriginAdversary(A, B, K, R), S), H
   ).
 
   (* L0 is partitioned into an authenticated live execution and the exact
