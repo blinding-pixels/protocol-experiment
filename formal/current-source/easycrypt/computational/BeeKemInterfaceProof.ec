@@ -1,5 +1,5 @@
 require import BeeKemTypes BeeKemQueryLog BeeKemProtocol BeeKemSafety.
-require import BeeKemSafetyProofs.
+require import BeeKemSafetyProofs BeeKemProtocolSemanticsProofs.
 
 (* Public closure for the executable Figure 8 oracle environment and exact
    finite-kappa Figure 3 safety predicate.  The trace theorems below force all
@@ -39,3 +39,9 @@ print pcs_trace_admissible.
 print pcs_trace_without_healing_update_rejected.
 print cfs_trace_admissible_at_kappa_two.
 print cfs_trace_without_fork_updates_rejected.
+
+print beekem_no_output_is_not_undefined.
+print beekem_undefined_is_not_no_output.
+print beekem_value_is_not_undefined.
+print beekem_empty_secret_entry_is_undefined.
+print beekem_retention_requires_positive_kappa.
