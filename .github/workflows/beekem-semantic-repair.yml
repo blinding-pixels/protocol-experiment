@@ -1,0 +1,223 @@
+name: One-shot BeeKEM semantic repair
+
+on:
+  push:
+    branches:
+      - formal/easycrypt-beekem-interface
+    paths:
+      - '.github/workflows/beekem-semantic-repair.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: formal/easycrypt-beekem-interface
+          fetch-depth: 0
+
+      - name: Apply exact semantic repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          root = Path('formal/current-source/easycrypt/computational')
+          types = root / 'BeeKemTypes.ec'
+          protocol = root / 'BeeKemProtocol.ec'
+          public = root / 'BeeKemInterfaceProof.ec'
+
+          text = types.read_text(encoding='utf-8')
+          old_comment = '''(* Figure 8 distinguishes epsilon (an algorithm failed to return an output)
+             from bottom (the operation legitimately establishes no group secret, as for
+             BeeKEM Add and Remove).  An option alone cannot preserve that distinction. *)'''
+          new_comment = '''(* Figure 8 uses two distinct non-key values.  [BeeSecretUndefined] models
+             epsilon: an uninitialized entry or failed algorithm output.
+             [BeeSecretNoOutput] models bottom: a defined protocol result with no group
+             secret (BeeKEM Create/Add/Remove and some conflict states), and the value
+             returned by a rejected oracle call.  Collapsing these cases would make the
+             Figure 8 consistency checks and challenge reachability incorrect. *)'''
+          assert text.count(old_comment) == 1
+          text = text.replace(old_comment, new_comment)
+
+          no_output = '''op beekem_secret_output_is_no_output (output : beekem_secret_output) : bool =
+            with output = BeeSecretNoOutput => true
+            with output = BeeSecretUndefined => false
+            with output = BeeSecretValue secret => false.
+
+          '''
+          undefined = no_output + '''op beekem_secret_output_is_undefined (output : beekem_secret_output) : bool =
+            with output = BeeSecretNoOutput => false
+            with output = BeeSecretUndefined => true
+            with output = BeeSecretValue secret => false.
+
+          '''
+          assert text.count(no_output) == 1
+          text = text.replace(no_output, undefined)
+
+          value_projection = '''op beekem_secret_output_value
+            (output : beekem_secret_output) : beekem_group_secret option =
+            with output = BeeSecretNoOutput => None
+            with output = BeeSecretUndefined => None
+            with output = BeeSecretValue secret => Some secret.
+
+          '''
+          retention = value_projection + '''(* [bms_current_personal_secret] is the newest personal secret; the list holds
+             older retained secrets.  Thus finite-kappa retention bounds the current
+             secret plus the retained suffix, matching "the kappa most recent personal
+             secrets" rather than allowing kappa old secrets in addition to the current
+             one. *)
+          op beekem_member_retention_valid
+            (kappa : int)
+            (member_state : beekem_member_state) : bool =
+            1 <= kappa /\\
+            1 + size member_state.`bms_retained_personal_secrets <= kappa.
+
+          '''
+          assert text.count(value_projection) == 1
+          text = text.replace(value_projection, retention)
+          assert text.count('bps_secrets = fun key => BeeSecretNoOutput;') == 1
+          text = text.replace(
+              'bps_secrets = fun key => BeeSecretNoOutput;',
+              'bps_secrets = fun key => BeeSecretUndefined;',
+          )
+          types.write_text(text, encoding='utf-8')
+
+          text = protocol.read_text(encoding='utf-8')
+          assert text.count('beekem_secret_output_is_no_output result.`bpr_secret') == 3
+          text = text.replace(
+              'beekem_secret_output_is_no_output result.`bpr_secret',
+              'beekem_secret_output_is_undefined result.`bpr_secret',
+          )
+          assert text.count('! beekem_secret_output_is_no_output sender_secret') == 1
+          text = text.replace(
+              '! beekem_secret_output_is_no_output sender_secret',
+              '! beekem_secret_output_is_undefined sender_secret',
+          )
+          assert text.count('beekem_secret_output_is_no_output result.`bxr_response_secret') == 1
+          text = text.replace(
+              'beekem_secret_output_is_no_output result.`bxr_response_secret',
+              'beekem_secret_output_is_undefined result.`bxr_response_secret',
+          )
+          assert text.count('if (beekem_secret_output_is_no_output secret) {') == 2
+          text = text.replace(
+              'if (beekem_secret_output_is_no_output secret) {',
+              'if (beekem_secret_output_is_undefined secret) {',
+          )
+
+          init_call = '''      initialized <@ P.init(id, group, kappa);
+                state <-
+          '''
+          init_checked = '''      initialized <@ P.init(id, group, kappa);
+                if (! beekem_member_retention_valid kappa initialized) {
+                  protocol_consistency_failure <- true;
+                }
+                state <-
+          '''
+          assert text.count(init_call) == 1
+          text = text.replace(init_call, init_checked)
+
+          create_call = '''      result <@ P.create(oget creator_state, initial_members);
+                if (result.`bpr_control = None \/
+          '''
+          create_checked = '''      result <@ P.create(oget creator_state, initial_members);
+                if (! beekem_member_retention_valid state.`bps_kappa result.`bpr_state) {
+                  protocol_consistency_failure <- true;
+                }
+                if (result.`bpr_control = None \/
+          '''
+          assert text.count(create_call) == 1
+          text = text.replace(create_call, create_checked)
+
+          modify_call = '''      if (adding) {
+                  result <@ P.add(oget actor_state, target);
+                } else {
+                  result <@ P.remove_member(oget actor_state, target);
+                }
+
+                if (result.`bpr_control = None \/
+          '''
+          modify_checked = '''      if (adding) {
+                  result <@ P.add(oget actor_state, target);
+                } else {
+                  result <@ P.remove_member(oget actor_state, target);
+                }
+
+                if (! beekem_member_retention_valid state.`bps_kappa result.`bpr_state) {
+                  protocol_consistency_failure <- true;
+                }
+                if (result.`bpr_control = None \/
+          '''
+          assert text.count(modify_call) == 1
+          text = text.replace(modify_call, modify_checked)
+
+          update_call = '''    if (accepted) {
+                result <@ P.update(oget actor_state);
+                if (result.`bpr_control = None \/
+          '''
+          update_checked = '''    if (accepted) {
+                result <@ P.update(oget actor_state);
+                if (! beekem_member_retention_valid state.`bps_kappa result.`bpr_state) {
+                  protocol_consistency_failure <- true;
+                }
+                if (result.`bpr_control = None \/
+          '''
+          assert text.count(update_call) == 1
+          text = text.replace(update_call, update_checked)
+
+          process_call = '''      result <@ P.process(
+                  oget recipient_state,
+                  sender,
+                  oget control,
+                  direct
+                );
+
+                state <-
+          '''
+          process_checked = '''      result <@ P.process(
+                  oget recipient_state,
+                  sender,
+                  oget control,
+                  direct
+                );
+                if (! beekem_member_retention_valid state.`bps_kappa result.`bxr_state) {
+                  protocol_consistency_failure <- true;
+                }
+
+                state <-
+          '''
+          assert text.count(process_call) == 1
+          text = text.replace(process_call, process_checked)
+          protocol.write_text(text, encoding='utf-8')
+
+          text = public.read_text(encoding='utf-8')
+          public_old = '''print beekem_secret_output_is_no_output.
+          print beekem_secret_output_is_value.'''
+          public_new = '''print beekem_secret_output_is_no_output.
+          print beekem_secret_output_is_undefined.
+          print beekem_secret_output_is_value.
+          print beekem_member_retention_valid.'''
+          assert text.count(public_old) == 1
+          text = text.replace(public_old, public_new)
+          public.write_text(text, encoding='utf-8')
+          PY
+
+          rm .github/workflows/beekem-semantic-repair.yml
+          git diff --check
+          git diff -- formal/current-source/easycrypt/computational/BeeKemTypes.ec \
+            formal/current-source/easycrypt/computational/BeeKemProtocol.ec \
+            formal/current-source/easycrypt/computational/BeeKemInterfaceProof.ec
+
+      - name: Commit repaired source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name blinding-pixels
+          git config user.email blindingpixels@protonmail.com
+          git add -A
+          git commit -m 'fix: align BeeKEM epsilon and retention semantics'
+          git push origin HEAD:formal/easycrypt-beekem-interface
