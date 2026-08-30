@@ -87,11 +87,15 @@ print BeeKemNikeSymmetryGame.
 print BeeKemSeCorrectnessGame.
 
 (* Exact imported BeeKEM Theorem 1 boundary.  The protocol is supplied only
-   through BEEKEM_PAPER_CONSTRUCTION(Nike, Se), preventing an unrelated
-   free-standing protocol module from being substituted at this boundary.
+   through one BEEKEM_PAPER_INSTANCE and all four definitional adapters,
+   preventing protocol and primitive modules from being varied independently.
    The theorem otherwise uses the uniform centered-bias
    interpretation required by Appendix B's hybrid inequalities. *)
-print BEEKEM_PAPER_CONSTRUCTION.
+print BEEKEM_PAPER_INSTANCE.
+print BeeKemProtocolOfPaperInstance.
+print BeeKemNikeOfPaperInstance.
+print BeeKemNikeSamplerOfPaperInstance.
+print BeeKemSeOfPaperInstance.
 print beekem_is_ceil_log2.
 print beekem_theorem1_loss.
 print beekem_ceil_log2_one.

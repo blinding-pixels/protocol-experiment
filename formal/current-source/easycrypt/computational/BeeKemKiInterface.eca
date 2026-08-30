@@ -5,23 +5,23 @@ require import BeeKemPrimitiveContracts BeeKemTheorem1Math BeeKemConstruction.
 (* Imported boundary for Yen et al., BeeKEM, Theorem 1.  The executable games,
    log, safety predicate, counters, primitive games, and correctness games are
    outside this axiom.  What remains imported is Appendix B's cryptographic
-   reduction and its two witness adversaries.  The displayed definition
-   immediately above Theorem 1 writes raw game-success probability, but
-   Appendix B bounds absolute differences of neighboring game probabilities.
-   Raw success would make the theorem false already at ceil(log2(1)) = 0.  This
-   boundary therefore uses one uniform centered-bias convention for all three
-   games.  Multiplying every advantage by two would leave the stated reduction
-   factors unchanged. *)
+   reduction, the concrete BeeKEM construction relation, and its two witness
+   adversaries.  The displayed definition immediately above Theorem 1 writes
+   raw game-success probability, but Appendix B bounds absolute differences of
+   neighboring game probabilities.  Raw success would make the theorem false
+   already at ceil(log2(1)) = 0.  This boundary therefore uses one uniform
+   centered-bias convention for all three games.  Multiplying every advantage
+   by two would leave the stated reduction factors unchanged. *)
 section BeeKemTheorem1ImportedBoundary.
   declare module A <: BEEKEM_KI_ADVERSARY.
-  declare module PaperBeeKemConstruction <: BEEKEM_PAPER_CONSTRUCTION.
-  declare module Nike <: BEEKEM_NIKE.
-  declare module NikeKeySampler <: BEEKEM_NIKE_KEY_SAMPLER.
-  declare module Se <: BEEKEM_SYMMETRIC_ENCRYPTION.
+  declare module PaperInstance <: BEEKEM_PAPER_INSTANCE.
 
-  (* The protocol in the KI game is definitionally the paper construction
-     instantiated by the same primitive modules used on the right-hand side. *)
-  module PaperBeeKem = PaperBeeKemConstruction(Nike, Se).
+  (* Every game adapter is definitionally backed by the same imported paper
+     instance; protocol and primitive modules cannot be varied independently. *)
+  module PaperBeeKem = BeeKemProtocolOfPaperInstance(PaperInstance).
+  module Nike = BeeKemNikeOfPaperInstance(PaperInstance).
+  module NikeKeySampler = BeeKemNikeSamplerOfPaperInstance(PaperInstance).
+  module Se = BeeKemSeOfPaperInstance(PaperInstance).
 
   (* These are the named Appendix-B witness reductions B and C.  Their
      existence and construction are part of the imported paper theorem; the
