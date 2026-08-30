@@ -1,139 +1,253 @@
 # Computational proof development
 
-Status: **first concrete Milestone 1 non-vacuity theorem checker-accepted; the final unauthorized-acceptance reduction remains open**.
+Status: **Deliverable A's unauthorized-operation reduction theorem is checker-accepted. Deliverables L and C remain open.**
 
-This directory is the new computational development required by
+This directory is the computational development required by
 `formal/documents/EASYCRYPT_COMPUTATIONAL_PROOF_HANDOFF.md`. The historical
-EasyCrypt files remain historical evidence and are not imported here.
+EasyCrypt files remain historical evidence and are not imported into this
+proof closure.
 
-## Checker-accepted checkpoint
+## Public Deliverable A theorem
 
-The pinned EasyCrypt `r2026.07` kernel now accepts the following direct theorem
-through the public production validator:
+`ComputationalProof.ec` imports the active A0--A5 dependency closure and prints
+`UnauthorizedOriginFinalBound.adv_unauthorized_origin_bound`:
 
 ```text
-lemma witness_honest_operation_accepted &m :
-  Pr[
-    ValidateOperation(TestSignature).validate(
-      Production,
-      witness_honest_edit_operation,
-      witness_base_view_exact,
-      witness_base_state_exact
-    ) @ &m :
-    res.`vr_accepted
-  ] = 1%r.
+Pr[UnauthorizedOriginPartitionGame(A,S,H).main(initial) : real]
+ <= 1 * Pr[MultiUserEUFCMAGame(BSignOriginOperationDirect(A,H),S).main(initial)]
+  + 1 * Pr[MultiUserEUFCMAGame(BSignOriginFactWitness(A,H),S).main(initial)]
+  +     Pr[NodeCollisionGame(BHashOrigin(A,S),H).main(initial)]
+  + 0
 ```
 
-This is a concrete semantic theorem, not an imported success premise. The proof:
+The left side is the exact real unauthorized-acceptance bit produced by the
+origin-aware A0 environment after executing the shared production validator.
+The right side contains only probabilities of named primitive games run with
+named reduction adversaries. The operation- and fact-signature reductions use
+one native multi-user experiment, so their guessing factors are exactly one.
+The model-level canonical-encoding failure term is proved equal to zero.
 
-- decodes and canonically re-encodes the exact signed operation;
-- checks the protocol domain/version, document binding, freshness, predecessor
-  existence, and exact causal closure;
-- normalizes the seven signed authorization facts inside the validator;
-- checks the resulting authorization digest;
-- checks signature bytes and author-key binding using the current idealized
-  `TestSignature` implementation;
-- proves exact-incarnation membership and `CapEdit` authority;
-- validates the operation body and all kind-specific production branches;
-- separately proves validator losslessness with a decreasing
-  `size remaining` loop variant;
-- combines semantic correctness and termination to obtain probability one.
+This is a reduction theorem, not an unconditional claim that the primitive
+probabilities are negligible. Concrete security follows only after instantiating
+and validating the deployed signature and node-hash constructions against those
+exact games.
 
-The same checker entry point also exposes the negative control
-`noncanonical_rejection_probability_one`, which proves that a concrete
-noncanonical operation is rejected by the same public validator with the exact
-`FailureCanonicalReencoding` result and probability one.
+## A0--A5 chain
 
-The checked entry point is `ComputationalProof.ec`. At commit
-`e2d9565c83bc40a5bd30809653fb497fd9bb93c7`:
+### A0: real validator and win event
 
-- the Milestone 1 workflow passed its anti-cheating audit and compiled
-  `HonestOperationContract.ec`;
-- the full computational workflow passed its source audit and compiled
-  `ComputationalProof.ec`;
-- the checkpoint audit reported **25 EasyCrypt sources and 0 manifest axioms**;
-- both checker and audit exit statuses were zero;
-- the full evidence artifact digest was
-  `sha256:f2c8bf1baadf3c2fb45078bbed053cd93177ad9e2ae9d0a745c97561e8dac7f2`.
+`UnauthorizedOriginGame.ec` gives the adaptive adversary protocol-shaped
+operation-signing, authorization-fact-signing, and candidate-submission
+procedures. Candidate submissions contain arbitrary operation bytes,
+signatures, signed grants/revocations, causal views, and malformed public
+inputs. The game, not the adversary, runs `ValidateOperation`, computes exact
+causal state, and sets the win bit.
 
-Checker runs:
+An accepted operation is unauthorized only when at least one of the following
+fails in its exact accepted context:
 
-- `https://github.com/blinding-pixels/protocol-experiment/actions/runs/33146735736`
-- `https://github.com/blinding-pixels/protocol-experiment/actions/runs/33146735749`
+- operation-signature origin for the complete production transcript;
+- exact-incarnation membership;
+- the required capability for that incarnation;
+- operation-kind/capability binding;
+- operation-body policy.
 
-## Implemented model surface
+A malicious operation deliberately signed and issued by a genuinely authorized
+principal is outside this win event.
 
-Implemented now:
+### A1: canonical transcript and node collision
 
-- key-native principals `(operationVerificationKey, incarnationNonce)`;
-- explicit operation-envelope fields and canonical test encoding;
-- signed membership/capability grant and observed-remove revocation facts;
-- deterministic authorization normalization;
-- one executable validator performing the fourteen checks in the handoff;
-- exact-incarnation authority and retired-incarnation non-revival;
-- causal-view, authorization-digest, predecessor-closure, BeeKEM-update,
-  history-grant, and puncture validation hooks;
-- fourteen one-defense-removed Milestone 1 witnesses;
-- canonical-encoding and visible-revocation negative controls;
-- a comment/string-aware mechanical audit under `tools/easycrypt/`.
+`CanonicalEncoding.ec` proves model-level injectivity of canonical operation
+encoding. `UnauthorizedOriginHashReduction.ec` logs the complete production
+node material—full transcript plus signature—and `BHashOrigin` returns the
+actual distinct pair whose digests collide. The final theorem uses the exact
+`NodeCollisionGame` probability.
 
-## Explicit non-claims
+### A2: operation-signature origin
 
-This checkpoint does **not** yet establish the handoff's final Deliverable A
-advantage bound. In particular:
+`OriginOperationDirectInvariant.ec` and
+`OriginOperationDirectReduction.ec` retain the first accepted unoriginated
+operation signature and prove exact equality with the named native multi-user
+EUF-CMA game run by `BSignOriginOperationDirect`.
 
-- `UnauthorizedReduction.ec` and the A0-to-A5 reduction chain are not complete;
-- no EUF-CMA or collision-resistance reduction has yet been imported or
-  instantiated;
-- `TestSignature` is idealized executable proof instrumentation, not a
-  cryptographic signature-security theorem;
-- live-key and content-key games and reductions have not begun;
-- the four confidentiality-layer mutations—live/history separation, exposure
-  exclusion, erasure, and public puncture—remain for later milestones;
-- source-to-Rust canonical-byte correspondence remains open;
-- abstract erasure does not prove concrete Rust, persistence, crash-recovery,
-  or operating-system residue behavior.
+### A3: signed authorization ancestry
 
-The result therefore closes the first required anti-vacuity obligation: an
-honest canonical operation really can traverse the modeled production validator
-and be accepted. It is not yet the theorem that unauthorized acceptance has
-only the final primitive-security advantage bound.
+`OriginFactWitnessGame.ec` and `OriginFactReductionWitness.ec` retain the first
+accepted unoriginated authorization-fact signature and prove exact equality
+with the named native multi-user EUF-CMA game run by
+`BSignOriginFactWitness`.
 
-## Run the executable and mechanical checks
+`AuthorizationAncestry.ec` and the mapped authorization development cover
+membership grants, capability grants, membership revocations, capability
+revocations, issuer authority in the fact's own context, exact incarnation
+binding, observed-remove behavior, and retired-incarnation non-revival.
+
+### A4: exact causal and authorization state
+
+The validator binds every fact identifier to immutable exact fact content,
+checks the complete predecessor closure, normalizes precisely the facts in that
+closure, and compares an exact authorization-state digest.
+
+`CausalClosureRepresentation.ec` proves the mapping between the executable
+closure map and an independent list representation. The authorization mapping
+is split across:
+
+- `AuthorizationRepresentation.ec`;
+- `AuthorizationLeanDeltaMapping.ec`;
+- `AuthorizationLeanDeltaCongruence.ec`;
+- `AuthorizationLeanFullReplay.ec`.
+
+The load-bearing theorem
+`authorization_policy_replay_matches_independent_lean_apply` connects the
+EasyCrypt replay to the independent Lean-style observed-remove fold. The
+recorded Lean authorization source blob is:
+
+```text
+55b138aa423f46db69d50d4427d89d67636c6281
+```
+
+### A5: ideal authorization
+
+`UnauthorizedLeanIdeal.ec`, `UnauthorizedLeanCertifiedIdeal.ec`, and
+`UnauthorizedIdeal.ec` execute the validator and independent authorization
+certificate. `UnauthorizedOriginPartition.origin_ideal_probability_zero`
+proves the ideal unauthorized event has probability exactly zero. The ideal
+game is not reject-all: honest production acceptance remains reachable and is
+proved separately.
+
+## Non-vacuity and reduction-connectivity controls
+
+The final entry point also prints the following controls:
+
+- `HonestOperationContract.witness_honest_operation_accepted`: the concrete
+  honest canonical edit is accepted by the production validator with
+  probability one;
+- `MutationProofs.noncanonical_rejection_probability_one`: a concrete
+  noncanonical operation is rejected with the exact canonical-reencoding
+  failure and probability one;
+- `PrimitiveControlProofs.test_signature_multi_user_eufcma_probability_one`:
+  the intentionally insecure test signature scheme loses the exact primitive
+  game with probability one, demonstrating that the signature reduction is
+  connected to its primitive challenge.
+
+The checker-proved one-defense-removed differential matrix is:
+
+1. `MutationGameProofs.mutation_operation_signature_wins_probability_one`;
+2. `MutationEditProofs.mutation_author_key_wins_probability_one`;
+3. `MutationEditProofs.mutation_incarnation_wins_probability_one`;
+4. `MutationEditProofs.mutation_document_wins_probability_one`;
+5. `MutationEditProofs.mutation_domain_wins_probability_one`;
+6. `MutationPolicyProofs.mutation_body_wins_probability_one`;
+7. `MutationPolicyProofs.mutation_capability_wins_probability_one`;
+8. `MutationPolicyProofs.mutation_context_wins_probability_one`;
+9. `MutationPolicyProofs.mutation_digest_wins_probability_one`;
+10. `MutationPolicyProofs.mutation_predecessor_wins_probability_one`;
+11. `MutationHistoryProofs.mutation_recipient_wins_probability_one`;
+12. `MutationHistoryProofs.mutation_merge_wins_probability_one`;
+13. `MutationHistoryProofs.mutation_region_wins_probability_one`;
+14. `MutationHistoryProofs.mutation_segment_wins_probability_one`.
+
+Each module proves both the unmodified production rejection and the matching
+single-defense-removed acceptance through the actual differential validator.
+
+## Imported assumptions
+
+The Deliverable A closure contains **zero imported axioms**. The exact
+operation-signature, fact-signature, and collision experiments remain explicit
+on the final theorem's right-hand side instead of being hidden behind arbitrary
+real-valued advantage operators.
+
+`ASSUMPTION_MANIFEST.json` records:
+
+- the public theorem and its exact named games;
+- factor one for both native multi-user signature reductions;
+- the two proved-zero terms;
+- zero imported assumptions;
+- model contracts that still require concrete implementation correspondence.
+
+BeeKEM is not imported by this authorization-only result.
+
+## Checker evidence
+
+The first complete theorem-bearing checkpoint is:
+
+```text
+source commit: 0dafe7d02d1afe8bbdffc4cd4e47c36543b8ed71
+workflow run:  https://github.com/blinding-pixels/protocol-experiment/actions/runs/33284649082
+artifact:      easycrypt-full-evidence-33284649082-1
+artifact SHA:  sha256:4ee45fa1ee093df2ae28a0c33730d9b7eaf6ba4b17cf936c007f95af9452d831
+```
+
+That run recorded:
+
+- anti-cheating audit exit status `0`;
+- executable reference-suite exit status `0`;
+- EasyCrypt checker exit status `0`;
+- `65` EasyCrypt source files audited;
+- `0` manifest axioms;
+- `20` executable reference tests passed;
+- `ComputationalProof.ec` as the diagnostic target;
+- the immutable EasyCrypt image digest listed below.
+
+The machine-readable manifest checkpoint also passed the complete closure:
+
+```text
+source commit: a1778b5d2b295af765da8baf0679c1c173539819
+workflow run:  https://github.com/blinding-pixels/protocol-experiment/actions/runs/33284779030
+artifact SHA:  sha256:22db093e933a3c32624f62827a06673c166ba827964c28e9374e83e2712d4e04
+```
+
+## Scope and remaining faithfulness work
+
+The theorem is a suffix security game parameterized by an arbitrary materialized
+`protocol_state`. That state represents the public DAG, immutable fact-content
+registry, exact fact closures, and application-policy expectations at the start
+of the attack. The adversary then adaptively signs protocol-shaped objects and
+submits arbitrary operations and views while accepted operations update the
+state.
+
+The complete handoff's larger `CreateGroup`/delivery/add/remove/grant/revoke
+trace API is not claimed by this theorem. Integrating this suffix result into
+that full shared trace environment remains an explicit faithfulness task,
+particularly before reusing it inside the live- and content-key games.
+
+The following implementation obligations also remain outside this EasyCrypt
+result:
+
+- byte-for-byte correspondence between `CanonicalWire` and deployed Rust
+  serialization;
+- correspondence between `ExactAuthorizationDigest` and the deployed digest
+  serialization/hash;
+- concrete signature-scheme and node-hash security instantiation;
+- Rust persistence, crash recovery, erasure, zeroization, and operating-system
+  residue behavior;
+- live application-key indistinguishability;
+- ungranted content-key indistinguishability after the erasure frontier.
+
+Accordingly, Deliverable A's reduction theorem is checker-accepted within the
+stated abstract/suffix-game boundary. This is not a claim that the entire
+three-deliverable computational handoff or the concrete Rust implementation is
+complete.
+
+## Running the checks
 
 From the repository root:
 
 ```text
-python -m unittest discover \
+python3 tools/easycrypt/audit_computational.py
+
+python3 -m unittest discover \
   -s formal/current-source/easycrypt/computational \
   -p 'test_*.py' -v
-
-python tools/easycrypt/audit_computational.py
 ```
 
-The reference suite contains eighteen tests: four positive/baseline controls and
-fourteen one-defense-removed authorization witnesses.
-
-## Node identity choice
-
-This development chooses:
-
-```text
-nodeId = SHA-256(canonicalOperationWire || 0x00 || canonicalSignature)
-```
-
-The signature is therefore part of node identity. EasyCrypt and Rust must use
-this rule consistently or revise it together before a final proof claim.
-
-## Checker boundary
-
-The required immutable checker remains:
+The authoritative EasyCrypt checker target is `ComputationalProof.ec`. CI uses:
 
 ```text
 ghcr.io/easycrypt/ec-test-box:r2026.07
 sha256:84980006e8b01fe6497bbd0ecd67deeb5e7361d8ad17e27d24924122d368e0fc
 ```
 
-A claim is checker-accepted only when a successful run identifies the exact
-source commit, source hashes, immutable image digest, audit output, and checker
-exit status. Later source changes require new successful evidence.
+A checker-acceptance claim is valid only for the exact source commit, source
+hashes, immutable image digest, audit output, and zero checker exit status in a
+captured workflow artifact. Any later proof-source change requires new evidence.
