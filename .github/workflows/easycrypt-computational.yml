@@ -69,6 +69,10 @@ jobs:
           printf '%s  %s\n' "$BEEKEM_PDF_SHA256" "$pdf" \
             | sha256sum --check \
             | tee "$evidence/beekem-source-hash.log"
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends poppler-utils
+          dpkg-query -W -f='${Package} ${Version}\n' poppler-utils \
+            | tee "$evidence/beekem-extractor-version.txt"
           pdftotext -layout "$pdf" "$text"
           file "$pdf" | tee "$evidence/beekem-source-file.log"
           wc -c "$pdf" "$text" | tee "$evidence/beekem-source-size.log"
