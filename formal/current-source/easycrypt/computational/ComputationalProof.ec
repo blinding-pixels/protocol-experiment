@@ -4,7 +4,8 @@ require import MutationEditProofs MutationGameProofs MutationProofs.
 require import HonestOperationContract UnauthorizedOriginPartition.
 require import AuthorizationLeanFullReplay CausalClosureRepresentation.
 require import LiveKeyGame LiveKeyWitnesses LiveAuthenticationReduction.
-require import LiveKeyGame LiveKeyWitnesses.
+require import BeeKemKiInterface LiveBeeKemControl LiveBeeKemDerived.
+require import LiveBeeKemOracle LiveBeeKemReduction LiveBeeKemWrapperControl.
 
 (* Authoritative Deliverable A entry point.
 
@@ -56,3 +57,6 @@ print LiveKeyWitnesses.immediate_same_node_compromise_is_not_bee_safe.
 print LiveAuthenticationReduction.live_success_le_authenticated_plus_origin_failure.
 print LiveAuthenticationReduction.live_authentication_failure_exactly_deliverable_a.
 print LiveAuthenticationReduction.live_authentication_failure_bound.
+
+(* Deliverable L checkpoint 3: concrete KI-DCGKA runtime adapter. *)
+print LiveBeeKemWrapperControl.beekem_live_wrapper_invokes_primitive_challenge_once.

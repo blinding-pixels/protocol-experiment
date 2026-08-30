@@ -1,0 +1,78 @@
+require import AllCore List FSet.
+require import ProtocolTypes LiveKeyGame.
+
+(* Provisional application-shaped BeeKEM seam.
+
+   This is not the paper-authoritative Figure 8 oracle, safety predicate,
+   KI-DCGKA game, or Theorem 1 boundary. It predates the parallel
+   [formal/easycrypt-beekem-interface] development and deliberately keeps only
+   the temporary principal/node-shaped surface needed to checker-connect the
+   application wrapper. In particular it does not represent the authoritative
+   per-author counters, complete failed-query log, multi-operation compromise
+   frontier, direct-message/response flow, or three-way secret-output type.
+
+   The exact replacement obligations are recorded in
+   BEEKEM_APPLICATION_ADAPTER_OBLIGATIONS.md. This file contains no security
+   axiom or paper theorem. *)
+
+type beekem_ki_query_kind = [
+  | KiCreateGroup of principal & principal fset
+  | KiAddMember of principal & principal
+  | KiRemoveMember of principal & principal
+  | KiSendUpdate of principal
+  | KiDeliver of node_id & principal
+  | KiReveal of principal & node_id
+  | KiChallenge of principal & node_id
+  | KiCompromise of principal
+].
+
+type beekem_ki_query = {
+  bkq_kind : beekem_ki_query_kind;
+  bkq_operation : node_id option
+}.
+
+module type BEEKEM_KI_ORACLE = {
+  proc create_group(
+    creator : principal,
+    initial_members : principal fset,
+    digest : authorization_digest
+  ) : beekem_step_result
+
+  proc add_member(
+    author : principal,
+    target : principal,
+    digest : authorization_digest
+  ) : beekem_step_result
+
+  proc remove_member(
+    author : principal,
+    target : principal,
+    digest : authorization_digest
+  ) : beekem_step_result
+
+  proc send_update(
+    author : principal,
+    digest : authorization_digest
+  ) : beekem_step_result
+
+  proc deliver(
+    message : beekem_control_message,
+    recipient : principal
+  ) : beekem_secret option
+
+  proc reveal(
+    member : principal,
+    node : node_id
+  ) : beekem_secret option
+
+  proc challenge(
+    member : principal,
+    node : node_id
+  ) : beekem_secret option
+
+  proc compromise(member : principal) : beekem_snapshot
+}.
+
+module type BEEKEM_KI_ADVERSARY(O : BEEKEM_KI_ORACLE) = {
+  proc attack() : bool
+}.
