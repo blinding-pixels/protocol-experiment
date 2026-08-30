@@ -32,11 +32,11 @@ module BeeKemSafetyMutationGame(
     hidden_bit : bool,
     mutation : beekem_safety_mutation
   ) : beekem_mutation_game_evidence = {
-    var exact : beekem_ki_evidence;
+    var exact_evidence : beekem_ki_evidence;
     var mutated_safe : bool;
     var mutated_win : bool;
 
-    exact <@ Exact.main_with_fixed_bit(
+    exact_evidence <@ Exact.main_with_fixed_bit(
       users, group, kappa, membership, hidden_bit
     );
     mutated_safe <- bee_safe_kappa_mutated
@@ -46,19 +46,19 @@ module BeeKemSafetyMutationGame(
       Exact.O.Environment.query_log;
     mutated_win <- beekem_ki_final_win
       mutated_safe
-      exact.`bke_protocol_consistency_failure
-      exact.`bke_adversary_guess
+      exact_evidence.`bke_protocol_consistency_failure
+      exact_evidence.`bke_adversary_guess
       hidden_bit;
 
     return
-      {| bmge_hidden_bit = exact.`bke_hidden_bit;
-         bmge_adversary_guess = exact.`bke_adversary_guess;
+      {| bmge_hidden_bit = exact_evidence.`bke_hidden_bit;
+         bmge_adversary_guess = exact_evidence.`bke_adversary_guess;
          bmge_protocol_consistency_failure =
-           exact.`bke_protocol_consistency_failure;
-         bmge_challenge_count = exact.`bke_challenge_count;
-         bmge_member_addition_count = exact.`bke_member_addition_count;
-         bmge_exact_safe = exact.`bke_safe;
-         bmge_exact_win = exact.`bke_win;
+           exact_evidence.`bke_protocol_consistency_failure;
+         bmge_challenge_count = exact_evidence.`bke_challenge_count;
+         bmge_member_addition_count = exact_evidence.`bke_member_addition_count;
+         bmge_exact_safe = exact_evidence.`bke_safe;
+         bmge_exact_win = exact_evidence.`bke_win;
          bmge_mutated_safe = mutated_safe;
          bmge_mutated_win = mutated_win |};
   }
