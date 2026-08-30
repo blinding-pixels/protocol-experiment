@@ -1,14 +1,83 @@
 {
   "schema": "protocol-experiment.easycrypt-assumption-manifest.v1",
-  "status": "milestone-1-skeleton",
+  "status": "deliverable-a-complete",
+  "scope": "unauthorized-operation-acceptance",
   "allowed_axiom_files": [
     "ImportedSecurity.eca",
     "BeeKemKiInterface.eca"
   ],
   "declarations": [],
-  "notes": [
-    "No computational primitive axiom has been introduced at this checkpoint.",
-    "The Python KeyStore is executable test instrumentation and is not an imported security theorem.",
-    "A declaration may be added only with exact source theorem, game, reduction interface, and query-bound metadata."
+  "imported_assumptions": [],
+  "public_theorem": {
+    "file": "UnauthorizedOriginFinalBound.ec",
+    "name": "adv_unauthorized_origin_bound",
+    "entry_point": "ComputationalProof.ec",
+    "left_hand_side": "Pr[UnauthorizedOriginPartitionGame.main(initial) : real unauthorized acceptance]",
+    "right_hand_side": [
+      "1 * Pr[MultiUserEUFCMAGame(BSignOriginOperationDirect).main(initial)]",
+      "1 * Pr[MultiUserEUFCMAGame(BSignOriginFactWitness).main(initial)]",
+      "Pr[NodeCollisionGame(BHashOrigin).main(initial)]",
+      "0"
+    ]
+  },
+  "primitive_security_boundary": [
+    {
+      "name": "operation-signature multi-user EUF-CMA",
+      "kind": "named game probability retained in theorem",
+      "guessing_factor": 1
+    },
+    {
+      "name": "authorization-fact-signature multi-user EUF-CMA",
+      "kind": "named game probability retained in theorem",
+      "guessing_factor": 1
+    },
+    {
+      "name": "complete node-material collision resistance",
+      "kind": "named game probability retained in theorem"
+    }
+  ],
+  "proved_zero_terms": [
+    {
+      "name": "ideal unauthorized acceptance",
+      "theorem": "UnauthorizedOriginPartition.origin_ideal_probability_zero"
+    },
+    {
+      "name": "model-level canonical encoding failure",
+      "theorem": "UnauthorizedOriginFinalBound.encoding_failure_probability_zero"
+    }
+  ],
+  "model_contracts_not_imported_as_axioms": [
+    {
+      "name": "canonical operation encoding",
+      "model": "injective EasyCrypt datatype constructor",
+      "implementation_obligation": "prove byte-for-byte correspondence with the deployed Rust encoder"
+    },
+    {
+      "name": "authorization digest",
+      "model": "ExactAuthorizationDigest over the complete normalized authorization state",
+      "implementation_obligation": "prove correspondence with the deployed Rust serialization and hash construction"
+    },
+    {
+      "name": "authorization semantics",
+      "model": "independent EasyCrypt fold mapped to the checked Lean observed-remove authorization model",
+      "lean_source_blob_sha1": "55b138aa423f46db69d50d4427d89d67636c6281"
+    }
+  ],
+  "checker_evidence": {
+    "source_commit": "0dafe7d02d1afe8bbdffc4cd4e47c36543b8ed71",
+    "workflow_run": 33284649082,
+    "artifact": "easycrypt-full-evidence-33284649082-1",
+    "artifact_sha256": "4ee45fa1ee093df2ae28a0c33730d9b7eaf6ba4b17cf936c007f95af9452d831",
+    "easycrypt_sources_audited": 65,
+    "manifest_axioms": 0,
+    "reference_tests": 20,
+    "audit_exit_status": 0,
+    "reference_exit_status": 0,
+    "checker_exit_status": 0
+  },
+  "non_claims": [
+    "No concrete signature scheme is proved secure by this manifest; the exact primitive-game probabilities remain on the theorem right-hand side.",
+    "No concrete Rust serialization, hashing, persistence, erasure, crash-recovery, zeroization, or operating-system residue property is proved here.",
+    "Live-key and ungranted-content-key confidentiality are separate unfinished deliverables."
   ]
 }
