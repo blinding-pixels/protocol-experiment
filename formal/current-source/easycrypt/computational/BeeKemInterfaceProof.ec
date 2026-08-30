@@ -1,9 +1,9 @@
 require import BeeKemTypes BeeKemQueryLog BeeKemProtocol BeeKemSafety.
+require import BeeKemSafetyProofs.
 
-(* Public closure for the executable Figure 8 oracle environment and the exact
-   finite-kappa Figure 3 safety predicate.  Later checkpoints add checked trace
-   characterizations, the hidden-bit game, primitive games, and the imported
-   BeeKEM Theorem 1 boundary without changing these definitions. *)
+(* Public closure for the executable Figure 8 oracle environment and exact
+   finite-kappa Figure 3 safety predicate.  The trace theorems below force all
+   three safety disjuncts and their unsafe boundaries to compute. *)
 print beekem_operation_precedes.
 print beekem_operation_precedes_or_equals.
 print beekem_operations_concurrent.
@@ -26,3 +26,14 @@ print beekem_pcs_clause.
 print beekem_kappa_cfs_clause.
 print beekem_challenge_compromise_pair_safe.
 print bee_safe_kappa.
+print fsu_positive_uses_fsu_clause.
+print pcs_positive_uses_pcs_clause.
+print cfs_positive_uses_cfs_clause.
+print fsu_trace_admissible_at_kappa_three.
+print fsu_kappa_one_boundary_admitted.
+print fsu_kappa_two_boundary_rejected.
+print fsu_larger_finite_window_rejected_at_four.
+print pcs_trace_admissible.
+print pcs_trace_without_healing_update_rejected.
+print cfs_trace_admissible_at_kappa_two.
+print cfs_trace_without_fork_updates_rejected.
