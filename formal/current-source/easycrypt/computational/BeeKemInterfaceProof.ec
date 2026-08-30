@@ -12,6 +12,7 @@ print beekem_operations_concurrent.
 print beekem_secret_output_is_no_output.
 print beekem_secret_output_is_undefined.
 print beekem_secret_output_is_value.
+print beekem_secret_output_value.
 print beekem_member_retention_valid.
 print beekem_empty_protocol_state.
 print beekem_query_is_send_update.
