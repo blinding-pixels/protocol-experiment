@@ -7,6 +7,7 @@ require import LiveKeyGame LiveKeyWitnesses LiveAuthenticationReduction.
 require import LiveBeeKemControl LiveBeeKemDerived.
 require import LiveBeeKemOracle LiveBeeKemReduction.
 require import LivePrfReduction.
+require import LivePrfTypes LivePrfGame LivePrfApplicationReduction LivePrfControls.
 
 (* Authoritative Deliverable A entry point.
 
@@ -63,9 +64,9 @@ print LiveAuthenticationReduction.live_authentication_failure_bound.
 print LiveBeeKemReduction.beekem_live_wrapper_invokes_primitive_challenge_once.
 
 (* Deliverable L checkpoint 4-in-progress: application multi-domain PRF game. *)
-print LivePrfReduction.mdprf_live_domain_is_not_history_domain.
-print LivePrfReduction.mdprf_live_domain_is_not_history_capability_domain.
-print LivePrfReduction.bprf_live_fixed_real_control.
-print LivePrfReduction.bprf_live_fixed_random_control.
-print LivePrfReduction.insecure_test_kdf_prf_game_probability_one.
-print LivePrfReduction.insecure_test_kdf_prf_normalized_advantage_half.
+print LivePrfTypes.mdprf_live_domain_is_not_history_domain.
+print LivePrfTypes.mdprf_live_domain_is_not_history_capability_domain.
+print LivePrfControls.prf_control_fixed_real.
+print LivePrfControls.prf_control_fixed_random.
+print LivePrfControls.insecure_test_kdf_prf_game_probability_one.
+print LivePrfControls.insecure_test_kdf_prf_normalized_advantage_half.
