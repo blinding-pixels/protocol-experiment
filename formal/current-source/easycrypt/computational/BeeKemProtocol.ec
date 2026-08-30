@@ -930,7 +930,7 @@ module BeeKemOracleEnvironment(
     accepted <- true;
     rejection <- None;
 
-    if (beekem_secret_output_is_undefined secret) {
+    if (! beekem_secret_output_is_value secret) {
       accepted <- false;
       rejection <- Some BeeRejectMissingSecret;
     }
@@ -979,7 +979,7 @@ module BeeKemOracleEnvironment(
     accepted <- true;
     rejection <- None;
 
-    if (beekem_secret_output_is_undefined secret) {
+    if (! beekem_secret_output_is_value secret) {
       accepted <- false;
       rejection <- Some BeeRejectMissingSecret;
     }
