@@ -4,13 +4,6 @@ require import AuthorizationState AuthorizationAncestry UnauthorizedOriginGame.
 require import LiveKeyGame LiveKeyWitnesses.
 require import LivePrfTypes LivePrfGame LivePrfApplicationReduction LivePrfControls.
 
-type application_prf_trace_control_result = {
-  aptc_evidence : mdprf_game_evidence;
-  aptc_reveal_real : bool;
-  aptc_challenge_real : bool;
-  aptc_history_reached : bool
-}.
-
 (* Concrete application adversary used only as an end-to-end connectivity
    control.  It reveals a live key at node 1, then asks both history domains and
    challenges the distinct node 2.  The application exclusion therefore holds
@@ -56,8 +49,14 @@ module ApplicationPrfTraceAdversary(
     history_reached <- history <> None /\ capability <> None;
   }
 
+  (* In the primitive random world this public bit is false exactly when the
+     application reveal stayed real, the distinguished challenge was sampled,
+     and both history procedures returned outputs. *)
   proc guess() : bool = {
-    return challenge_was_real;
+    return
+         ! reveal_was_real
+      \/ challenge_was_real
+      \/ ! history_reached;
   }
 }.
 
@@ -72,42 +71,21 @@ module ApplicationPrfTraceGame = MultiDomainPrfGame(
   TestLiveKeySampler
 ).
 
-module ApplicationPrfTraceControl = {
-  proc main(bit : bool) : application_prf_trace_control_result = {
-    var evidence : mdprf_game_evidence;
-
-    evidence <@ ApplicationPrfTraceGame.main_with_fixed_bit(
-      live_witness_protocol_state,
-      [],
-      1,
-      bit
-    );
-
-    return
-      {| aptc_evidence = evidence;
-         aptc_reveal_real =
-           ApplicationPrfTraceGame.A.A.reveal_was_real;
-         aptc_challenge_real =
-           ApplicationPrfTraceGame.A.A.challenge_was_real;
-         aptc_history_reached =
-           ApplicationPrfTraceGame.A.A.history_reached |};
-  }
-}.
-
+(* End-to-end non-vacuity control for the exact application/PRF hop.  The
+   application trace is eligible, its public diagnostic bit confirms the real
+   reveal / sampled challenge / reached-history conjunction, and the primitive
+   transcript contains exactly one call in every application-relevant domain. *)
 lemma application_prf_random_trace_reaches_every_oracle :
-  hoare [ApplicationPrfTraceControl.main :
-       arg = false
+  hoare [ApplicationPrfTraceGame.main_with_fixed_bit :
+       arg.`4 = false
     ==>
-       (res.`aptc_evidence).`mpge_win
-    /\ (res.`aptc_evidence).`mpge_eligible
-    /\ ! (res.`aptc_evidence).`mpge_guess
-    /\ res.`aptc_reveal_real
-    /\ ! res.`aptc_challenge_real
-    /\ res.`aptc_history_reached
-    /\ (res.`aptc_evidence).`mpge_live_query_count = 1
-    /\ (res.`aptc_evidence).`mpge_live_challenge_count = 1
-    /\ (res.`aptc_evidence).`mpge_history_query_count = 1
-    /\ (res.`aptc_evidence).`mpge_history_capability_query_count = 1].
+       res.`mpge_win
+    /\ res.`mpge_eligible
+    /\ ! res.`mpge_guess
+    /\ res.`mpge_live_query_count = 1
+    /\ res.`mpge_live_challenge_count = 1
+    /\ res.`mpge_history_query_count = 1
+    /\ res.`mpge_history_capability_query_count = 1].
 proof.
   proc.
   inline *.
