@@ -144,5 +144,5 @@ lemma insecure_test_kdf_prf_normalized_advantage_half
 proof.
   rewrite insecure_test_kdf_prf_game_probability_one.
   rewrite /mdprf_normalized_advantage.
-  by norm.
+  by smt().
 qed.
