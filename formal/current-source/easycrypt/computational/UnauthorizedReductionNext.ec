@@ -1,4 +1,4 @@
-require import UnauthorizedMilestone AuthorizationLeanDeltaCongruence AuthorizationLeanFullReplay UnauthorizedLeanIdeal.
+require import UnauthorizedMilestone AuthorizationLeanDeltaCongruence AuthorizationLeanFullReplay UnauthorizedLeanIdeal UnauthorizedLeanCertifiedIdeal.
 
 (* Active post-partition hardening entry point.  Importing UnauthorizedMilestone
    preserves the complete Deliverable A and mutation closure while the typed
@@ -13,3 +13,6 @@ print AuthorizationLeanFullReplay.authorization_ancestry_matches_independent_lea
 print UnauthorizedLeanIdeal.represented_operation_authorized_is_exact.
 print UnauthorizedLeanIdeal.ideal_decoded_authorized_implies_lean_ideal.
 print UnauthorizedLeanIdeal.ideal_authorized_candidate_implies_lean_ideal.
+print UnauthorizedLeanCertifiedIdeal.ideal_decoded_authorized_implies_lean_replay_certificate.
+print UnauthorizedLeanCertifiedIdeal.lean_certified_ideal_decoded_authorized_iff.
+print UnauthorizedLeanCertifiedIdeal.lean_certified_ideal_authorized_candidate_iff.
