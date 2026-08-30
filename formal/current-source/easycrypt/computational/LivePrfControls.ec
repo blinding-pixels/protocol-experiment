@@ -140,7 +140,8 @@ lemma insecure_test_kdf_prf_normalized_advantage_half
        PrfControlGame.main(
          initial_state, initial_facts, retention_kappa
        ) @ &m : res
-     ]) = 1%r / 2%r.
+     ])
+    1%r = 1%r / 2%r.
 proof.
   rewrite insecure_test_kdf_prf_game_probability_one.
   rewrite /mdprf_normalized_advantage.

@@ -137,7 +137,43 @@ module MultiDomainPrfGame(
   }
 }.
 
-op mdprf_normalized_advantage (success_probability : real) : real =
-  if 1%r / 2%r <= success_probability
-  then success_probability - 1%r / 2%r
-  else 1%r / 2%r - success_probability.
+(* Fixed-bit distinguishing distance. *)
+op mdprf_fixed_bit_advantage
+    (real_one_probability random_one_probability : real) : real =
+  if random_one_probability <= real_one_probability
+  then real_one_probability - random_one_probability
+  else random_one_probability - real_one_probability.
+
+(* Success probability of the equivalent fair hidden-bit presentation when the
+   real-bit event is [eligible /\ guess] and the random-bit event is
+   [eligible /\ guess].  The random-bit win event is therefore the eligible
+   mass not contained in the random-bit one-event. *)
+op mdprf_hidden_bit_success
+    (real_one_probability random_one_probability
+     eligibility_probability : real) : real =
+  (real_one_probability +
+     (eligibility_probability - random_one_probability)) / 2%r.
+
+(* Eligibility is challenger-computed and may have probability below one.  The
+   fair baseline is therefore half the eligibility mass, not an unconditional
+   one half. *)
+op mdprf_normalized_advantage
+    (success_probability eligibility_probability : real) : real =
+  if eligibility_probability / 2%r <= success_probability
+  then success_probability - eligibility_probability / 2%r
+  else eligibility_probability / 2%r - success_probability.
+
+lemma mdprf_hidden_bit_normalization
+    (real_one_probability random_one_probability
+     eligibility_probability : real) :
+  mdprf_normalized_advantage
+    (mdprf_hidden_bit_success
+       real_one_probability random_one_probability eligibility_probability)
+    eligibility_probability =
+  mdprf_fixed_bit_advantage
+    real_one_probability random_one_probability / 2%r.
+proof.
+  rewrite /mdprf_normalized_advantage /mdprf_hidden_bit_success
+    /mdprf_fixed_bit_advantage.
+  case (random_one_probability <= real_one_probability); smt().
+qed.

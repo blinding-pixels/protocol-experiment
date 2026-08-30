@@ -66,6 +66,7 @@ print LiveBeeKemReduction.beekem_live_wrapper_invokes_primitive_challenge_once.
 (* Deliverable L checkpoint 4-in-progress: application multi-domain PRF game. *)
 print LivePrfTypes.mdprf_live_domain_is_not_history_domain.
 print LivePrfTypes.mdprf_live_domain_is_not_history_capability_domain.
+print LivePrfGame.mdprf_hidden_bit_normalization.
 print LivePrfControls.prf_control_fixed_real.
 print LivePrfControls.prf_control_fixed_random.
 print LivePrfControls.insecure_test_kdf_prf_game_probability_one.
