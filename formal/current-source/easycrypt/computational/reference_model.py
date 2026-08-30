@@ -96,7 +96,7 @@ class View: facts:tuple[Fact,...]; observed:tuple[str,...]
 class HistoryExpected: issuer:Principal; recipient:Principal; merge:str; region:tuple[tuple[str,int,int],...]; cover:tuple[tuple[str,str,int],...]
 @dataclass(frozen=True)
 class State:
-    creator:Principal; doc:str; nodes:frozenset[str]; closures:dict[str,frozenset[str]]; seen_oids:frozenset[str]=frozenset(); seen_nonces:frozenset[str]=frozenset(); bee_paths:dict[tuple[str,...],str]|None=None; history:HistoryExpected|None=None; punctures:frozenset[str]=frozenset()
+    creator:Principal; doc:str; nodes:frozenset[str]; closures:dict[str,frozenset[str]]; fact_contents:dict[str,Fact]; seen_oids:frozenset[str]=frozenset(); seen_nonces:frozenset[str]=frozenset(); bee_paths:dict[tuple[str,...],str]|None=None; history:HistoryExpected|None=None; punctures:frozenset[str]=frozenset()
     def closure(self,preds):
         z=set()
         for p in preds:
@@ -140,7 +140,8 @@ def validate(op:SignedOp,v:View,s:State,k:Keys,c:Cfg=Cfg())->Result:
     cl=s.closure(e.preds)
     ids=tuple(sorted(f.id for f in v.facts))
     if c.complete and frozenset(ids)!=cl: return Result(False,"predecessor-completeness")
-    if c.context and tuple(sorted(v.observed))!=ids: return Result(False,"exact-author-context")
+    if c.context and (tuple(sorted(v.observed))!=ids or any(s.fact_contents.get(f.id)!=replace(f,sig=None) for f in v.facts)):
+        return Result(False,"exact-author-context")
     try: a=norm(v.facts,s.creator,k)
     except ValueError: return Result(False,"authorization-facts")
     if c.digest and e.adigest!=a.digest(): return Result(False,"authorization-digest")

@@ -58,6 +58,218 @@ module EUFCMAGame(
   }
 }.
 
+(* The protocol reduction needs both sides of the exact primitive interface:
+   signing queries establish origin, while successful verification queries
+   establish that a returned candidate is a real primitive forgery. *)
+type signature_verification_query =
+  verification_key * signature_message * signature_bytes * bool.
+
+type signature_forgery = {
+  sf_verification_key : verification_key;
+  sf_message : signature_message;
+  sf_signature : signature
+}.
+
+module type LOGGED_SIGNATURE_ORACLE = {
+  proc sign(
+    vk : verification_key,
+    message : signature_message
+  ) : signature
+
+  proc verify(
+    vk : verification_key,
+    message : signature_message,
+    bytes : signature_bytes
+  ) : bool
+
+  proc get_sign_queries() : signature_query list
+  proc get_verify_queries() : signature_verification_query list
+}.
+
+module LoggedSignatureOracle(S : SIGNATURE_SCHEME) : LOGGED_SIGNATURE_ORACLE = {
+  var sign_queries : signature_query list
+  var verify_queries : signature_verification_query list
+
+  proc init() : unit = {
+    sign_queries <- [];
+    verify_queries <- [];
+  }
+
+  proc sign(
+    vk : verification_key,
+    message : signature_message
+  ) : signature = {
+    var sig : signature;
+    sig <@ S.sign(vk, message);
+    sign_queries <- rcons sign_queries (vk, message);
+    return sig;
+  }
+
+  proc verify(
+    vk : verification_key,
+    message : signature_message,
+    bytes : signature_bytes
+  ) : bool = {
+    var valid : bool;
+    valid <@ S.verify(vk, message, bytes);
+    verify_queries <- rcons verify_queries (vk, message, bytes, valid);
+    return valid;
+  }
+
+  proc get_sign_queries() : signature_query list = {
+    return sign_queries;
+  }
+
+  proc get_verify_queries() : signature_verification_query list = {
+    return verify_queries;
+  }
+}.
+
+module SignatureOracleScheme(O : LOGGED_SIGNATURE_ORACLE) : SIGNATURE_SCHEME = {
+  proc sign(
+    vk : verification_key,
+    message : signature_message
+  ) : signature = {
+    var sig : signature;
+    sig <@ O.sign(vk, message);
+    return sig;
+  }
+
+  proc verify(
+    vk : verification_key,
+    message : signature_message,
+    bytes : signature_bytes
+  ) : bool = {
+    var valid : bool;
+    valid <@ O.verify(vk, message, bytes);
+    return valid;
+  }
+}.
+
+op signature_forgery_valid
+    (forgery : signature_forgery)
+    (sign_queries : signature_query list)
+    (verify_queries : signature_verification_query list) : bool =
+     forgery.`sf_signature.`sig_verification_key =
+       forgery.`sf_verification_key
+  /\ ! mem sign_queries
+       (forgery.`sf_verification_key, forgery.`sf_message)
+  /\ mem verify_queries
+       (forgery.`sf_verification_key,
+        forgery.`sf_message,
+        forgery.`sf_signature.`sig_bytes,
+        true).
+
+module type MULTI_USER_EUFCMA_ADVERSARY(O : LOGGED_SIGNATURE_ORACLE) = {
+  proc forge(initial_state : protocol_state) : signature_forgery option
+}.
+
+module MultiUserEUFCMAGame(
+  A : MULTI_USER_EUFCMA_ADVERSARY,
+  S : SIGNATURE_SCHEME
+) = {
+  module O = LoggedSignatureOracle(S)
+  module A = A(O)
+
+  proc main(initial_state : protocol_state) : bool = {
+    var forgery_option : signature_forgery option;
+    var forgery : signature_forgery;
+    var sign_queries : signature_query list;
+    var verify_queries : signature_verification_query list;
+    var win : bool;
+
+    O.init();
+    forgery_option <@ A.forge(initial_state);
+    sign_queries <@ O.get_sign_queries();
+    verify_queries <@ O.get_verify_queries();
+    forgery <- witness;
+    win <- false;
+
+    if (forgery_option <> None) {
+      forgery <- oget forgery_option;
+      win <- signature_forgery_valid forgery sign_queries verify_queries;
+    }
+
+    return win;
+  }
+}.
+
+(* Node identity hashes the complete production transcript together with the
+   operation signature.  The collision game therefore logs [node_material],
+   not only the transcript component. *)
+type node_hash_query = node_material * node_id.
+type node_collision = node_material * node_material.
+
+op find_collision_with
+    (material : node_material)
+    (digest : node_id)
+    (queries : node_hash_query list) : node_material option =
+  with queries = [] => None
+  with queries = query :: rest =>
+    if query.`2 = digest /\ query.`1 <> material
+    then Some query.`1
+    else find_collision_with material digest rest.
+
+op find_node_collision_pair
+    (queries : node_hash_query list) : node_collision option =
+  with queries = [] => None
+  with queries = query :: rest =>
+    let other = find_collision_with query.`1 query.`2 rest in
+    if other = None
+    then find_node_collision_pair rest
+    else Some (query.`1, oget other).
+
+module type LOGGED_NODE_HASH_ORACLE = {
+  proc hash(material : node_material) : node_id
+  proc get_queries() : node_hash_query list
+}.
+
+module LoggedNodeHash(H : NODE_HASH) : LOGGED_NODE_HASH_ORACLE = {
+  var queries : node_hash_query list
+
+  proc init() : unit = {
+    queries <- [];
+  }
+
+  proc hash(material : node_material) : node_id = {
+    var digest : node_id;
+    digest <@ H.hash(material);
+    queries <- rcons queries (material, digest);
+    return digest;
+  }
+
+  proc get_queries() : node_hash_query list = {
+    return queries;
+  }
+}.
+
+module type NODE_COLLISION_ADVERSARY(O : LOGGED_NODE_HASH_ORACLE) = {
+  proc collide(initial_state : protocol_state) : node_collision
+}.
+
+module NodeCollisionGame(
+  A : NODE_COLLISION_ADVERSARY,
+  H : NODE_HASH
+) = {
+  module O = LoggedNodeHash(H)
+  module A = A(O)
+
+  proc main(initial_state : protocol_state) : bool = {
+    var pair : node_collision;
+    var queries : node_hash_query list;
+    var found : node_collision option;
+
+    O.init();
+    pair <@ A.collide(initial_state);
+    queries <@ O.get_queries();
+    found <- find_node_collision_pair queries;
+
+    return found <> None /\ pair = oget found;
+  }
+}.
+
+(* Retained transcript-only game for compatibility with the initial executable
+   skeleton.  Deliverable A reductions use [NodeCollisionGame]. *)
 module type COLLISION_ADVERSARY = {
   proc collide() : operation_transcript * operation_transcript
 }.

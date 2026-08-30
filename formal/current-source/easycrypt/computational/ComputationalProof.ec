@@ -1,15 +1,44 @@
-require import HonestOperationContract MutationProofs.
+require import UnauthorizedReductionNext UnauthorizedOriginFinalBound.
+require import PrimitiveControlProofs MutationHistoryProofs MutationPolicyProofs.
+require import MutationEditProofs MutationGameProofs MutationProofs.
+require import HonestOperationContract UnauthorizedOriginPartition.
+require import AuthorizationLeanFullReplay CausalClosureRepresentation.
 
-(* Current checker entry point for the computational development.
+(* Authoritative Deliverable A entry point.
 
-   This file deliberately exposes only the claims that have already been
-   discharged by the kernel.  In particular, it does not claim the final
-   unauthorized-acceptance reduction, live-key indistinguishability, or
-   content-key indistinguishability required by the handoff.
+   Importing [UnauthorizedReductionNext] forces the complete active A0--A5,
+   direct operation/fact forgery, hash-collision, independent Lean-fold,
+   validator, mutation, and anti-vacuity dependency closure through the
+   EasyCrypt kernel.  The declarations below expose the public theorem and its
+   load-bearing controls rather than leaving the completed reduction hidden
+   behind the development-only milestone entry point. *)
 
-   The first print is the direct, non-vacuous production acceptance witness:
-   the concrete canonical operation is accepted by the public validator with
-   probability one.  The second print is a concrete negative control through
-   that same validator. *)
+print UnauthorizedOriginFinalBound.adv_unauthorized_origin_bound.
+print UnauthorizedOriginPartition.origin_ideal_probability_zero.
+print UnauthorizedOriginFinalBound.encoding_failure_probability_zero.
+print UnauthorizedOriginFinalBound.distinct_envelopes_have_distinct_canonical_encodings.
+print AuthorizationLeanFullReplay.authorization_policy_replay_matches_independent_lean_apply.
+print CausalClosureRepresentation.represented_exact_predecessor_closure.
+
+(* Non-vacuity and primitive connectivity controls. *)
 print HonestOperationContract.witness_honest_operation_accepted.
 print MutationProofs.noncanonical_rejection_probability_one.
+print PrimitiveControlProofs.test_signature_multi_user_eufcma_probability_one.
+
+(* Deliverable A one-defense-removed differential matrix.  Each probability-one
+   theorem depends on a production-rejection lemma and a matching
+   single-defense-removed acceptance lemma in the same proof module. *)
+print MutationGameProofs.mutation_operation_signature_wins_probability_one.
+print MutationEditProofs.mutation_author_key_wins_probability_one.
+print MutationEditProofs.mutation_incarnation_wins_probability_one.
+print MutationEditProofs.mutation_document_wins_probability_one.
+print MutationEditProofs.mutation_domain_wins_probability_one.
+print MutationPolicyProofs.mutation_body_wins_probability_one.
+print MutationPolicyProofs.mutation_capability_wins_probability_one.
+print MutationPolicyProofs.mutation_context_wins_probability_one.
+print MutationPolicyProofs.mutation_digest_wins_probability_one.
+print MutationPolicyProofs.mutation_predecessor_wins_probability_one.
+print MutationHistoryProofs.mutation_recipient_wins_probability_one.
+print MutationHistoryProofs.mutation_merge_wins_probability_one.
+print MutationHistoryProofs.mutation_region_wins_probability_one.
+print MutationHistoryProofs.mutation_segment_wins_probability_one.

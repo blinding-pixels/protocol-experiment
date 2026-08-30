@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - formal/easycrypt-computational-m1
+      - formal/easycrypt-unauthorized-reduction
     paths:
       - '.github/workflows/easycrypt-computational.yml'
       - 'formal/current-source/easycrypt/computational/**'
@@ -26,7 +27,7 @@ concurrency:
 
 jobs:
   computational-proof:
-    name: Check full computational proof
+    name: Check complete Deliverable A closure
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
@@ -71,6 +72,24 @@ jobs:
           cat "$evidence/audit-stderr.log" >&2
           exit "$status"
 
+      - name: Run executable reference suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/easycrypt-full-evidence"
+          set +e
+          python3 -m unittest discover \
+            -s formal/current-source/easycrypt/computational \
+            -p 'test_*.py' -v \
+            >"$evidence/reference-stdout.log" \
+            2>"$evidence/reference-stderr.log"
+          status=$?
+          set -e
+          printf '%s\n' "$status" >"$evidence/reference-exit-status.txt"
+          cat "$evidence/reference-stdout.log"
+          cat "$evidence/reference-stderr.log" >&2
+          exit "$status"
+
       - name: Pull immutable EasyCrypt image
         shell: bash
         run: |
@@ -82,7 +101,7 @@ jobs:
             --format '{{json .RepoDigests}}' \
             | tee "$evidence/image-repo-digests.txt"
 
-      - name: Compile full computational proof
+      - name: Compile complete Deliverable A closure
         shell: bash
         run: |
           set -euo pipefail

@@ -157,6 +157,33 @@ proof.
     witness_base_view_observed_fact_ids witness_base_fact_ids.
 qed.
 
+lemma witness_base_fact_contents_match :
+  fact_contents_match_state
+    witness_base_state_exact witness_base_view_exact.`pv_facts.
+proof.
+  rewrite witness_base_view_facts
+    /fact_contents_match_state
+    /witness_base_state_exact /witness_protocol_state
+    /witness_fact_contents_for_node
+    /witness_extended_node /witness_rejoin_node
+    /witness_missing_revoke_node /witness_base_node.
+  rewrite /witness_base_signed_facts
+    !fact_contents_match_store_cons
+    /witness_signed_fact_1 /witness_signed_fact_2
+    /witness_signed_fact_3 /witness_signed_fact_4
+    /witness_signed_fact_5 /witness_signed_fact_6
+    /witness_signed_fact_7 /witness_signed_fact_of
+    /fact_content_map_of_authorization_facts
+    /witness_base_authorization_facts
+    /witness_fact_1 /witness_fact_2 /witness_fact_3
+    /witness_fact_4 /witness_fact_5 /witness_fact_6
+    /witness_fact_7
+    /witness_fact_id_1 /witness_fact_id_2 /witness_fact_id_3
+    /witness_fact_id_4 /witness_fact_id_5 /witness_fact_id_6
+    /witness_fact_id_7.
+  smt().
+qed.
+
 lemma witness_base_signed_facts_for_context :
   signed_facts_for_ids witness_base_signed_facts witness_context_7 =
     witness_base_signed_facts.
@@ -195,10 +222,10 @@ proof.
 qed.
 
 lemma witness_honest_freshness :
-     witness_honest_edit_envelope.`oe_operation_id
-       \notin witness_base_state_exact.`ps_seen_operation_ids
-  /\ witness_honest_edit_envelope.`oe_nonce
-       \notin witness_base_state_exact.`ps_seen_nonces.
+     ! (witness_honest_edit_envelope.`oe_operation_id
+          \in witness_base_state_exact.`ps_seen_operation_ids)
+  /\ ! (witness_honest_edit_envelope.`oe_nonce
+          \in witness_base_state_exact.`ps_seen_nonces).
 proof.
   by rewrite /witness_honest_edit_envelope /witness_edit_envelope
     /witness_base_state_exact /witness_protocol_state !inE.
@@ -301,35 +328,35 @@ proof.
   proc.
   inline TestSignature.verify.
 
-  rcondf 8; first by
+  rcondf 15; first by
     auto;
     rewrite /validation_success /defense_enabled;
     smt(witness_honest_domain_version).
-  rcondf 8; first by
+  rcondf 15; first by
     auto;
     rewrite /validation_success /defense_enabled;
     smt(witness_honest_document_binding).
-  rcondf 8; first by
+  rcondf 15; first by
     auto;
     rewrite /validation_success /defense_enabled;
     smt(witness_honest_freshness).
-  rcondf 8; first by
+  rcondf 15; first by
     auto;
     rewrite /validation_success;
     smt(witness_honest_predecessors_exist).
-  rcondt 8; first by auto; rewrite /validation_success.
+  rcondt 15; first by auto; rewrite /validation_success.
 
-  rcondf 10; first by
+  rcondf 19; first by
     auto=> />;
     rewrite witness_honest_exact_closure
       witness_base_view_facts witness_base_fact_ids.
-  rcondf 10; first by
+  rcondf 19; first by
     auto=> />;
-    rewrite witness_base_view_observed_fact_ids
-      witness_base_view_facts witness_base_fact_ids.
-  rcondt 10; first by auto; rewrite /validation_success.
+    smt(witness_honest_observed_context_matches_fact_ids
+        witness_base_fact_contents_match).
+  rcondt 19; first by auto; rewrite /validation_success.
 
-  seq 10 :
+  seq 19 :
     (result = validation_success /\
      authorization_valid = true /\
      authorization = witness_authorization_state_7 /\
@@ -342,7 +369,8 @@ proof.
     auto=> />;
     try rewrite witness_base_view_facts witness_base_state_creator;
     auto.
-  + rcondf 1; first by auto.
+  + sp 2.
+    rcondf 1; first by auto.
     rcondf 1; first by
       auto=> />;
       exact witness_honest_authorization_digest.
@@ -350,11 +378,11 @@ proof.
       auto=> />;
       exact witness_honest_author_key_binding.
     rcondt 1; first by auto.
-    rcondf 5; first by
+    rcondf 7; first by
       auto=> />;
       exact witness_honest_signature_bytes.
 
-    sp 4.
+    sp 6.
     rcondf 1; first by
       auto=> />;
       try rewrite witness_honest_author
@@ -422,14 +450,14 @@ lemma witness_honest_validate :
     res.`vr_accepted].
 proof.
   proc.
-  rcondf 10; first by
+  rcondf 17; first by
     auto;
     rewrite witness_honest_edit_decodes /validation_success.
-  rcondf 11; first by
+  rcondf 18; first by
     auto;
     rewrite witness_honest_edit_is_canonical
       /defense_enabled /validation_success.
-  rcondt 11; first by auto; rewrite /validation_success.
+  rcondt 18; first by auto; rewrite /validation_success.
   call (witness_honest_validate_decoded).
   auto; rewrite witness_honest_edit_decodes.
 qed.
