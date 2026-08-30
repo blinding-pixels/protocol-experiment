@@ -1,6 +1,8 @@
 require import AllCore List FSet.
 require import ProtocolTypes CanonicalEncoding ProtocolPrimitives AuthorizationState.
-require import AuthorizationAncestry PrimitiveGames UnauthorizedOriginGame.
+require import AuthorizationAncestry UnauthorizedOriginGame.
+require PrimitiveGames.
+clone import PrimitiveGames as PG.
 require import UnauthorizedOriginPartition UnauthorizedOriginFinalBound.
 require import OriginOperationDirectInvariant OriginFactReductionWitness.
 require import UnauthorizedOriginHashReduction LiveKeyGame.
