@@ -1,4 +1,4 @@
-require import AllCore List Distr.
+require import AllCore List FSet Distr.
 require import ProtocolTypes ProtocolChecks CanonicalEncoding.
 require import LiveKeyGame LivePrfTypes LivePrfGame.
 
