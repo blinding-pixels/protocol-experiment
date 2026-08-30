@@ -4,136 +4,136 @@ Application branch: `formal/easycrypt-live-key-reduction`
 
 Read-only BeeKEM branch: `formal/easycrypt-beekem-interface`
 
-Exact BeeKEM source inspected: `a360e933b8cf1bf61ab85532f590427e950d9256`
+Exact BeeKEM source inspected: `fda87857acfa0875509b577cc02afedafee397f0`
 
-Exact BeeKEM workflow inspected: `33337603316`
+Exact BeeKEM workflow inspected: `33338655869`
 
-This file records an application-side coordination snapshot. It does not merge,
-cherry-pick, restate, or replace the BeeKEM foundation, and it is not evidence
-that the current BeeKEM head is checker-accepted.
+Evidence artifact: `easycrypt-full-evidence-33338655869-1`
+
+Evidence artifact SHA-256:
+`8ee813027c4ada0b938a623fbb4128322bf250bd07e55e765cae685e002107af`
+
+This file records an application-side, read-only coordination snapshot. It does
+not merge, cherry-pick, restate, or replace the BeeKEM foundation.
 
 ## Current BeeKEM checker state
 
-The source audit passed over 87 EasyCrypt sources with the one manifested
-BeeKEM theorem axiom, and the 20 executable reference tests passed. The pinned
-EasyCrypt compile of `BeeKemInterfaceProof.ec` failed while importing
-`BeeKemKiInterface.eca` with:
+The exact BeeKEM head above is checker-accepted by the pinned workflow:
 
-```text
-anomaly: File "src/ecSubst.ml", line 289, characters 2-8:
-Assertion failed
-```
+- `BeeKemInterfaceProof.ec` compiled successfully under the immutable EasyCrypt
+  image;
+- the dependency closure contained 23 source files and included
+  `BeeKemSafety.ec`;
+- the computational audit covered 88 EasyCrypt sources and found the one
+  manifest-declared imported BeeKEM theorem axiom;
+- all 20 executable reference tests passed; and
+- deleting `BeeKemSafety.ec` from the copied dependency closure made the checker
+  fail for the expected missing-theory reason.
 
-The failure is in EasyCrypt module substitution for the new construction-bound
-theorem surface. Therefore the exact head above is not yet an imported premise
-available to Deliverable L.
+The earlier EasyCrypt module-substitution anomaly observed at
+`a360e933b8cf1bf61ab85532f590427e950d9256` is resolved. The current foundation
+uses one flat `BEEKEM_PAPER_INSTANCE` module and derives the protocol, NIKE,
+NIKE-sampler, and symmetric-encryption adapters from that same instance.
 
-The earlier application-side snapshot
-`ec516a7e3c376dffb9d6d3872c26bb99d6a3a8b9` remains the last BeeKEM checkpoint
-this branch recorded as pinned-checker green.
+## Current authoritative public surface
 
-## Public interface changes since the earlier green snapshot
+The foundation currently owns and checker-connects:
 
-### Reveal admission control
-
-`BeeKemRevealMutationProofs.ec` executes the exact KI oracle. In the production
-trace, a successful Reveal marks `(sender, counter)` and the later Challenge of
-the same entry is rejected without incrementing the challenge counter. The
-single mutation clears only that shared mark after preserving the successful
-Reveal in the append-only query log; the same Challenge then executes and
-increments the real challenge counter.
-
-The final application adapter must preserve this shared stateful exclusion. A
-successful application reveal may not be represented only as an informational
-log entry.
-
-### Construction identity
-
-`BeeKemConstruction.ec` introduces:
-
-```text
-BEEKEM_PAPER_CONSTRUCTION(Nike, Se)
-```
-
-The imported theorem source now defines its KI protocol as that construction
-functor instantiated by the same NIKE and symmetric-encryption modules whose
-HKR-CKS and MU-CPA games occur on the right-hand side.
-
-This closes an important shape-level loophole: an unrelated module that merely
-implements `BEEKEM_PROTOCOL_ALGORITHMS` must not be eligible for Theorem 1.
-However, the current EasyCrypt substitution anomaly means this strengthened
-boundary is not yet checker-accepted.
-
-The final Deliverable L adapter must prove that its BeeKEM runtime and returned
-roots correspond to the exact construction instance used by the imported
-theorem. Equality of procedure signatures is not an equivalence proof.
-
-## Unchanged authoritative requirements
-
-The BeeKEM branch still owns:
-
-- concrete bitstring group secrets;
+- concrete bitstring BeeKEM group secrets;
 - same-length random challenge sampling inside the KI challenger;
-- the complete attempted-query log, including rejections and causal frontiers;
-- exact `bee_safe_kappa` over that log and the operation DAG;
-- actual challenge and member-addition counters;
-- the NIKE and symmetric-encryption primitive games; and
-- the sole imported BeeKEM Theorem 1 boundary.
+- the complete attempted-query log, including rejected calls and causal
+  frontiers;
+- exact finite-kappa `bee_safe_kappa` over that log and the operation DAG;
+- exact challenge and member-addition counters;
+- stateful Reveal/Challenge exclusion for the same sender/counter entry;
+- finite personal-secret retention and compromise exposure;
+- FSU, PCS, concurrent-fork CFS, compromise-log, and causal-ancestry mutation
+  witnesses connected to the actual KI game;
+- nonzero challenge-count and logarithmic member-addition loss-factor controls;
+- executable NIKE and symmetric-encryption primitive games; and
+- the sole imported BeeKEM Theorem 1 boundary,
+  `beekem_theorem1_imported_normalized`.
 
-The application branch must not sample a replacement root, create a competing
-safety predicate, add a second BeeKEM axiom, or identify its provisional integer
-root with the authoritative bitstring by representation coincidence.
+The theorem boundary now quantifies one `BEEKEM_PAPER_INSTANCE`. The KI protocol,
+HKR-CKS game, MU-CPA game, NIKE symmetry premise, and symmetric-encryption
+correctness premise are all instantiated through adapters derived from that
+same module. The application adapter must therefore target the exact protocol
+adapter of one paper instance; matching procedure signatures alone is not an
+equivalence proof.
 
 ## Normalization blocker remains open
 
-The current BeeKEM game still gates final success by `safe`, while its public
-centered operator subtracts an unconditional `1/2`. Consequently, an unsafe
-trace that loses in both hidden-bit branches has success probability zero but
-is assigned centered value one half.
+The current BeeKEM game still computes
 
-Deliverable L must not instantiate Theorem 1 until the BeeKEM foundation chooses
-and checker-connects one authoritative repair, such as a probability-one safety
-premise or a safe-mass baseline. This application branch does not choose the
-BeeKEM security notion on its behalf.
+```text
+beekem_ki_final_win safe protocol_failure guess bit
+  = safe /\ (protocol_failure \/ guess = bit)
+```
+
+while its public advantage operator is
+
+```text
+beekem_normalized_ki_advantage p = abs(p - 1/2).
+```
+
+Those choices do not compose for arbitrary KI adversaries without an additional
+safety premise or a safe-mass baseline. An adversary whose complete trace is
+unsafe in both branches loses with probability one, so `Pr[win] = 0`, but the
+current centered operator assigns value `1/2`. The foundation's own mutation
+witnesses make unsafe losing traces executable, so this is not merely a
+syntactic concern.
+
+Deliverable L must not instantiate the imported theorem until the BeeKEM branch
+resolves this in one authoritative, checker-connected way. This application
+branch does not choose the BeeKEM security notion on the foundation's behalf.
 
 ## Application-side progress independent of the blocker
 
-The following application controls are in the full `ComputationalProof.ec`
-closure:
+The full `ComputationalProof.ec` closure now contains:
 
-- `LivePrfAuthorizationDigestMutation`: omitting only the authorization digest
-  yields game success probability one and normalized advantage one half;
-- `LivePrfRootBindingMutation`: omitting only the BeeKEM root yields game
-  success probability one and normalized advantage one half; and
-- `LivePrfEligibilityNormalizationControls`: a zero-query ineligible adversary
-  has success probability zero, eligibility mass zero, and application PRF
-  normalized advantage zero.
+- the Deliverable A authentication-loss composition;
+- the concrete application multi-domain PRF reduction;
+- the bit-free ideal game and exact ideal-zero theorem;
+- exact transcript injectivity for live, history, and constrained-history
+  queries;
+- live/history and live/constrained-history domain-collapse mutations;
+- prior-live-reveal challenge-exclusion mutation;
+- zero-safe-mass normalization controls; and
+- single-field omission mutations for the BeeKEM root, protocol version,
+  document identifier, node identifier, and authorization digest.
 
-These results specify load-bearing application-composition behavior without
-claiming the provisional BeeKEM wrapper is authoritative.
+Each omission mutation changes only its named cryptographic input while the
+complete typed transcript still records the differing value. In every case the
+insecure schedule wins with probability one and has normalized advantage one
+half. These are application-composition controls, not claims that the
+provisional BeeKEM runtime is authoritative.
 
 ## Remaining adapter obligations affected by this snapshot
 
-1. Map application principals, groups, nodes, and causal context injectively to
-   authoritative BeeKEM users, groups, sender/counter message keys, operations,
-   and frontiers.
-2. Translate create, add, remove, update, delivery, reveal, challenge, and
+1. Map application principals and group/document identities injectively to
+   authoritative BeeKEM users and groups.
+2. Map each accepted application control node to the authoritative
+   `(beekem_user, beekem_counter)` key and `beekem_operation_id`, preserving the
+   returned control/direct messages and response operations.
+3. Translate create, add, remove, update, delivery, reveal, challenge, and
    compromise through the authoritative procedures while preserving every
-   attempted query and rejection.
-3. Preserve the three distinct secret outputs and prove the explicit
-   application-root relation to the authoritative bitstring secret.
-4. Preserve the shared Reveal/Challenge admission mark and exact challenge
-   counter transition.
-5. Prove every accepted application challenge becomes a successful
-   authoritative challenge and that the resulting complete log satisfies exact
-   `BeeKemSafety.bee_safe_kappa`.
-6. Prove the adapter runtime corresponds to the exact
-   `BEEKEM_PAPER_CONSTRUCTION(Nike, Se)` instance used by Theorem 1.
-7. Resolve the BeeKEM normalization and EasyCrypt substitution blockers before
-   applying the imported theorem.
-8. Relate actual application challenge/member-addition counts to the theorem
-   loss and only then expose the final Deliverable L bound.
+   attempted query, rejection, actor/target frontier, and query order.
+4. Preserve `BeeSecretValue`, `BeeSecretNoOutput`, and `BeeSecretUndefined`
+   distinctly and prove an explicit representation relation from the
+   authoritative bitstring root to the application key-schedule root.
+5. Preserve the shared Reveal/Challenge admission mark, exact challenge counter,
+   finite retention, and full compromise frontier.
+6. Prove every accepted application challenge becomes one successful
+   authoritative challenge and that the complete resulting log satisfies exact
+   `BeeKemSafety.bee_safe_kappa`; do not assume this as a Boolean.
+7. Prove that the adapter runtime corresponds to
+   `BeeKemProtocolOfPaperInstance(PaperInstance)` for the exact paper instance
+   used on both sides of Theorem 1.
+8. Resolve the BeeKEM normalization blocker, relate actual application challenge
+   and addition counts to the theorem side conditions, and only then instantiate
+   `beekem_theorem1_imported_normalized`.
+9. Expose the final L0--L4 theorem with the imported BeeKEM term, concrete
+   multi-domain PRF term, ideal zero, and Deliverable A's named loss expansion.
 
-A green application workflow for this snapshot proves only that the existing
-application proof closure remains intact. It does not make the red BeeKEM head
-green and is not a Deliverable L completion claim.
+A green application workflow for this snapshot proves only the printed
+intermediate theorems and controls. It is not a Deliverable L completion claim.
