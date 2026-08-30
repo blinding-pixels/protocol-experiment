@@ -479,6 +479,17 @@ module type LIVE_PROTOCOL_ORACLE = {
   proc submit_operation(operation : signed_operation) : bool
 }.
 
+op live_query_kind_of_control
+    (expected_kind : beekem_control_kind)
+    (expected_author : principal)
+    (expected_target : principal option) : live_query_kind =
+  with expected_kind = BeeCreate => LiveCreateQuery expected_author
+  with expected_kind = BeeAdd =>
+    LiveAddQuery expected_author (oget expected_target)
+  with expected_kind = BeeRemove =>
+    LiveRemoveQuery expected_author (oget expected_target)
+  with expected_kind = BeeUpdate => LiveUpdateQuery expected_author.
+
 module LiveProtocolEnvironment(
   S : SIGNATURE_SCHEME,
   H : NODE_HASH,
@@ -593,12 +604,8 @@ module LiveProtocolEnvironment(
           member_secrets expected_author node step.`bsr_secret;
 
       query_kind <-
-        with expected_kind = BeeCreate => LiveCreateQuery expected_author
-        with expected_kind = BeeAdd =>
-          LiveAddQuery expected_author (oget expected_target)
-        with expected_kind = BeeRemove =>
-          LiveRemoveQuery expected_author (oget expected_target)
-        with expected_kind = BeeUpdate => LiveUpdateQuery expected_author;
+        live_query_kind_of_control
+          expected_kind expected_author expected_target;
 
       queries <- rcons queries
         {| lq_kind = query_kind; lq_operation = Some node |};
