@@ -22,7 +22,7 @@ module type BEEKEM_PROTOCOL_ALGORITHMS = {
     target : beekem_user
   ) : beekem_protocol_result
 
-  proc remove(
+  proc remove_member(
     state : beekem_member_state,
     target : beekem_user
   ) : beekem_protocol_result
@@ -597,7 +597,7 @@ module BeeKemOracleEnvironment(
       if (adding) {
         result <@ P.add(oget actor_state, target);
       } else {
-        result <@ P.remove(oget actor_state, target);
+        result <@ P.remove_member(oget actor_state, target);
       }
 
       if (result.`bpr_control = None \/
