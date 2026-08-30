@@ -6,7 +6,7 @@ require import BeeKemGameWitnesses.
    before the final P(queries) safety predicate.  The mutation below preserves
    the successful Reveal in the append-only log and changes only whether that
    entry contributes its shared admission mark to the later Challenge. *)
-op rec beekem_successful_reveal_for
+op beekem_successful_reveal_for
     (queries : beekem_query list)
     (sender : beekem_user)
     (counter : beekem_counter) : bool =
@@ -18,7 +18,7 @@ op rec beekem_successful_reveal_for
         query.`bq_counter = Some counter)
     \/ beekem_successful_reveal_for remaining sender counter.
 
-op rec beekem_successful_challenge_for
+op beekem_successful_challenge_for
     (queries : beekem_query list)
     (sender : beekem_user)
     (counter : beekem_counter) : bool =
