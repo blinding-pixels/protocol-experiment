@@ -16,6 +16,7 @@ require import LivePrfCapabilityDomainSeparationControls.
 require import LiveChallengeExclusionMutation.
 require import LivePrfAuthorizationDigestMutation.
 require import LivePrfRootBindingMutation.
+require import LivePrfEligibilityNormalizationControls.
 
 (* Authoritative Deliverable A entry point.
 
@@ -130,3 +131,10 @@ print LivePrfRootBindingMutation.root_omission_fixed_real.
 print LivePrfRootBindingMutation.root_omission_fixed_random.
 print LivePrfRootBindingMutation.root_omission_game_probability_one.
 print LivePrfRootBindingMutation.root_omission_normalized_advantage_half.
+
+(* Zero-safe-mass normalization control. *)
+print LivePrfEligibilityNormalizationControls.ineligible_prf_fixed_real_loses.
+print LivePrfEligibilityNormalizationControls.ineligible_prf_fixed_random_loses.
+print LivePrfEligibilityNormalizationControls.ineligible_prf_game_probability_zero.
+print LivePrfEligibilityNormalizationControls.ineligible_prf_eligibility_probability_zero.
+print LivePrfEligibilityNormalizationControls.ineligible_prf_normalized_advantage_zero.
