@@ -18,6 +18,7 @@ require import LivePrfAuthorizationDigestMutation.
 require import LivePrfRootBindingMutation.
 require import LivePrfEligibilityNormalizationControls.
 require import LivePrfProtocolVersionBindingMutation.
+require import LivePrfDocumentBindingMutation.
 
 (* Authoritative Deliverable A entry point.
 
@@ -146,3 +147,10 @@ print LivePrfProtocolVersionBindingMutation.protocol_version_omission_fixed_real
 print LivePrfProtocolVersionBindingMutation.protocol_version_omission_fixed_random.
 print LivePrfProtocolVersionBindingMutation.protocol_version_omission_game_probability_one.
 print LivePrfProtocolVersionBindingMutation.protocol_version_omission_normalized_advantage_half.
+
+(* Document-identifier field-omission mutation control. *)
+print LivePrfDocumentBindingMutation.document_mutation_labels_differ_only_in_document_id.
+print LivePrfDocumentBindingMutation.document_id_omission_fixed_real.
+print LivePrfDocumentBindingMutation.document_id_omission_fixed_random.
+print LivePrfDocumentBindingMutation.document_id_omission_game_probability_one.
+print LivePrfDocumentBindingMutation.document_id_omission_normalized_advantage_half.
