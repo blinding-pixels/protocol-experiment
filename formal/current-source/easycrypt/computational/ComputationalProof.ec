@@ -17,6 +17,7 @@ require import LiveChallengeExclusionMutation.
 require import LivePrfAuthorizationDigestMutation.
 require import LivePrfRootBindingMutation.
 require import LivePrfEligibilityNormalizationControls.
+require import LivePrfProtocolVersionBindingMutation.
 
 (* Authoritative Deliverable A entry point.
 
@@ -138,3 +139,10 @@ print LivePrfEligibilityNormalizationControls.ineligible_prf_fixed_random_loses.
 print LivePrfEligibilityNormalizationControls.ineligible_prf_game_probability_zero.
 print LivePrfEligibilityNormalizationControls.ineligible_prf_eligibility_probability_zero.
 print LivePrfEligibilityNormalizationControls.ineligible_prf_normalized_advantage_zero.
+
+(* Protocol-version field-omission mutation control. *)
+print LivePrfProtocolVersionBindingMutation.version_mutation_labels_differ_only_in_protocol_version.
+print LivePrfProtocolVersionBindingMutation.protocol_version_omission_fixed_real.
+print LivePrfProtocolVersionBindingMutation.protocol_version_omission_fixed_random.
+print LivePrfProtocolVersionBindingMutation.protocol_version_omission_game_probability_one.
+print LivePrfProtocolVersionBindingMutation.protocol_version_omission_normalized_advantage_half.
