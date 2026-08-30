@@ -116,6 +116,8 @@ print beekem_actual_challenge_counter_reaches_one.
 print beekem_actual_addition_counter_reaches_one.
 print beekem_drop_one_count.
 print beekem_actual_counter_factors_are_nonzero.
+print mutation_drop_challenge_count_changes_theorem_factor.
+print mutation_drop_addition_count_changes_logarithmic_factor.
 
 (* Correct-but-insecure primitive controls through the named HKR-CKS and
    multi-user CPA games. *)
