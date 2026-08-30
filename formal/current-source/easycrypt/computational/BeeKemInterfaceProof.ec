@@ -1,7 +1,7 @@
 require import BeeKemTypes BeeKemQueryLog BeeKemProtocol BeeKemSafety BeeKemKiGame BeeKemPrimitiveGames BeeKemPrimitiveContracts BeeKemTheorem1Math.
 require BeeKemKiInterface.
 clone import BeeKemKiInterface as BKI.
-require import BeeKemSafetyProofs BeeKemSafetyMutations BeeKemProtocolSemanticsProofs BeeKemGameWitnesses BeeKemQueryCounterProofs BeeKemCounterMutationProofs BeeKemMutationGameProofs BeeKemPrimitiveWitnesses.
+require import BeeKemSafetyProofs BeeKemSafetyMutations BeeKemProtocolSemanticsProofs BeeKemGameWitnesses BeeKemQueryCounterProofs BeeKemCounterMutationProofs BeeKemMutationGameProofs BeeKemForkGameWitnesses BeeKemForkMutationProofs BeeKemPrimitiveWitnesses.
 
 (* Public closure for the executable Figure 8 oracle environment and exact
    finite-kappa Figure 3 safety predicate.  The trace theorems below force all
@@ -56,6 +56,8 @@ print beekem_mutation_game_evidence.
 print mutation_fsu_chain_reaches_actual_ki_game.
 print mutation_pcs_update_reaches_actual_ki_game.
 print mutation_compromise_log_reaches_actual_ki_game.
+print mutation_cfs_chain_reaches_actual_ki_game.
+print mutation_ignore_ancestry_reaches_actual_ki_game.
 
 print beekem_no_output_is_not_undefined.
 print beekem_undefined_is_not_no_output.
