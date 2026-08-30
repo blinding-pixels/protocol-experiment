@@ -13,11 +13,10 @@ them until the obligations below are discharged against the merged foundation.
 
 ## Read-only coordination refresh
 
-The requested public files were inspected at the commit above. Since the prior
-application-side snapshot
+Since the earlier application-side snapshot
 `ab8a8e6337081e206df5de5d7ba56c2b9d360283`, the BeeKEM foundation made one
-material public-interface correction and then restored all mutation/counter
-proofs against that corrected interface:
+material public-interface correction and restored its mutation/counter proofs
+against that corrected interface:
 
 - `beekem_group_secret` is now a concrete `bool list` carrier rather than an
   integer-like wrapper;
@@ -27,7 +26,11 @@ proofs against that corrected interface:
 - the authoritative game is now instantiated as `BeeKemKiGame(A, P)`, and the
   imported Theorem 1 boundary uses that game directly;
 - the complete safety mutations, exact challenge/member-addition counters, and
-  Theorem 1 loss controls remain connected to the executable KI game.
+  Theorem 1 loss controls remain connected to the executable KI game;
+- `BeeKemForkMutationProofs.ec` now reaches that same KI game with concrete
+  counterexamples for dropping the CFS ordered-update chain or ignoring causal
+  ancestry.  In each case the exact trace is unsafe and losing while the named
+  mutation alone makes it safe and winning.
 
 These are foundation-side corrections and controls, not application-side
 adapter proofs. In particular, the application wrapper may neither choose the
@@ -56,6 +59,52 @@ The parallel branch currently exposes:
 - a single imported boundary,
   `beekem_theorem1_imported_normalized`, over the executable KI game and named
   HKR-CKS/MU-CPA games in `BeeKemKiInterface.eca`.
+
+## Imported-boundary normalization blocker
+
+The current parallel branch computes
+
+```text
+beekem_ki_final_win safe protocol_failure guess bit
+  = safe /\ (protocol_failure \/ guess = bit)
+```
+
+but defines
+
+```text
+beekem_normalized_ki_advantage p = abs(p - 1/2).
+```
+
+Those two choices do not compose for arbitrary `BEEKEM_KI_ADVERSARY` modules.
+Any adversary whose complete trace is unsafe in both hidden-bit branches has
+`win = false` in both branches, hence `Pr[PaperGame.main : res] = 0`; the stated
+normalization assigns that losing adversary advantage `1/2`, not zero.  The
+foundation's own FSU, PCS, compromise-log, CFS-chain, and causal-ancestry
+mutation witnesses provide executable unsafe traces with exact `win = false`,
+so this is not a hypothetical unreachable case.
+
+The imported theorem currently has neither:
+
+- a premise that the adversary's complete trace is safe with probability one;
+  nor
+- a safe-mass baseline such as
+  `abs(Pr[win] - Pr[safe]/2)` (with protocol-failure handling stated exactly).
+
+This matters independently of primitive security.  The theorem permits a count
+bound `n = 1`, for which the checked relation gives
+`ceil(log2 n) = 0`; its right-hand reduction factor is therefore zero.  An
+unsafe always-losing game on the left is nevertheless assigned `1/2` by the
+current centered operator.  Deliverable L must not instantiate this imported
+boundary until the BeeKEM branch resolves the mismatch in one authoritative
+way.
+
+Possible repairs include an all-safe adversary premise, a safe-mass-centered
+advantage, or the paper's exact neighboring-game convention.  This application
+branch deliberately chooses none of them: selecting the BeeKEM security
+notion belongs to the parallel foundation and must be reflected consistently in
+its game, imported theorem, manifest, mutation controls, and application
+adapter.  A green parser/kernel run cannot by itself discharge this semantic
+obligation.
 
 ## Explicit mapping obligations
 
@@ -118,12 +167,13 @@ The parallel branch currently exposes:
     chain and conservative frontier lifting in `BeeKemSafety.ec`; the provisional
     count-based predicate is not a substitute.
 
-11. **Game and loss alignment.** Relate application challenge count and member
-    additions to `bke_challenge_count` and `bke_member_addition_count`, then apply
-    `beekem_theorem1_imported_normalized` with the exact executable side
-    conditions. Instantiate the authoritative two-parameter KI game; do not
-    reintroduce the deleted sampler, import a second theorem, or reconstruct
-    Appendix B.
+11. **Game, normalization, and loss alignment.** Relate application challenge
+    count and member additions to `bke_challenge_count` and
+    `bke_member_addition_count`, resolve the normalization blocker above, then
+    apply the corrected `beekem_theorem1_imported_normalized` with the exact
+    executable side conditions. Instantiate the authoritative two-parameter KI
+    game; do not reintroduce the deleted sampler, import a second theorem, or
+    reconstruct Appendix B.
 
 ## Stable composition seam
 
