@@ -5,6 +5,7 @@ on:
     branches:
       - formal/easycrypt-computational-m1
       - formal/easycrypt-unauthorized-reduction
+      - formal/easycrypt-beekem-interface
     paths:
       - '.github/workflows/easycrypt-computational.yml'
       - 'formal/current-source/easycrypt/computational/**'
@@ -27,12 +28,13 @@ concurrency:
 
 jobs:
   computational-proof:
-    name: Check complete Deliverable A closure
+    name: Check computational proof closure
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
       EASYCRYPT_IMAGE: ghcr.io/easycrypt/ec-test-box@sha256:84980006e8b01fe6497bbd0ecd67deeb5e7361d8ad17e27d24924122d368e0fc
       CHECK_EC: ComputationalProof.ec
+      BEEKEM_PDF_SHA256: 129a819400898536455cabe4ba104c02d902384ea802b4900a388e8e9c0e4fb3
     steps:
       - name: Check out exact proof source
         uses: actions/checkout@v4
@@ -52,6 +54,24 @@ jobs:
             | xargs -0 sha256sum \
             | tee "$evidence/source-sha256.txt"
           git status --short --branch | tee "$evidence/git-status.txt"
+
+      - name: Verify BeeKEM primary source
+        if: github.ref == 'refs/heads/formal/easycrypt-beekem-interface'
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/easycrypt-full-evidence"
+          pdf="$evidence/BeeKEM-2026-1434.pdf"
+          text="$evidence/BeeKEM-2026-1434.txt"
+          curl --fail --location --retry 5 --retry-all-errors \
+            --output "$pdf" \
+            https://eprint.iacr.org/2026/1434.pdf
+          printf '%s  %s\n' "$BEEKEM_PDF_SHA256" "$pdf" \
+            | sha256sum --check \
+            | tee "$evidence/beekem-source-hash.log"
+          pdftotext -layout "$pdf" "$text"
+          file "$pdf" | tee "$evidence/beekem-source-file.log"
+          wc -c "$pdf" "$text" | tee "$evidence/beekem-source-size.log"
 
       - name: Verify active proof source
         shell: bash
@@ -101,7 +121,7 @@ jobs:
             --format '{{json .RepoDigests}}' \
             | tee "$evidence/image-repo-digests.txt"
 
-      - name: Compile complete Deliverable A closure
+      - name: Compile active computational closure
         shell: bash
         run: |
           set -euo pipefail
