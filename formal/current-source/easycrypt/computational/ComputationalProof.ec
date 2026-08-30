@@ -15,6 +15,7 @@ require import LivePrfDomainSeparationControls.
 require import LivePrfCapabilityDomainSeparationControls.
 require import LiveChallengeExclusionMutation.
 require import LivePrfAuthorizationDigestMutation.
+require import LivePrfRootBindingMutation.
 
 (* Authoritative Deliverable A entry point.
 
@@ -122,3 +123,10 @@ print LivePrfAuthorizationDigestMutation.authorization_digest_omission_fixed_rea
 print LivePrfAuthorizationDigestMutation.authorization_digest_omission_fixed_random.
 print LivePrfAuthorizationDigestMutation.authorization_digest_omission_game_probability_one.
 print LivePrfAuthorizationDigestMutation.authorization_digest_omission_normalized_advantage_half.
+
+(* BeeKEM-root input-omission mutation control. *)
+print LivePrfRootBindingMutation.root_mutation_uses_distinct_roots_and_identical_labels.
+print LivePrfRootBindingMutation.root_omission_fixed_real.
+print LivePrfRootBindingMutation.root_omission_fixed_random.
+print LivePrfRootBindingMutation.root_omission_game_probability_one.
+print LivePrfRootBindingMutation.root_omission_normalized_advantage_half.
