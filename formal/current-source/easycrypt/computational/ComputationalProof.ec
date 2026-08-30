@@ -6,6 +6,7 @@ require import AuthorizationLeanFullReplay CausalClosureRepresentation.
 require import LiveKeyGame LiveKeyWitnesses LiveAuthenticationReduction.
 require import LiveBeeKemControl LiveBeeKemDerived.
 require import LiveBeeKemOracle LiveBeeKemReduction.
+require import LivePrfReduction.
 
 (* Authoritative Deliverable A entry point.
 
@@ -60,3 +61,11 @@ print LiveAuthenticationReduction.live_authentication_failure_bound.
 
 (* Deliverable L checkpoint 3: concrete KI-DCGKA runtime adapter. *)
 print LiveBeeKemReduction.beekem_live_wrapper_invokes_primitive_challenge_once.
+
+(* Deliverable L checkpoint 4-in-progress: application multi-domain PRF game. *)
+print LivePrfReduction.mdprf_live_domain_is_not_history_domain.
+print LivePrfReduction.mdprf_live_domain_is_not_history_capability_domain.
+print LivePrfReduction.bprf_live_fixed_real_control.
+print LivePrfReduction.bprf_live_fixed_random_control.
+print LivePrfReduction.insecure_test_kdf_prf_game_probability_one.
+print LivePrfReduction.insecure_test_kdf_prf_normalized_advantage_half.
