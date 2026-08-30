@@ -1,6 +1,6 @@
 require import AllCore List FSet.
 require import BeeKemTypes BeeKemProtocol BeeKemKiGame BeeKemPrimitiveGames.
-require import BeeKemPrimitiveContracts BeeKemTheorem1Math.
+require import BeeKemPrimitiveContracts BeeKemTheorem1Math BeeKemConstruction.
 
 (* Imported boundary for Yen et al., BeeKEM, Theorem 1.  The executable games,
    log, safety predicate, counters, primitive games, and correctness games are
@@ -14,10 +14,14 @@ require import BeeKemPrimitiveContracts BeeKemTheorem1Math.
    factors unchanged. *)
 section BeeKemTheorem1ImportedBoundary.
   declare module A <: BEEKEM_KI_ADVERSARY.
-  declare module PaperBeeKem <: BEEKEM_PROTOCOL_ALGORITHMS.
+  declare module PaperBeeKemConstruction <: BEEKEM_PAPER_CONSTRUCTION.
   declare module Nike <: BEEKEM_NIKE.
   declare module NikeKeySampler <: BEEKEM_NIKE_KEY_SAMPLER.
   declare module Se <: BEEKEM_SYMMETRIC_ENCRYPTION.
+
+  (* The protocol in the KI game is definitionally the paper construction
+     instantiated by the same primitive modules used on the right-hand side. *)
+  module PaperBeeKem = PaperBeeKemConstruction(Nike, Se).
 
   (* These are the named Appendix-B witness reductions B and C.  Their
      existence and construction are part of the imported paper theorem; the

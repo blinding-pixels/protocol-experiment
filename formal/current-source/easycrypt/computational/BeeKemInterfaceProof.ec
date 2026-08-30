@@ -1,4 +1,4 @@
-require import BeeKemTypes BeeKemQueryLog BeeKemProtocol BeeKemSafety BeeKemKiGame BeeKemPrimitiveGames BeeKemPrimitiveContracts BeeKemTheorem1Math.
+require import BeeKemTypes BeeKemQueryLog BeeKemProtocol BeeKemSafety BeeKemKiGame BeeKemPrimitiveGames BeeKemPrimitiveContracts BeeKemTheorem1Math BeeKemConstruction.
 require BeeKemKiInterface.
 clone import BeeKemKiInterface as BKI.
 require import BeeKemSafetyProofs BeeKemSafetyMutations BeeKemProtocolSemanticsProofs BeeKemGameWitnesses BeeKemQueryCounterProofs BeeKemCounterMutationProofs BeeKemMutationGameProofs BeeKemForkGameWitnesses BeeKemForkMutationProofs BeeKemRevealMutationProofs BeeKemPrimitiveWitnesses.
@@ -86,8 +86,12 @@ print beekem_mu_cpa_advantage.
 print BeeKemNikeSymmetryGame.
 print BeeKemSeCorrectnessGame.
 
-(* Exact imported BeeKEM Theorem 1 boundary under the uniform centered-bias
+(* Exact imported BeeKEM Theorem 1 boundary.  The protocol is supplied only
+   through BEEKEM_PAPER_CONSTRUCTION(Nike, Se), preventing an unrelated
+   free-standing protocol module from being substituted at this boundary.
+   The theorem otherwise uses the uniform centered-bias
    interpretation required by Appendix B's hybrid inequalities. *)
+print BEEKEM_PAPER_CONSTRUCTION.
 print beekem_is_ceil_log2.
 print beekem_theorem1_loss.
 print beekem_ceil_log2_one.
