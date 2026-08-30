@@ -86,20 +86,21 @@ module LiveAuthenticationGame(
   K : MULTI_DOMAIN_KEY_SCHEDULE,
   R : LIVE_KEY_SAMPLER
 ) = {
-  module GP = UnauthorizedOriginPartitionGame(
-    BLiveAuthentication(A, B, K, R), S, H
-  )
+  module SO = PG.LoggedSignatureOracle(S)
+  module O = OriginTrackedCandidateEnvironment(SO, H)
+  module BA = BLiveAuthentication(A, B, K, R, O)
 
   proc main() : live_authentication_result = {
-    var partition : origin_partition_result;
+    SO.init();
+    O.init(live_auth_initial_state);
+    BA.attack();
 
-    partition <@ GP.main(live_auth_initial_state);
     return
-      {| lar_live_success = GP.A.live_success;
-         lar_authentication_failure = partition.`opr_real;
-         lar_bad_operation = partition.`opr_bad_operation;
-         lar_bad_fact = partition.`opr_bad_fact;
-         lar_ideal = partition.`opr_ideal |};
+      {| lar_live_success = BA.live_success;
+         lar_authentication_failure = O.unauthorized_accepted;
+         lar_bad_operation = O.bad_operation_signature;
+         lar_bad_fact = O.bad_fact_signature;
+         lar_ideal = O.ideal_unauthorized |};
   }
 }.
 
@@ -107,7 +108,7 @@ section LiveAuthenticationHop.
   declare module A <: LIVE_KEY_ADVERSARY.
   declare module S <: SIGNATURE_SCHEME.
   declare module H <: NODE_HASH.
-  declare module B <: BEEKEM_LIVE_RUNTIME.
+  declare module B <: BEEKEM_LIVE_RUNTIME,
   declare module K <: MULTI_DOMAIN_KEY_SCHEDULE.
   declare module R <: LIVE_KEY_SAMPLER.
 
@@ -162,7 +163,7 @@ section LiveAuthenticationHop.
       (_ : ={glob A, glob S, glob H, glob B, glob K, glob R} ==>
            res{1}.`lar_authentication_failure = res{2}.`opr_real) => //.
     proc.
-    inline LAG.main.
+    inline *.
     sim.
   qed.
 
