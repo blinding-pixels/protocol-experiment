@@ -1,5 +1,5 @@
 require import AllCore List Distr.
-require import ProtocolTypes CanonicalEncoding.
+require import ProtocolTypes ProtocolChecks CanonicalEncoding.
 require import LiveKeyGame LivePrfTypes LivePrfGame.
 
 op prf_control_secret : beekem_secret = BeeKemSecret 100.
