@@ -1,5 +1,5 @@
 require import AllCore List FSet.
-require import ProtocolTypes ProtocolPrimitives UnauthorizedSignatureReduction.
+require import ProtocolTypes CanonicalEncoding ProtocolPrimitives AuthorizationState UnauthorizedSignatureReduction.
 require import UnauthorizedOriginGame LiveKeyGame LiveBeeKemDerived.
 require BeeKemKiInterface.
 clone import BeeKemKiInterface as BKI.

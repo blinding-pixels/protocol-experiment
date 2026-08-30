@@ -1,5 +1,5 @@
 require import AllCore List FSet Distr DBool.
-require import ProtocolTypes ProtocolPrimitives UnauthorizedSignatureReduction.
+require import ProtocolTypes CanonicalEncoding ProtocolPrimitives AuthorizationState UnauthorizedSignatureReduction.
 require import UnauthorizedOriginGame LiveKeyGame LiveAuthenticationReduction.
 require import LiveBeeKemOracle.
 require BeeKemKiInterface.
