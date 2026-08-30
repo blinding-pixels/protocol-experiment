@@ -1,9 +1,9 @@
 require import AllCore List FSet.
 
 (* BeeKEM's protocol/game carriers are intentionally concrete wrappers.  The
-   cryptographic algorithms will be module parameters, but protocol state,
+   cryptographic algorithms are module parameters, while protocol state,
    message flow, causal ancestry, retention, and query accounting remain
-   executable data. *)
+   explicit data maintained by the challenger. *)
 type beekem_user = [ BeeKemUser of int ].
 type beekem_group = [ BeeKemGroup of int ].
 type beekem_operation_id = [ BeeKemOperationId of int ].
@@ -86,21 +86,20 @@ type beekem_direct_message = {
   bdm_payload : beekem_direct_payload
 }.
 
+(* Figure 8 distinguishes epsilon (an algorithm failed to return an output)
+   from bottom (the operation legitimately establishes no group secret, as for
+   BeeKEM Add and Remove).  An option alone cannot preserve that distinction. *)
+type beekem_secret_output = [
+  | BeeSecretNoOutput
+  | BeeSecretUndefined
+  | BeeSecretValue of beekem_group_secret
+].
+
 type beekem_generated_message = {
   bgm_operation : beekem_operation;
   bgm_direct_messages : beekem_direct_message list;
-  bgm_sender_secret : beekem_group_secret option;
+  bgm_sender_secret : beekem_secret_output;
   bgm_needs_response : bool
-}.
-
-type beekem_delivery = {
-  bd_operation : beekem_operation_id;
-  bd_sender : beekem_user;
-  bd_recipient : beekem_user;
-  bd_recipient_frontier_before : beekem_operation_id fset;
-  bd_recipient_frontier_after : beekem_operation_id fset;
-  bd_recipient_secret : beekem_group_secret option;
-  bd_response_operation : beekem_operation_id option
 }.
 
 type beekem_member_state = {
@@ -116,6 +115,29 @@ type beekem_member_state = {
   bms_pending_structural_operations : bool
 }.
 
+type beekem_protocol_result = {
+  bpr_state : beekem_member_state;
+  bpr_control : beekem_generated_message option;
+  bpr_secret : beekem_secret_output
+}.
+
+type beekem_process_result = {
+  bxr_state : beekem_member_state;
+  bxr_control : beekem_generated_message option;
+  bxr_sender_secret : beekem_secret_output;
+  bxr_response_secret : beekem_secret_output
+}.
+
+type beekem_delivery = {
+  bd_operation : beekem_operation_id;
+  bd_sender : beekem_user;
+  bd_recipient : beekem_user;
+  bd_recipient_frontier_before : beekem_operation_id fset;
+  bd_recipient_frontier_after : beekem_operation_id fset;
+  bd_recipient_secret : beekem_secret_output;
+  bd_response_operation : beekem_operation_id option
+}.
+
 type beekem_message_key = beekem_user * beekem_counter.
 type beekem_direct_message_key = beekem_user * beekem_counter * beekem_user.
 
@@ -124,15 +146,17 @@ type beekem_counter_map = beekem_user -> int.
 type beekem_message_map = beekem_message_key -> beekem_generated_message option.
 type beekem_direct_message_map =
   beekem_direct_message_key -> beekem_direct_message option.
-type beekem_secret_map = beekem_message_key -> beekem_group_secret option.
+type beekem_secret_map = beekem_message_key -> beekem_secret_output.
 type beekem_add_target_map = beekem_message_key -> beekem_user option.
 type beekem_challenge_mark_map = beekem_message_key -> bool.
+type beekem_needs_response_map = beekem_message_key -> bool.
 type beekem_delivery_mark_map =
   beekem_user * beekem_counter * beekem_user -> bool.
 
 type beekem_protocol_state = {
   bps_group : beekem_group option;
   bps_kappa : int;
+  bps_initialized_users : beekem_user fset;
   bps_members : beekem_user fset;
   bps_member_states : beekem_member_state_map;
   bps_counters : beekem_counter_map;
@@ -141,6 +165,7 @@ type beekem_protocol_state = {
   bps_secrets : beekem_secret_map;
   bps_add_targets : beekem_add_target_map;
   bps_challenge_marks : beekem_challenge_mark_map;
+  bps_needs_responses : beekem_needs_response_map;
   bps_delivery_marks : beekem_delivery_mark_map;
   bps_operations : beekem_operation list;
   bps_deliveries : beekem_delivery list;
@@ -162,3 +187,98 @@ op beekem_operations_concurrent
   left.`bo_id <> right.`bo_id /\
   ! beekem_operation_precedes left right /\
   ! beekem_operation_precedes right left.
+
+op beekem_secret_output_is_no_output (output : beekem_secret_output) : bool =
+  with output = BeeSecretNoOutput => true
+  with output = BeeSecretUndefined => false
+  with output = BeeSecretValue secret => false.
+
+op beekem_secret_output_is_value (output : beekem_secret_output) : bool =
+  with output = BeeSecretNoOutput => false
+  with output = BeeSecretUndefined => false
+  with output = BeeSecretValue secret => true.
+
+op beekem_secret_output_value
+  (output : beekem_secret_output) : beekem_group_secret option =
+  with output = BeeSecretNoOutput => None
+  with output = BeeSecretUndefined => None
+  with output = BeeSecretValue secret => Some secret.
+
+op beekem_operation_key
+  (operation : beekem_operation) : beekem_message_key =
+  (operation.`bo_author, operation.`bo_author_counter).
+
+op beekem_member_state_map_set
+  (states : beekem_member_state_map)
+  (id : beekem_user)
+  (value : beekem_member_state option) : beekem_member_state_map =
+  fun candidate => if candidate = id then value else states candidate.
+
+op beekem_counter_map_set
+  (counters : beekem_counter_map)
+  (id : beekem_user)
+  (value : int) : beekem_counter_map =
+  fun candidate => if candidate = id then value else counters candidate.
+
+op beekem_message_map_set
+  (messages : beekem_message_map)
+  (key : beekem_message_key)
+  (value : beekem_generated_message option) : beekem_message_map =
+  fun candidate => if candidate = key then value else messages candidate.
+
+op beekem_direct_message_map_set
+  (messages : beekem_direct_message_map)
+  (key : beekem_direct_message_key)
+  (value : beekem_direct_message option) : beekem_direct_message_map =
+  fun candidate => if candidate = key then value else messages candidate.
+
+op beekem_secret_map_set
+  (secrets : beekem_secret_map)
+  (key : beekem_message_key)
+  (value : beekem_secret_output) : beekem_secret_map =
+  fun candidate => if candidate = key then value else secrets candidate.
+
+op beekem_add_target_map_set
+  (targets : beekem_add_target_map)
+  (key : beekem_message_key)
+  (value : beekem_user option) : beekem_add_target_map =
+  fun candidate => if candidate = key then value else targets candidate.
+
+op beekem_challenge_mark_map_set
+  (marks : beekem_challenge_mark_map)
+  (key : beekem_message_key)
+  (value : bool) : beekem_challenge_mark_map =
+  fun candidate => if candidate = key then value else marks candidate.
+
+op beekem_needs_response_map_set
+  (marks : beekem_needs_response_map)
+  (key : beekem_message_key)
+  (value : bool) : beekem_needs_response_map =
+  fun candidate => if candidate = key then value else marks candidate.
+
+op beekem_delivery_mark_map_set
+  (marks : beekem_delivery_mark_map)
+  (key : beekem_user * beekem_counter * beekem_user)
+  (value : bool) : beekem_delivery_mark_map =
+  fun candidate => if candidate = key then value else marks candidate.
+
+op beekem_empty_protocol_state
+  (group : beekem_group)
+  (kappa : int) : beekem_protocol_state =
+  {| bps_group = Some group;
+     bps_kappa = kappa;
+     bps_initialized_users = fset0;
+     bps_members = fset0;
+     bps_member_states = fun id => None;
+     bps_counters = fun id => 0;
+     bps_messages = fun key => None;
+     bps_direct_messages = fun key => None;
+     bps_secrets = fun key => BeeSecretNoOutput;
+     bps_add_targets = fun key => None;
+     bps_challenge_marks = fun key => false;
+     bps_needs_responses = fun key => false;
+     bps_delivery_marks = fun key => false;
+     bps_operations = [];
+     bps_deliveries = [];
+     bps_challenge_count = 0;
+     bps_member_addition_count = 0 |}.

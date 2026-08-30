@@ -17,6 +17,7 @@ type beekem_query_kind = [
 ].
 
 type beekem_query_rejection = [
+  | BeeRejectInvalidOperation
   | BeeRejectAlreadyCreated
   | BeeRejectCreatorInInitialSet
   | BeeRejectInvalidMember
