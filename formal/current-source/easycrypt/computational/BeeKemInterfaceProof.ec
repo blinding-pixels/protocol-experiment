@@ -1,7 +1,7 @@
 require import BeeKemTypes BeeKemQueryLog BeeKemProtocol BeeKemSafety BeeKemKiGame BeeKemPrimitiveGames BeeKemPrimitiveContracts BeeKemTheorem1Math.
 require BeeKemKiInterface.
 clone import BeeKemKiInterface as BKI.
-require import BeeKemSafetyProofs BeeKemProtocolSemanticsProofs.
+require import BeeKemSafetyProofs BeeKemProtocolSemanticsProofs BeeKemGameWitnesses.
 
 (* Public closure for the executable Figure 8 oracle environment and exact
    finite-kappa Figure 3 safety predicate.  The trace theorems below force all
@@ -72,3 +72,9 @@ print beekem_theorem1_loss.
 print beekem_ceil_log2_one.
 print beekem_ceil_log2_two.
 print BKI.beekem_theorem1_imported_normalized.
+
+(* Checker-reachable non-vacuity controls for the exact KI game. *)
+print beekem_witness_real_branch_reachable.
+print beekem_witness_random_branch_reachable.
+print beekem_witness_wrong_guess_changes_result.
+print beekem_witness_game_wins_probability_one.

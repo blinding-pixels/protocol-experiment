@@ -220,19 +220,21 @@ module BeeKemKiGame(
 
   var last_evidence : beekem_ki_evidence
 
-  proc main_with_evidence(
+  (* Deterministic branch runner used only by checker-proved non-vacuity and
+     mutation witnesses.  [main_with_evidence] below still samples the hidden
+     bit exactly as Figure 8 requires, then delegates to this same code path. *)
+  proc main_with_fixed_bit(
     users : beekem_user list,
     group : beekem_group,
     kappa : int,
-    membership : beekem_dgm
+    membership : beekem_dgm,
+    hidden_bit : bool
   ) : beekem_ki_evidence = {
-    var hidden_bit : bool;
     var guess : bool;
     var safe : bool;
     var protocol_failure : bool;
     var win : bool;
 
-    hidden_bit <$ dbool;
     O.initialize(users, group, kappa, membership, hidden_bit);
     guess <@ A.attack();
 
@@ -262,6 +264,22 @@ module BeeKemKiGame(
          bke_random_sample_count = O.random_sample_count;
          bke_win = win |};
     return last_evidence;
+  }
+
+  proc main_with_evidence(
+    users : beekem_user list,
+    group : beekem_group,
+    kappa : int,
+    membership : beekem_dgm
+  ) : beekem_ki_evidence = {
+    var hidden_bit : bool;
+    var evidence : beekem_ki_evidence;
+
+    hidden_bit <$ dbool;
+    evidence <@ main_with_fixed_bit(
+      users, group, kappa, membership, hidden_bit
+    );
+    return evidence;
   }
 
   proc main(
