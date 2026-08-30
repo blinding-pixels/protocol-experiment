@@ -3,10 +3,11 @@ require import ProtocolTypes CanonicalEncoding ProtocolPrimitives.
 require import LiveKeyGame LivePrfTypes LivePrfGame.
 require import LivePrfApplicationReduction.
 
-(* Bit-free ideal oracle.  Live challenges are sampled once from the ideal
-   live-key sampler.  History and constrained-history queries remain on the
-   real multi-domain schedule, and every query retains the same typed log shape
-   used by the primitive game.  No hidden bit is stored or consulted here. *)
+(* Bit-free ideal oracle.  Permitted live reveals remain on the real key
+   schedule.  Only the distinguished live challenge is sampled from the ideal
+   live-key sampler.  History and constrained-history queries remain real, and
+   every call retains the same typed log shape used by the primitive game.
+   No hidden bit is stored or consulted here. *)
 module MultiDomainPrfIdealOracle(
   K : MULTI_DOMAIN_KEY_SCHEDULE,
   R : LIVE_KEY_SAMPLER
@@ -15,6 +16,19 @@ module MultiDomainPrfIdealOracle(
 
   proc init() : unit = {
     queries <- [];
+  }
+
+  proc derive_live(
+    secret : beekem_secret,
+    label : live_key_label
+  ) : live_application_key = {
+    var answer : live_application_key;
+
+    answer <@ K.derive_live(secret, label);
+    queries <- rcons queries
+      {| mpq_kind = MdPrfLiveQuery
+           {| mpli_secret = secret; mpli_label = label |} |};
+    return answer;
   }
 
   proc challenge_live(

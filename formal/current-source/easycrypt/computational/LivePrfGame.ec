@@ -1,9 +1,10 @@
 require import AllCore List Distr DBool.
 require import ProtocolTypes CanonicalEncoding LiveKeyGame LivePrfTypes.
 
-(* The primitive hidden bit changes only the live domain.  Permitted history
-   and constrained-capability queries are always answered by the same real
-   multi-domain key schedule and are logged with their complete typed input. *)
+(* The primitive hidden bit changes only the distinguished live challenge.
+   Permitted live reveals, history outputs, and constrained-history outputs are
+   always answered by the same real multi-domain key schedule.  Every call is
+   logged with its complete typed input. *)
 module MultiDomainPrfOracle(
   K : MULTI_DOMAIN_KEY_SCHEDULE,
   R : LIVE_KEY_SAMPLER
@@ -14,6 +15,19 @@ module MultiDomainPrfOracle(
   proc init(bit : bool) : unit = {
     hidden_bit <- bit;
     queries <- [];
+  }
+
+  proc derive_live(
+    secret : beekem_secret,
+    label : live_key_label
+  ) : live_application_key = {
+    var answer : live_application_key;
+
+    answer <@ K.derive_live(secret, label);
+    queries <- rcons queries
+      {| mpq_kind = MdPrfLiveQuery
+           {| mpli_secret = secret; mpli_label = label |} |};
+    return answer;
   }
 
   proc challenge_live(
@@ -100,7 +114,8 @@ module MultiDomainPrfGame(
       {| mpge_hidden_bit = hidden_bit;
          mpge_eligible = result.`mpar_eligible;
          mpge_guess = result.`mpar_guess;
-         mpge_live_challenge_count = mdprf_live_query_count O.queries;
+         mpge_live_query_count = mdprf_live_query_count O.queries;
+         mpge_live_challenge_count = mdprf_live_challenge_count O.queries;
          mpge_history_query_count = mdprf_history_query_count O.queries;
          mpge_history_capability_query_count =
            mdprf_history_capability_query_count O.queries;
