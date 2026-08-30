@@ -1,4 +1,4 @@
-require import BeeKemTypes BeeKemQueryLog BeeKemProtocol BeeKemSafety.
+require import BeeKemTypes BeeKemQueryLog BeeKemProtocol BeeKemSafety BeeKemKiGame.
 require import BeeKemSafetyProofs BeeKemProtocolSemanticsProofs.
 
 (* Public closure for the executable Figure 8 oracle environment and exact
@@ -45,3 +45,9 @@ print beekem_undefined_is_not_no_output.
 print beekem_value_is_not_undefined.
 print beekem_empty_secret_entry_is_undefined.
 print beekem_retention_requires_positive_kappa.
+
+(* KI-DCGKA public game boundary.  Importing BeeKemKiGame checks the hidden-bit
+   challenger, the complete adversary oracle interface, and use of the final
+   adversary guess. *)
+print beekem_ki_evidence.
+print beekem_normalized_ki_advantage.
