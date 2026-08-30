@@ -1,15 +1,9 @@
-require import AllCore List FSet DBool.
+require import AllCore List FSet DBool DList.
 require import BeeKemTypes BeeKemQueryLog BeeKemProtocol BeeKemSafety.
 
-(* The paper's random branch samples a string of the same length as the real
-   group secret.  The protocol carrier abstracts concrete byte strings, so the
-   sampler receives the real secret and must return a value in the same concrete
-   secret space.  It is an executable game dependency, not an advantage term or
-   a security axiom. *)
-module type BEEKEM_GROUP_SECRET_SAMPLER = {
-  proc sample(reference : beekem_group_secret) : beekem_group_secret
-}.
-
+(* Figure 8's ideal branch is represented literally: draw a uniformly random
+   bitstring of exactly the real group-secret length.  There is no adversary- or
+   theorem-supplied sampler at this boundary. *)
 module type BEEKEM_KI_ORACLES = {
   proc create_group(
     creator : beekem_user,
@@ -65,8 +59,7 @@ module type BEEKEM_KI_ADVERSARY(O : BEEKEM_KI_ORACLES) = {
 }.
 
 module BeeKemKiOracles(
-  P : BEEKEM_PROTOCOL_ALGORITHMS,
-  R : BEEKEM_GROUP_SECRET_SAMPLER
+  P : BEEKEM_PROTOCOL_ALGORITHMS
 ) = {
   module Environment = BeeKemOracleEnvironment(P)
 
@@ -112,7 +105,9 @@ module BeeKemKiOracles(
     target : beekem_user
   ) : bool = {
     var accepted : bool;
-    accepted <@ Environment.remove_member(actor, target);
+    accepted <@ Environment.remove_meber(
+      actor, target
+    );
     return accepted;
   }
 
@@ -149,6 +144,8 @@ module BeeKemKiOracles(
     var after_count : int;
     var real_output : beekem_secret_output;
     var real_secret : beekem_group_secret;
+    var real_bits : bool list;
+    var random_bits : bool list;
     var random_secret : beekem_group_secret;
     var answer : beekem_secret_output;
 
@@ -164,7 +161,9 @@ module BeeKemKiOracles(
         random_branch_count <- random_branch_count + 1;
         if (beekem_secret_output_is_value real_output) {
           real_secret <- oget (beekem_secret_output_value real_output);
-          random_secret <@ R.sample(real_secret);
+          real_bits <- beekem_group_secret_bits real_secret;
+          random_bits <$ dlist dbool (size real_bits);
+          random_secret <- BeeKemGroupSecret random_bits;
           random_sample_count <- random_sample_count + 1;
           answer <- BeeSecretValue random_secret;
         }
@@ -216,10 +215,9 @@ type beekem_ki_evidence = {
 
 module BeeKemKiGame(
   A : BEEKEM_KI_ADVERSARY,
-  P : BEEKEM_PROTOCOL_ALGORITHMS,
-  R : BEEKEM_GROUP_SECRET_SAMPLER
+  P : BEEKEM_PROTOCOL_ALGORITHMS
 ) = {
-  module O = BeeKemKiOracles(P, R)
+  module O = BeeKemKiOracles(P)
   module A = A(O)
 
   var last_evidence : beekem_ki_evidence

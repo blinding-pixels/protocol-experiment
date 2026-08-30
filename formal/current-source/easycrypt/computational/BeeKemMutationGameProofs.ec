@@ -19,10 +19,9 @@ type beekem_mutation_game_evidence = {
 
 module BeeKemSafetyMutationGame(
   A : BEEKEM_KI_ADVERSARY,
-  P : BEEKEM_PROTOCOL_ALGORITHMS,
-  R : BEEKEM_GROUP_SECRET_SAMPLER
+  P : BEEKEM_PROTOCOL_ALGORITHMS
 ) = {
-  module Exact = BeeKemKiGame(A, P, R)
+  module Exact = BeeKemKiGame(A, P)
 
   proc main_with_fixed_mutation(
     users : beekem_user list,
@@ -99,15 +98,13 @@ module BeeKemPcsExposureAdversary(O : BEEKEM_KI_ORACLES) = {
 module BeeKemFsuExposureMutationGame =
   BeeKemSafetyMutationGame(
     BeeKemFsuExposureAdversary,
-    BeeKemWitnessProtocol,
-    BeeKemWitnessSecretSampler
+    BeeKemWitnessProtocol
   ).
 
 module BeeKemPcsExposureMutationGame =
   BeeKemSafetyMutationGame(
     BeeKemPcsExposureAdversary,
-    BeeKemWitnessProtocol,
-    BeeKemWitnessSecretSampler
+    BeeKemWitnessProtocol
   ).
 
 lemma mutation_fsu_chain_reaches_actual_ki_game :
@@ -122,7 +119,7 @@ lemma mutation_fsu_chain_reaches_actual_ki_game :
        res.`bmge_hidden_bit
     /\ res.`bmge_adversary_guess
     /\ ! res.`bmge_protocol_consistency_failure
-    /\ res.`bmge_challenge_count = 1
+    /\ res.`bme_challenge_count = 1
     /\ res.`bmge_member_addition_count = 0
     /\ ! res.`bmge_exact_safe
     /\ ! res.`bmge_exact_win
@@ -183,7 +180,7 @@ lemma mutation_pcs_update_reaches_actual_ki_game :
        res.`bmge_hidden_bit
     /\ res.`bmge_adversary_guess
     /\ ! res.`bmge_protocol_consistency_failure
-    /\ res.`bmge_challenge_count = 1
+    /\ res.`bme_challenge_count = 1
     /\ res.`bmge_member_addition_count = 0
     /\ ! res.`bmge_exact_safe
     /\ ! res.`bmge_exact_win
@@ -205,7 +202,7 @@ proof.
     /beekem_witness_control /beekem_witness_create_operation
     /beekem_witness_update_operation /beekem_witness_operation
     /beekem_control_operation_id /beekem_control_operation
-    /beekem_counter_value /beekem_empty_protocol_state
+     /beekem_counter_value /beekem_empty_protocol_state
     /beekem_secret_output_is_undefined /beekem_secret_output_is_value
     /beekem_secret_output_value /beekem_operation_precedes_or_equals
     /beekem_operation_precedes /bee_safe_kappa /beekem_all_challenges_safe
@@ -243,7 +240,7 @@ lemma mutation_compromise_log_reaches_actual_ki_game :
     ==>
        res.`bmge_hidden_bit
     /\ res.`bmge_adversary_guess
-    /\ ! res.`bmge_protocol_consistency_failure
+    /\ ! res.`bme_protocol_consistency_failure
     /\ res.`bmge_challenge_count = 1
     /\ ! res.`bmge_exact_safe
     /\ ! res.`bmge_exact_win
@@ -265,7 +262,7 @@ proof.
     /beekem_witness_control /beekem_witness_create_operation
     /beekem_witness_update_operation /beekem_witness_operation
     /beekem_control_operation_id /beekem_control_operation
-    /beekem_counter_value /beekem_empty_protocol_state
+     /beekem_counter_value /beekem_empty_protocol_state
     /beekem_secret_output_is_undefined /beekem_secret_output_is_value
     /beekem_secret_output_value /beekem_operation_precedes_or_equals
     /beekem_operation_precedes /bee_safe_kappa /beekem_all_challenges_safe
@@ -275,7 +272,7 @@ proof.
     /beekem_successful_update_for /beekem_q2op_precedes
     /beekem_q2op_precedes_or_equals /beekem_q2op_concurrent
     /beekem_q2op_set /beekem_ids_precede_frontier
-    /beekem_ids_precede_or_equal_frontier /beekem_id_precedes_some
+    /beekem_ids_precede_or_equal_frontier /beekem_id_preceds_some
     /beekem_id_precedes_or_equals_some /beekem_ids_pairwise_concurrent
     /beekem_id_concurrent_with_all /beekem_operation_ids_concurrent
     /beekem_operation_id_precedes /beekem_operation_id_precedes_or_equals

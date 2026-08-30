@@ -14,8 +14,10 @@ op beekem_witness_update_id : beekem_operation_id = BeeKemOperationId 704.
 op beekem_witness_add_id : beekem_operation_id = BeeKemOperationId 705.
 op beekem_witness_remove_id : beekem_operation_id = BeeKemOperationId 706.
 op beekem_witness_personal_id : beekem_operation_id = BeeKemOperationId 700.
-op beekem_witness_real_secret : beekem_group_secret = BeeKemGroupSecret 707.
-op beekem_witness_random_secret : beekem_group_secret = BeeKemGroupSecret 708.
+op beekem_witness_real_secret : beekem_group_secret =
+  BeeKemGroupSecret [true].
+op beekem_witness_alternate_secret : beekem_group_secret =
+  BeeKemGroupSecret [false].
 
 op beekem_witness_tree : beekem_tree =
   {| bt_root = None;
@@ -195,12 +197,6 @@ module BeeKemWitnessProtocol : BEEKEM_PROTOCOL_ALGORITHMS = {
   }
 }.
 
-module BeeKemWitnessSecretSampler : BEEKEM_GROUP_SECRET_SAMPLER = {
-  proc sample(reference : beekem_group_secret) : beekem_group_secret = {
-    return beekem_witness_random_secret;
-  }
-}.
-
 op beekem_witness_membership (operations : beekem_operation list) :
     beekem_user fset =
   if operations = [] then fset0 else fset1 beekem_witness_user.
@@ -235,15 +231,13 @@ module BeeKemWitnessWrongGuess(O : BEEKEM_KI_ORACLES) = {
 module BeeKemWitnessGame =
   BeeKemKiGame(
     BeeKemWitnessDistinguisher,
-    BeeKemWitnessProtocol,
-    BeeKemWitnessSecretSampler
+    BeeKemWitnessProtocol
   ).
 
 module BeeKemWitnessWrongGuessGame =
   BeeKemKiGame(
     BeeKemWitnessWrongGuess,
-    BeeKemWitnessProtocol,
-    BeeKemWitnessSecretSampler
+    BeeKemWitnessProtocol
   ).
 
 (* The fixed-bit entry points below are the exact game code path, minus only the
@@ -301,15 +295,13 @@ lemma beekem_witness_random_branch_reachable :
     /\ hidden_bit = false
     ==>
        ! res.`bke_hidden_bit
-    /\ ! res.`bke_adversary_guess
     /\ res.`bke_safe
     /\ ! res.`bke_protocol_consistency_failure
     /\ res.`bke_challenge_count = 1
     /\ res.`bke_member_addition_count = 0
     /\ res.`bke_real_branch_count = 0
     /\ res.`bke_random_branch_count = 1
-    /\ res.`bke_random_sample_count = 1
-    /\ res.`bke_win].
+    /\ res.`bke_random_sample_count = 1].
 proof.
   proc.
   inline *.
@@ -372,24 +364,17 @@ proof.
   smt(in_fset0 in_fset1 size_rcons size_ge0).
 qed.
 
-lemma beekem_witness_game_wins_probability_one &m :
+lemma beekem_witness_real_fixed_bit_wins_probability_one &m :
   Pr[
-    BeeKemWitnessGame.main(
+    BeeKemWitnessGame.main_with_fixed_bit(
       [beekem_witness_user],
       beekem_witness_group,
       1,
-      beekem_witness_membership
-    ) @ &m : res
+      beekem_witness_membership,
+      true
+    ) @ &m : res.`bke_win
   ] = 1%r.
 proof.
   byphoare => //.
-  proc.
-  inline BeeKemWitnessGame.main_with_evidence.
-  seq 1 : true 1%r.
-  + rnd.
-  call (: true ==> res.`bke_win).
-  + case (hidden_bit).
-    + conseq beekem_witness_real_branch_reachable => //.
-    + conseq beekem_witness_random_branch_reachable => //.
-  auto.
+  conseq beekem_witness_real_branch_reachable => //.
 qed.

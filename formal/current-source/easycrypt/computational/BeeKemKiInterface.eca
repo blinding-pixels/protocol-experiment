@@ -15,8 +15,6 @@ require import BeeKemPrimitiveContracts BeeKemTheorem1Math.
 section BeeKemTheorem1ImportedBoundary.
   declare module A <: BEEKEM_KI_ADVERSARY.
   declare module PaperBeeKem <: BEEKEM_PROTOCOL_ALGORITHMS.
-  declare module GroupSecretSampler <: BEEKEM_GROUP_SECRET_SAMPLER.
-
   declare module Nike <: BEEKEM_NIKE.
   declare module NikeKeySampler <: BEEKEM_NIKE_KEY_SAMPLER.
   declare module Se <: BEEKEM_SYMMETRIC_ENCRYPTION.
@@ -28,7 +26,7 @@ section BeeKemTheorem1ImportedBoundary.
   declare module BSe <: BEEKEM_MU_CPA_ADVERSARY.
 
   module PaperGame =
-    BeeKemKiGame(A, PaperBeeKem, GroupSecretSampler).
+    BeeKemKiGame(A, PaperBeeKem).
   module NikeReductionGame =
     BeeKemHkrCksGame(BNike, Nike, NikeKeySampler).
   module SeReductionGame =

@@ -29,8 +29,7 @@ module BeeKemCounterFactorAdversary(O : BEEKEM_KI_ORACLES) = {
 module BeeKemCounterFactorGame =
   BeeKemKiGame(
     BeeKemCounterFactorAdversary,
-    BeeKemWitnessProtocol,
-    BeeKemWitnessSecretSampler
+    BeeKemWitnessProtocol
   ).
 
 op beekem_drop_one_count (count : int) : int = count - 1.

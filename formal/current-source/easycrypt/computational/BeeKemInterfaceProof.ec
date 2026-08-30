@@ -9,6 +9,8 @@ require import BeeKemSafetyProofs BeeKemSafetyMutations BeeKemProtocolSemanticsP
 print beekem_operation_precedes.
 print beekem_operation_precedes_or_equals.
 print beekem_operations_concurrent.
+print beekem_group_secret_bits.
+print beekem_group_secret_length.
 print beekem_secret_output_is_no_output.
 print beekem_secret_output_is_undefined.
 print beekem_secret_output_is_value.
@@ -90,7 +92,7 @@ print BKI.beekem_theorem1_imported_normalized.
 print beekem_witness_real_branch_reachable.
 print beekem_witness_random_branch_reachable.
 print beekem_witness_wrong_guess_changes_result.
-print beekem_witness_game_wins_probability_one.
+print beekem_witness_real_fixed_bit_wins_probability_one.
 print beekem_actual_challenge_counter_reaches_one.
 print beekem_actual_addition_counter_reaches_one.
 print beekem_drop_one_count.

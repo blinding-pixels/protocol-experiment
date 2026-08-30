@@ -14,7 +14,11 @@ type beekem_counter = [ BeeKemCounter of int ].
 type beekem_public_key = [ BeeKemPublicKey of int ].
 type beekem_secret_key = [ BeeKemSecretKey of int ].
 type beekem_subgroup_secret = [ BeeKemSubgroupSecret of int ].
-type beekem_group_secret = [ BeeKemGroupSecret of int ].
+(* Figure 8 samples the ideal challenge uniformly from the same-length key
+   space as the real secret.  Represent group secrets as concrete bitstrings so
+   that the challenger can perform that draw directly rather than delegating it
+   to an unconstrained sampler module. *)
+type beekem_group_secret = [ BeeKemGroupSecret of bool list ].
 type beekem_symmetric_key = [ BeeKemSymmetricKey of int ].
 type beekem_ciphertext = [ BeeKemCiphertext of int ].
 type beekem_control_payload = [ BeeKemControlPayload of int ].
@@ -191,6 +195,14 @@ op beekem_operations_concurrent
   ! beekem_operation_precedes left right /\
   ! beekem_operation_precedes right left.
 
+op beekem_group_secret_bits
+  (secret : beekem_group_secret) : bool list =
+  with secret = BeeKemGroupSecret bits => bits.
+
+op beekem_group_secret_length
+  (secret : beekem_group_secret) : int =
+  size (beekem_group_secret_bits secret).
+
 op beekem_secret_output_is_no_output (output : beekem_secret_output) : bool =
   with output = BeeSecretNoOutput => true
   with output = BeeSecretUndefined => false
@@ -300,4 +312,5 @@ op beekem_empty_protocol_state
      bps_operations = [];
      bps_deliveries = [];
      bps_challenge_count = 0;
-     bps_member_addition_count = 0 |}.
+     bps_member_addition_count : int
+}.

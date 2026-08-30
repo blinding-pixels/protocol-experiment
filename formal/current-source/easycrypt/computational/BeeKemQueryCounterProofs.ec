@@ -23,8 +23,7 @@ module BeeKemWitnessAdditionCounterAdversary(O : BEEKEM_KI_ORACLES) = {
 module BeeKemWitnessAdditionCounterGame =
   BeeKemKiGame(
     BeeKemWitnessAdditionCounterAdversary,
-    BeeKemWitnessProtocol,
-    BeeKemWitnessSecretSampler
+    BeeKemWitnessProtocol
   ).
 
 lemma beekem_actual_challenge_counter_reaches_one :
@@ -46,7 +45,7 @@ lemma beekem_actual_addition_counter_reaches_one :
        users = [beekem_witness_user]
     /\ group = beekem_witness_group
     /\ kappa = 1
-    /\ membership = beekem_witness_membership
+     /\ membership = beekem_witness_membership
     /\ hidden_bit = false
     ==>
        ! res.`bke_hidden_bit
