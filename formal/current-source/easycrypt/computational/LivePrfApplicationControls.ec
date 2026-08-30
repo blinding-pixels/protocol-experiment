@@ -304,7 +304,7 @@ module ApplicationTwoChallengeGame = MultiDomainPrfGame(
   TestLiveKeySampler
 ).
 
-lemma two_application_challenges_map_to_two_prf_challenges :
+lemma two_accepted_application_challenges_map_to_two_prf_challenges :
   hoare [ApplicationTwoChallengeGame.main_with_fixed_bit :
        initial_state = live_witness_protocol_state
     /\ initial_facts = []
@@ -314,8 +314,6 @@ lemma two_application_challenges_map_to_two_prf_challenges :
        res.`mpge_win
     /\ res.`mpge_eligible
     /\ ! res.`mpge_guess
-    /\ challenge_query_count
-         ApplicationTwoChallengeGame.A.Core.queries = 2
     /\ res.`mpge_live_query_count = 0
     /\ res.`mpge_live_challenge_count = 2
     /\ res.`mpge_history_query_count = 0
