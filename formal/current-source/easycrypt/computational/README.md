@@ -1,6 +1,6 @@
 # Computational proof development
 
-Status: **Deliverable A's unauthorized-operation reduction theorem is checker-accepted. Deliverables L and C remain open.**
+Status: **Deliverable A's unauthorized-operation reduction and the BeeKEM KI-DCGKA foundation are checker-accepted. Application Deliverables L and C remain open.**
 
 This directory is the computational development required by
 `formal/documents/EASYCRYPT_COMPUTATIONAL_PROOF_HANDOFF.md`. The historical
@@ -150,22 +150,177 @@ The checker-proved one-defense-removed differential matrix is:
 Each module proves both the unmodified production rejection and the matching
 single-defense-removed acceptance through the actual differential validator.
 
+
+## BeeKEM KI-DCGKA foundation
+
+`BeeKemInterfaceProof.ec` is the public checker target for the BeeKEM branch.
+Its dependency closure contains 23 EasyCrypt sources and reaches the following
+executable objects rather than a collection of unconstrained theorem
+parameters:
+
+- `BeeKemTypes.ec`: protocol state, operations, messages, personal secrets,
+  group secrets, deliveries, and finite-retention state;
+- `BeeKemQueryLog.ec`: one append-only record for every accepted or rejected
+  state-transition or safety-relevant adversarial query;
+- `BeeKemProtocol.ec`: the stateful Figure 8/9 create, add, remove, update,
+  deliver, reveal, challenge-opening, compromise, and message-read procedures;
+- `BeeKemSafety.ec`: the executable finite-`kappa` FSU, PCS, and CFS clauses and
+  their conjunction over every successful challenge/compromise pair;
+- `BeeKemKiGame.ec`: the hidden-bit KI-DCGKA game, final adversary guess, exact
+  same-length uniform random challenge branch, and game evidence;
+- `BeeKemPrimitiveGames.ec`: named HKR-CKS NIKE and multi-user CPA
+  symmetric-encryption games;
+- `BeeKemConstruction.ec`: one `BEEKEM_PAPER_INSTANCE` whose protocol, NIKE,
+  sampler, and symmetric-encryption adapters are definitionally tied to the
+  same BeeKEM construction;
+- `BeeKemKiInterface.eca`: the single imported BeeKEM Theorem 1 boundary.
+
+The adversary receives the complete KI oracle surface. The challenger—not the
+adversary—computes acceptance, delivery readiness, reveal history, compromise
+snapshots, the `bee_safe_kappa` predicate, and the challenge/member-addition
+counters.
+
+### Query history and safety
+
+Every create, add, remove, update, deliver, reveal, challenge, and compromise
+attempt is logged with its actual accepted bit and rejection reason. Figure 8's
+perpetual read-only access to the control and direct message maps is modeled as
+a direct read and is not counted as a safety query. An operation-bearing
+successful query maps to its recorded operation.
+A successful snapshot compromise maps to the actor's challenger-maintained
+causal frontier at that instant. Rejected queries and successful queries with
+no operation/frontier contribution map to the empty set.
+
+The finite-`kappa` safety predicate then evaluates the complete log:
+
+- FSU searches for `kappa` successful causally ordered updates between the
+  challenged operation and a later compromise;
+- PCS searches for a successful healing update between a compromise and the
+  challenge;
+- CFS requires `kappa` updates ending at the compromise together with pairwise
+  causal concurrency between the challenge operation and the compromise
+  frontier.
+
+These are finite recursive predicates over challenger state. No adversary
+supplies a `safe`, `admissible`, `q2op`, ancestry, reveal-history, or retention
+Boolean.
+
+### Public imported theorem
+
+The sole BeeKEM axiom is
+`beekem_theorem1_imported_normalized`. The checker prints its quantifier order
+as:
+
+```text
+for every KI adversary A,
+for every single concrete BeeKEM PaperInstance,
+for every memory and public game-parameter tuple satisfying the side conditions,
+there exist primitive adversaries BNike and BSe such that
+
+AdvKI(BeeKemKiGame(A, PaperInstance))
+ <= c * ceil(log2(n)) *
+      (AdvHKR-CKS(BNike) + AdvMU-CPA(BSe)).
+```
+
+That order is load-bearing. `BNike` and `BSe` are existential witnesses after
+the universally quantified challenged adversary and paper instance. They can
+therefore be the Appendix-B constructions `B(A, Pi)` and `C(A, Pi)`; they are
+not unrelated universal primitive adversaries. The KI game and both
+right-hand-side games use adapters of the same `BEEKEM_PAPER_INSTANCE`.
+
+The theorem side conditions are explicit:
+
+- finite `kappa >= 1`;
+- nonnegative challenge bound `c`;
+- executable `beekem_is_ceil_log2 n h`;
+- probability-one NIKE symmetry and symmetric-encryption correctness;
+- probability-one evidence that the actual accepted challenge count is at most
+  `c` and actual member-addition count is at most `n`.
+
+The probability-one correctness premises are an honest, narrower
+perfect-correctness specialization of the paper's overwhelming-correctness
+formulation. Correctness failure has not been silently deleted.
+
+### Advantage convention
+
+The definition printed immediately before BeeKEM Theorem 1 calls raw game
+success probability an advantage, while Appendix B reasons with absolute
+differences between neighboring game probabilities. Raw success cannot satisfy
+the displayed bound when `n = 1`, because the multiplier
+`ceil(log2(1))` is zero.
+
+The imported boundary therefore records one centered convention for all three
+games:
+
+```text
+abs(Pr[guess = hidden bit] - 1/2).
+```
+
+Using the same factor-two alternative for every game scales both sides equally
+and leaves the theorem's reduction factors unchanged. No raw-success theorem is
+assumed.
+
+### Imported and checked boundary
+
+Machine-checked in this repository:
+
+- the typed state and complete oracle environment;
+- accepted/rejected query logging;
+- finite-retention compromise responses;
+- `q2op` frontier lifting and all three finite-`kappa` safety clauses;
+- the hidden-bit KI game and exact random challenge branch;
+- actual challenge and member-addition counters;
+- named HKR-CKS and multi-user CPA games;
+- same-instance protocol/primitive adapters;
+- the theorem's quantifier shape and side conditions;
+- positive and negative trace witnesses and mutation controls.
+
+Imported from BeeKEM Theorem 1 and Appendix B:
+
+- the cryptographic hybrid argument itself;
+- the internal algorithms of the existential reductions `BNike` and `BSe`;
+- the resulting inequality under the stated primitive assumptions.
+
+This is a concrete formal interface to the paper theorem, not a
+machine-checked reproof of Appendix B.
+
+### BeeKEM non-vacuity and anti-regression controls
+
+The public entry point prints checker-proved witnesses that exercise:
+
+- real and random KI challenge branches;
+- a wrong final guess changing the result;
+- nonzero accepted challenge and member-addition counters;
+- each FSU, PCS, and CFS positive trace and its unsafe boundary;
+- missing healing updates, missing fork updates, ignored compromise history,
+  ignored ancestry, ignored reveal history, and disabled finite retention;
+- deliberately insecure-but-correct NIKE and symmetric encryption losing their
+  named primitive games with probability one;
+- counter mutations changing the theorem multiplier.
+
+CI additionally performs two destructive source mutations:
+
+1. it removes the existential `BNike` witness and requires the anti-cheating
+   audit to reject the theorem boundary for that exact reason;
+2. it deletes `BeeKemSafety.ec` and requires the pinned EasyCrypt compiler to
+   reject the public closure because that dependency is genuinely required.
+
 ## Imported assumptions
 
-The Deliverable A closure contains **zero imported axioms**. The exact
-operation-signature, fact-signature, and collision experiments remain explicit
-on the final theorem's right-hand side instead of being hidden behind arbitrary
-real-valued advantage operators.
+The Deliverable A closure, checked through `ComputationalProof.ec`, contains
+**zero imported axioms**. Its exact operation-signature, fact-signature, and
+collision experiments remain explicit on the final theorem's right-hand side.
 
-`ASSUMPTION_MANIFEST.json` records:
+The separate BeeKEM closure, checked through `BeeKemInterfaceProof.ec`,
+contains **exactly one imported axiom**:
+`beekem_theorem1_imported_normalized`. That axiom is limited to BeeKEM
+Theorem 1's Appendix-B reduction inequality with the explicit quantifier,
+same-instance, correctness, safety, and query-bound conditions above. No
+application final game or authorization advantage appears in it.
 
-- the public theorem and its exact named games;
-- factor one for both native multi-user signature reductions;
-- the two proved-zero terms;
-- zero imported assumptions;
-- model contracts that still require concrete implementation correspondence.
-
-BeeKEM is not imported by this authorization-only result.
+`ASSUMPTION_MANIFEST.json` records both proof boundaries, the exact named games,
+the source-paper hash, the sole imported declaration, its non-claims, and the
+remaining implementation-correspondence obligations.
 
 ## Checker evidence
 
@@ -197,19 +352,55 @@ workflow run:  https://github.com/blinding-pixels/protocol-experiment/actions/ru
 artifact SHA:  sha256:22db093e933a3c32624f62827a06673c166ba827964c28e9374e83e2712d4e04
 ```
 
+
+### BeeKEM theorem-boundary evidence
+
+The checker-accepted theorem source and its later anti-regression guards are:
+
+```text
+theorem source commit:   54bc3b7653462f8ddf74d348ed9173523917c067
+quantifier audit commit: d2cca0a57f55a4d35adf1b6faf3b3f2921d42e33
+CI mutation commit:      e916660879de633c98d9d5e86d82ef8e894e650c
+workflow run:            33340568672
+artifact:                easycrypt-full-evidence-33340568672-1
+artifact ID:             9740421932
+artifact digest:         sha256:b21c28477007240363a30c4f70d2572c51fa47875e67f0985154c50c1c174ac0
+```
+
+That exact run recorded:
+
+- source identity, paper hash, dependency closure, and source-manifest hashes;
+- `88` EasyCrypt sources audited and exactly `1` manifest axiom;
+- `20` executable reference tests passed;
+- pinned EasyCrypt compilation of `BeeKemInterfaceProof.ec` with status `0`;
+- theorem-boundary mutant audit status `1` and expected-rejection assertion
+  status `0`;
+- dependency-removal mutant checker status `1` and expected-rejection assertion
+  status `0`;
+- immutable EasyCrypt image
+  `sha256:84980006e8b01fe6497bbd0ecd67deeb5e7361d8ad17e27d24924122d368e0fc`;
+- EasyCrypt `r2026.07` and Why3 `1.8.2`.
+
+The evidence artifact contains the exact checked sources, checker output,
+mutation outputs, status files, source hashes, and extracted fixed-hash paper.
+
 ## Scope and remaining faithfulness work
 
-The theorem is a suffix security game parameterized by an arbitrary materialized
-`protocol_state`. That state represents the public DAG, immutable fact-content
+The Deliverable A theorem is a suffix security game parameterized by an
+arbitrary materialized `protocol_state`. That state represents the public DAG,
+immutable fact-content
 registry, exact fact closures, and application-policy expectations at the start
 of the attack. The adversary then adaptively signs protocol-shaped objects and
 submits arbitrary operations and views while accepted operations update the
 state.
 
-The complete handoff's larger `CreateGroup`/delivery/add/remove/grant/revoke
-trace API is not claimed by this theorem. Integrating this suffix result into
-that full shared trace environment remains an explicit faithfulness task,
-particularly before reusing it inside the live- and content-key games.
+The complete handoff's larger shared application
+`CreateGroup`/delivery/add/remove/grant/revoke trace API is not claimed by the
+Deliverable A suffix theorem. The BeeKEM foundation does model its own Figure 8
+create/add/remove/update/deliver/reveal/challenge/compromise interface, but it
+has not yet been composed with the application authorization suffix game.
+That composition remains an explicit faithfulness task before reusing both
+pieces inside the live- and content-key games.
 
 The following implementation obligations also remain outside this EasyCrypt
 result:
@@ -224,10 +415,14 @@ result:
 - live application-key indistinguishability;
 - ungranted content-key indistinguishability after the erasure frontier.
 
-Accordingly, Deliverable A's reduction theorem is checker-accepted within the
-stated abstract/suffix-game boundary. This is not a claim that the entire
-three-deliverable computational handoff or the concrete Rust implementation is
-complete.
+Accordingly, Deliverable A's authorization reduction and the BeeKEM
+KI-DCGKA foundation are checker-accepted within their stated boundaries. The
+BeeKEM result supplies the exact cryptographic base game and imported Theorem 1
+interface that Deliverables L and C must reduce to; it does not itself prove
+either application-key theorem.
+
+This is not a claim that the entire three-deliverable computational handoff or
+the concrete Rust implementation is complete.
 
 ## Running the checks
 
@@ -241,13 +436,23 @@ python3 -m unittest discover \
   -p 'test_*.py' -v
 ```
 
-The authoritative EasyCrypt checker target is `ComputationalProof.ec`. CI uses:
+The branch-specific authoritative EasyCrypt targets are:
+
+```text
+formal/easycrypt-beekem-interface        BeeKemInterfaceProof.ec
+other computational-proof branches      ComputationalProof.ec
+```
+
+CI uses:
 
 ```text
 ghcr.io/easycrypt/ec-test-box:r2026.07
 sha256:84980006e8b01fe6497bbd0ecd67deeb5e7361d8ad17e27d24924122d368e0fc
 ```
 
-A checker-acceptance claim is valid only for the exact source commit, source
-hashes, immutable image digest, audit output, and zero checker exit status in a
-captured workflow artifact. Any later proof-source change requires new evidence.
+A checker-acceptance claim is valid only for the exact source commit, dependency
+closure, source hashes, immutable image digest, audit output, mutation outputs,
+and zero real-checker exit status in a captured workflow artifact. An expected
+nonzero mutant status is successful only when its separate assertion status is
+zero and the logged failure matches the intended mutation. Any later
+proof-source change requires new evidence.
