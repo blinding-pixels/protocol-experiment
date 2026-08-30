@@ -249,7 +249,7 @@ module BeeKemKiGame(
        Mutation games reuse this same operator and change only their named
        safety condition. *)
     win <- beekem_ki_final_win
-      safe protocl_failure guess hidden_bit;
+      safe protocol_failure guess hidden_bit;
 
     last_evidence <-
       {| bke_hidden_bit = hidden_bit;
