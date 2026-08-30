@@ -937,6 +937,30 @@ module type LIVE_KEY_ADVERSARY(O : LIVE_PROTOCOL_ORACLE) = {
   proc guess() : bool
 }.
 
+(* Deliverable A proves a suffix game over a materialized public state.  The
+   initial authorization value used to label BeeKEM-derived application keys
+   is reconstructed deterministically from that public suffix input.  This
+   operator performs no signature call and assumes no authentication bit;
+   malformed or policy-invalid material yields [None] and makes the live
+   experiment ineligible. *)
+op live_initial_authorization
+    (initial_state : protocol_state)
+    (initial_facts : signed_authorization_fact list) :
+    authorization_state option =
+  authorization_policy_replay
+    initial_state.`ps_creator
+    initial_facts.
+
+op live_initial_authorization_digest
+    (initial_state : protocol_state)
+    (initial_facts : signed_authorization_fact list) :
+    authorization_digest =
+  let initial_authorization =
+    live_initial_authorization initial_state initial_facts in
+  if initial_authorization = None
+  then InvalidAuthorizationDigest 0
+  else authorization_digest_of (oget initial_authorization).
+
 module LiveReal(
   A : LIVE_KEY_ADVERSARY,
   S : SIGNATURE_SCHEME,
@@ -957,25 +981,18 @@ module LiveReal(
   ) : bool = {
     var challenge_bit : bool;
     var adversary_guess : bool;
-    var normalized_valid : bool;
-    var normalized_state : authorization_state;
+    var initial_authorization : authorization_state option;
     var initial_digest : authorization_digest;
 
-    normalized_valid <- false;
-    normalized_state <- empty_authorization_state;
+    initial_authorization <- None;
     initial_digest <- InvalidAuthorizationDigest 0;
 
     SO.init();
     Auth.init(initial_state);
-    (normalized_valid, normalized_state) <@
-      NormalizeAuthorization(Auth.Scheme).normalize(
-        initial_facts,
-        initial_state.`ps_creator
-      );
+    initial_authorization <-
+      live_initial_authorization initial_state initial_facts;
     initial_digest <-
-      if normalized_valid
-      then authorization_digest_of normalized_state
-      else InvalidAuthorizationDigest 0;
+      live_initial_authorization_digest initial_state initial_facts;
 
     challenge_bit <$ {0,1};
     O.init(
@@ -988,7 +1005,8 @@ module LiveReal(
     adversary_guess <@ A.guess();
 
     return
-         live_trace_admissible
+         initial_authorization <> None
+      /\ live_trace_admissible
            retention_kappa O.relation O.queries O.runtime_fault
       /\ adversary_guess = challenge_bit;
   }
@@ -1017,25 +1035,18 @@ module LiveRealBit(
     challenge_bit : bool
   ) : bool = {
     var adversary_guess : bool;
-    var normalized_valid : bool;
-    var normalized_state : authorization_state;
+    var initial_authorization : authorization_state option;
     var initial_digest : authorization_digest;
 
-    normalized_valid <- false;
-    normalized_state <- empty_authorization_state;
+    initial_authorization <- None;
     initial_digest <- InvalidAuthorizationDigest 0;
 
     SO.init();
     Auth.init(initial_state);
-    (normalized_valid, normalized_state) <@
-      NormalizeAuthorization(Auth.Scheme).normalize(
-        initial_facts,
-        initial_state.`ps_creator
-      );
+    initial_authorization <-
+      live_initial_authorization initial_state initial_facts;
     initial_digest <-
-      if normalized_valid
-      then authorization_digest_of normalized_state
-      else InvalidAuthorizationDigest 0;
+      live_initial_authorization_digest initial_state initial_facts;
 
     O.init(
       initial_state,
@@ -1047,7 +1058,8 @@ module LiveRealBit(
     adversary_guess <@ A.guess();
 
     return
-         live_trace_admissible
+         initial_authorization <> None
+      /\ live_trace_admissible
            retention_kappa O.relation O.queries O.runtime_fault
       /\ adversary_guess;
   }
