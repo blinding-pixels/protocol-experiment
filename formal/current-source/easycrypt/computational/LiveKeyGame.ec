@@ -289,30 +289,50 @@ type live_query = {
   lq_operation : node_id option
 }.
 
+op query_kind_is_update_by
+    (kind : live_query_kind)
+    (member : principal) : bool =
+  with kind = LiveUpdateQuery updater => updater = member
+  with kind = _ => false.
+
 op query_is_update_by
     (query : live_query)
     (member : principal) : bool =
-  with query.`lq_kind = LiveUpdateQuery updater => updater = member
-  with query.`lq_kind = _ => false.
+  query_kind_is_update_by query.`lq_kind member.
+
+op query_kind_is_challenge (kind : live_query_kind) : bool =
+  with kind = LiveChallengeQuery member => true
+  with kind = _ => false.
 
 op query_is_challenge (query : live_query) : bool =
-  with query.`lq_kind = LiveChallengeQuery member => true
-  with query.`lq_kind = _ => false.
+  query_kind_is_challenge query.`lq_kind.
+
+op query_kind_is_compromise_of
+    (kind : live_query_kind)
+    (member : principal) : bool =
+  with kind = LiveCompromiseQuery compromised => compromised = member
+  with kind = _ => false.
 
 op query_is_compromise_of
     (query : live_query)
     (member : principal) : bool =
-  with query.`lq_kind = LiveCompromiseQuery compromised =>
-    compromised = member
-  with query.`lq_kind = _ => false.
+  query_kind_is_compromise_of query.`lq_kind member.
+
+op query_kind_challenge_member
+    (kind : live_query_kind) : principal option =
+  with kind = LiveChallengeQuery member => Some member
+  with kind = _ => None.
 
 op query_challenge_member (query : live_query) : principal option =
-  with query.`lq_kind = LiveChallengeQuery member => Some member
-  with query.`lq_kind = _ => None.
+  query_kind_challenge_member query.`lq_kind.
+
+op query_kind_compromise_member
+    (kind : live_query_kind) : principal option =
+  with kind = LiveCompromiseQuery member => Some member
+  with kind = _ => None.
 
 op query_compromise_member (query : live_query) : principal option =
-  with query.`lq_kind = LiveCompromiseQuery member => Some member
-  with query.`lq_kind = _ => None.
+  query_kind_compromise_member query.`lq_kind.
 
 op count_updates_between
     (relation : causal_relation)
