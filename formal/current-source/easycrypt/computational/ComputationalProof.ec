@@ -3,6 +3,7 @@ require import PrimitiveControlProofs MutationHistoryProofs MutationPolicyProofs
 require import MutationEditProofs MutationGameProofs MutationProofs.
 require import HonestOperationContract UnauthorizedOriginPartition.
 require import AuthorizationLeanFullReplay CausalClosureRepresentation.
+require import LiveKeyGame LiveKeyWitnesses.
 
 (* Authoritative Deliverable A entry point.
 
@@ -42,3 +43,9 @@ print MutationHistoryProofs.mutation_recipient_wins_probability_one.
 print MutationHistoryProofs.mutation_merge_wins_probability_one.
 print MutationHistoryProofs.mutation_region_wins_probability_one.
 print MutationHistoryProofs.mutation_segment_wins_probability_one.
+
+(* Deliverable L checkpoint 1: executable game and non-vacuity controls. *)
+print LiveKeyWitnesses.honest_live_trace_reaches_admissible_challenge.
+print LiveKeyWitnesses.previously_revealed_live_node_cannot_be_challenged.
+print LiveKeyWitnesses.single_challenge_without_compromise_is_bee_safe.
+print LiveKeyWitnesses.immediate_same_node_compromise_is_not_bee_safe.
