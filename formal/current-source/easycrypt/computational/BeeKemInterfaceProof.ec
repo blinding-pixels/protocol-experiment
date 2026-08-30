@@ -1,7 +1,7 @@
 require import BeeKemTypes BeeKemQueryLog BeeKemProtocol BeeKemSafety BeeKemKiGame BeeKemPrimitiveGames BeeKemPrimitiveContracts BeeKemTheorem1Math.
 require BeeKemKiInterface.
 clone import BeeKemKiInterface as BKI.
-require import BeeKemSafetyProofs BeeKemProtocolSemanticsProofs BeeKemGameWitnesses.
+require import BeeKemSafetyProofs BeeKemProtocolSemanticsProofs BeeKemGameWitnesses BeeKemPrimitiveWitnesses.
 
 (* Public closure for the executable Figure 8 oracle environment and exact
    finite-kappa Figure 3 safety predicate.  The trace theorems below force all
@@ -65,7 +65,7 @@ print beekem_mu_cpa_advantage.
 print BeeKemNikeSymmetryGame.
 print BeeKemSeCorrectnessGame.
 
-(* Exact imported BeeKEM Theorem 1 boundary under the uniform centered-bias
+** Exact imported BeeKEM Theorem 1 boundary under the uniform centered-bias
    interpretation required by Appendix B's hybrid inequalities. *)
 print beekem_is_ceil_log2.
 print beekem_theorem1_loss.
@@ -78,3 +78,14 @@ print beekem_witness_real_branch_reachable.
 print beekem_witness_random_branch_reachable.
 print beekem_witness_wrong_guess_changes_result.
 print beekem_witness_game_wins_probability_one.
+
+** Correct-but-insecure primitive controls through the named HKR-CKS and
+   multi-user CPA games. *)
+print beekem_insecure_nike_real_branch_wins.
+print beekem_insecure_nike_random_branch_wins.
+print beekem_insecure_nike_game_probability_one.
+print beekem_insecure_nike_is_symmetric.
+print beekem_insecure_se_left_branch_wins.
+print beekem_insecure_se_right_branch_wins.
+print beekem_insecure_se_game_probability_one.
+print beekem_insecure_se_is_correct.

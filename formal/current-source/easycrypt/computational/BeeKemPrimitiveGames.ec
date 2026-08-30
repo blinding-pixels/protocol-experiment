@@ -148,11 +148,12 @@ module BeeKemHkrCksGame(
 
   var last_evidence : beekem_hkr_cks_evidence
 
-  proc main_with_evidence() : beekem_hkr_cks_evidence = {
-    var hidden_bit : bool;
+  (* Deterministic branch runner for checker-proved primitive-game controls.
+     [main_with_evidence] still samples the hidden bit and delegates to this
+     exact path. *)
+  proc main_with_fixed_bit(hidden_bit : bool) : beekem_hkr_cks_evidence = {
     var guess : bool;
 
-    hidden_bit <$ dbool;
     O.initialize(hidden_bit);
     guess <@ A.distinguish();
     last_evidence <-
@@ -165,6 +166,15 @@ module BeeKemHkrCksGame(
          bhc_query_log = O.query_log;
          bhc_win = (guess = hidden_bit) |};
     return last_evidence;
+  }
+
+  proc main_with_evidence() : beekem_hkr_cks_evidence = {
+    var hidden_bit : bool;
+    var evidence : beekem_hkr_cks_evidence;
+
+    hidden_bit <$ dbool;
+    evidence <@ main_with_fixed_bit(hidden_bit);
+    return evidence;
   }
 
   proc main() : bool = {
@@ -339,11 +349,12 @@ module BeeKemMuCpaGame(
 
   var last_evidence : beekem_mu_cpa_evidence
 
-  proc main_with_evidence() : beekem_mu_cpa_evidence = {
-    var hidden_bit : bool;
+  (* Deterministic branch runner for checker-proved primitive-game controls.
+     [main_with_evidence] still samples the hidden bit and delegates to this
+     exact path. *)
+  proc main_with_fixed_bit(hidden_bit : bool) : beekem_mu_cpa_evidence = {
     var guess : bool;
 
-    hidden_bit <$ dbool;
     O.initialize(hidden_bit);
     guess <@ A.distinguish();
     last_evidence <-
@@ -351,12 +362,21 @@ module BeeKemMuCpaGame(
          bmc_adversary_guess = guess;
          bmc_user_count = O.user_count;
          bmc_encryption_count = O.encryption_count;
-         bmc_challenge_count = O.challenge_count;
+         bmc_challenge_count = O.challene_count;
          bmc_left_challenge_count = O.left_challenge_count;
          bmc_right_challenge_count = O.right_challenge_count;
          bmc_query_log = O.query_log;
          bmc_win = (guess = hidden_bit) |};
     return last_evidence;
+  }
+
+  proc main_with_evidence() : beekem_mu_cpa_evidence = {
+    var hidden_bit : bool;
+    var evidence : beekem_mu_cpa_evidence;
+
+    hidden_bit <$ dbool;
+    evidence <@ main_with_fixed_bit(hidden_bit);
+    return evidence;
   }
 
   proc main() : bool = {
