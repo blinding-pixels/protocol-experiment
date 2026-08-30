@@ -105,9 +105,7 @@ module BeeKemKiOracles(
     target : beekem_user
   ) : bool = {
     var accepted : bool;
-    accepted <@ Environment.remove_meber(
-      actor, target
-    );
+    accepted <@ Environment.remove_member(actor, target);
     return accepted;
   }
 
@@ -251,7 +249,7 @@ module BeeKemKiGame(
        Mutation games reuse this same operator and change only their named
        safety condition. *)
     win <- beekem_ki_final_win
-      safe protocol_failure guess hidden_bit;
+      safe protocl_failure guess hidden_bit;
 
     last_evidence <-
       {| bke_hidden_bit = hidden_bit;
