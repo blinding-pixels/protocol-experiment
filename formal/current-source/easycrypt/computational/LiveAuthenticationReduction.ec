@@ -2,7 +2,7 @@ require import AllCore List FSet.
 require import ProtocolTypes CanonicalEncoding ProtocolPrimitives AuthorizationState.
 require import AuthorizationAncestry UnauthorizedSignatureReduction UnauthorizedOriginGame.
 require import UnauthorizedOriginPartition UnauthorizedOriginFinalBound.
-require import OriginOperationDirectInvariant OriginFactReductionWitness.
+require import OriginOperationDirectInvariant OriginFactWitnessGame OriginFactReductionWitness.
 require import UnauthorizedOriginHashReduction LiveKeyGame.
 
 import PG.
