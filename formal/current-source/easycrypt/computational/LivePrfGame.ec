@@ -28,7 +28,8 @@ module MultiDomainPrfOracle(
     random_key <@ R.sample(label);
     answer <- if hidden_bit then real_key else random_key;
     queries <- rcons queries
-      {| mpq_kind = MdPrfLiveChallenge secret label |};
+      {| mpq_kind = MdPrfLiveChallenge
+           {| mpli_secret = secret; mpli_label = label |} |};
     return answer;
   }
 
@@ -40,7 +41,8 @@ module MultiDomainPrfOracle(
 
     answer <@ K.derive_history(secret, label);
     queries <- rcons queries
-      {| mpq_kind = MdPrfHistoryQuery secret label |};
+      {| mpq_kind = MdPrfHistoryQuery
+           {| mphi_secret = secret; mphi_label = label |} |};
     return answer;
   }
 
@@ -53,8 +55,10 @@ module MultiDomainPrfOracle(
 
     answer <@ K.derive_history_capability(secret, label, cover);
     queries <- rcons queries
-      {| mpq_kind =
-           MdPrfHistoryCapabilityQuery secret label cover |};
+      {| mpq_kind = MdPrfHistoryCapabilityQuery
+           {| mphci_secret = secret;
+              mphci_label = label;
+              mphci_cover = cover |} |};
     return answer;
   }
 }.
