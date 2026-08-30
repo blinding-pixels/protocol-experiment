@@ -53,8 +53,8 @@ print MutationHistoryProofs.mutation_segment_wins_probability_one.
 (* Deliverable L checkpoint 1: executable game and non-vacuity controls. *)
 print LiveKeyWitnesses.honest_live_trace_reaches_admissible_challenge.
 print LiveKeyWitnesses.previously_revealed_live_node_cannot_be_challenged.
-print LiveKeyWitnesses.single_challenge_without_compromise_is_bee_safe.
-print LiveKeyWitnesses.immediate_same_node_compromise_is_not_bee_safe.
+print LiveKeyWitnesses.single_challenge_without_compromise_is_provisionally_safe.
+print LiveKeyWitnesses.immediate_same_node_compromise_is_provisionally_unsafe.
 
 (* Deliverable L checkpoint 2: the exact live execution is installed inside
    Deliverable A's origin-tracked validator environment. *)
@@ -62,10 +62,10 @@ print LiveAuthenticationReduction.live_success_le_authenticated_plus_origin_fail
 print LiveAuthenticationReduction.live_authentication_failure_exactly_deliverable_a.
 print LiveAuthenticationReduction.live_authentication_failure_bound.
 
-(* Deliverable L checkpoint 3: concrete KI-DCGKA runtime adapter. *)
+(* Deliverable L provisional BeeKEM seam: challenge-call connectivity only. *)
 print LiveBeeKemReduction.beekem_live_wrapper_invokes_primitive_challenge_once.
 
-(* Deliverable L checkpoint 4-in-progress: application multi-domain PRF game. *)
+(* Deliverable L application multi-domain PRF hop and ideal-zero checkpoint. *)
 print LivePrfTypes.mdprf_live_query_is_not_live_challenge.
 print LivePrfControls.prf_control_reveal_and_challenge_labels_differ.
 print LivePrfTypes.mdprf_live_domain_is_not_history_domain.

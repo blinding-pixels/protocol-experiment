@@ -30,7 +30,7 @@ op live_witness_compromise_same_node_query : live_query =
   {| lq_kind = LiveCompromiseQuery live_witness_creator;
      lq_operation = Some (NodeId 2) |}.
 
-lemma single_challenge_without_compromise_is_bee_safe
+lemma single_challenge_without_compromise_is_provisionally_safe
     (retention_kappa : int)
     (relation : causal_relation) :
   1 <= retention_kappa =>
@@ -44,7 +44,7 @@ proof.
   by smt().
 qed.
 
-lemma immediate_same_node_compromise_is_not_bee_safe
+lemma immediate_same_node_compromise_is_provisionally_unsafe
     (retention_kappa : int) :
   1 <= retention_kappa =>
   ! bee_safe_kappa
