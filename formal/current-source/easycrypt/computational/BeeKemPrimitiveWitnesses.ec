@@ -186,8 +186,8 @@ lemma beekem_insecure_se_right_branch_wins :
     /\ res.`bmc_user_count = 1
     /\ res.`bmc_challenge_count = 1
     /\ res.`bmc_left_challenge_count = 0
-    /\ res.`bmc_right_challene_count = 1
-     /\ res.`bmc_win].
+    /\ res.`bmc_right_challenge_count = 1
+    /\ res.`bmc_win].
 proof.
   proc.
   inline *.
