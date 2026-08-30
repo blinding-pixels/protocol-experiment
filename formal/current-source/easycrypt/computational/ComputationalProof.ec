@@ -14,6 +14,7 @@ require import LivePrfLabelBinding.
 require import LivePrfDomainSeparationControls.
 require import LivePrfCapabilityDomainSeparationControls.
 require import LiveChallengeExclusionMutation.
+require import LivePrfAuthorizationDigestMutation.
 
 (* Authoritative Deliverable A entry point.
 
@@ -114,3 +115,10 @@ print LiveChallengeExclusionMutation.reveal_exclusion_removed_fixed_real.
 print LiveChallengeExclusionMutation.reveal_exclusion_removed_fixed_random.
 print LiveChallengeExclusionMutation.reveal_exclusion_removed_game_probability_one.
 print LiveChallengeExclusionMutation.reveal_exclusion_removed_normalized_advantage_half.
+
+(* Authorization-digest field-omission mutation control. *)
+print LivePrfAuthorizationDigestMutation.digest_mutation_labels_differ_only_in_authorization_digest.
+print LivePrfAuthorizationDigestMutation.authorization_digest_omission_fixed_real.
+print LivePrfAuthorizationDigestMutation.authorization_digest_omission_fixed_random.
+print LivePrfAuthorizationDigestMutation.authorization_digest_omission_game_probability_one.
+print LivePrfAuthorizationDigestMutation.authorization_digest_omission_normalized_advantage_half.
