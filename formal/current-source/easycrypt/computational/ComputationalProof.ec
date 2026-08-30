@@ -10,6 +10,7 @@ require import LivePrfReduction.
 require import LivePrfTypes LivePrfGame LivePrfApplicationReduction.
 require import LivePrfIdeal LivePrfControls LivePrfIdealControls.
 require import LivePrfApplicationHop LivePrfApplicationControls.
+require import LivePrfLabelBinding.
 require import LivePrfDomainSeparationControls.
 require import LivePrfCapabilityDomainSeparationControls.
 require import LiveChallengeExclusionMutation.
@@ -86,6 +87,15 @@ print LivePrfControls.prf_control_fixed_real.
 print LivePrfControls.prf_control_fixed_random.
 print LivePrfControls.insecure_test_kdf_prf_game_probability_one.
 print LivePrfControls.insecure_test_kdf_prf_normalized_advantage_half.
+
+(* Exact production-field binding for every multi-domain PRF transcript. *)
+print LivePrfLabelBinding.live_label_of_records_every_production_field.
+print LivePrfLabelBinding.history_label_of_records_every_production_field.
+print LivePrfLabelBinding.application_live_challenge_query_injective.
+print LivePrfLabelBinding.application_history_query_injective.
+print LivePrfLabelBinding.application_history_capability_query_injective.
+print LivePrfLabelBinding.application_live_challenge_not_history_query.
+print LivePrfLabelBinding.application_live_challenge_not_history_capability_query.
 
 (* Live/history domain-separation mutation control. *)
 print LivePrfDomainSeparationControls.collapsed_live_history_application_fixed_real.

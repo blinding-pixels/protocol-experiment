@@ -7,6 +7,7 @@ require import LivePrfIdeal.
 require import LivePrfControls.
 require import LivePrfIdealControls.
 
+require import LivePrfLabelBinding.
 require import LivePrfDomainSeparationControls.
 require import LivePrfCapabilityDomainSeparationControls.
 
