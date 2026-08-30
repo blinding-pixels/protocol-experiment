@@ -312,5 +312,4 @@ op beekem_empty_protocol_state
      bps_operations = [];
      bps_deliveries = [];
      bps_challenge_count = 0;
-     bps_member_addition_count : int
-}.
+     bps_member_addition_count = 0 |}.
