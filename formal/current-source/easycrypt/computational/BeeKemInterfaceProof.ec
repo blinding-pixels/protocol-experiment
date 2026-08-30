@@ -1,7 +1,7 @@
 require import BeeKemTypes BeeKemQueryLog BeeKemProtocol BeeKemSafety BeeKemKiGame BeeKemPrimitiveGames BeeKemPrimitiveContracts BeeKemTheorem1Math.
 require BeeKemKiInterface.
 clone import BeeKemKiInterface as BKI.
-require import BeeKemSafetyProofs BeeKemSafetyMutations BeeKemProtocolSemanticsProofs BeeKemGameWitnesses BeeKemQueryCounterProofs BeeKemMutationGameProofs BeeKemPrimitiveWitnesses.
+require import BeeKemSafetyProofs BeeKemSafetyMutations BeeKemProtocolSemanticsProofs BeeKemGameWitnesses BeeKemQueryCounterProofs BeeKemCounterMutationProofs BeeKemMutationGameProofs BeeKemPrimitiveWitnesses.
 
 (* Public closure for the executable Figure 8 oracle environment and exact
    finite-kappa Figure 3 safety predicate.  The trace theorems below force all
@@ -93,6 +93,8 @@ print beekem_witness_wrong_guess_changes_result.
 print beekem_witness_game_wins_probability_one.
 print beekem_actual_challenge_counter_reaches_one.
 print beekem_actual_addition_counter_reaches_one.
+print beekem_drop_one_count.
+print beekem_actual_counter_factors_are_nonzero.
 
 (* Correct-but-insecure primitive controls through the named HKR-CKS and
    multi-user CPA games. *)
