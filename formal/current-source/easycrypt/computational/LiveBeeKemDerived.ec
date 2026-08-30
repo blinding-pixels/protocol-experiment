@@ -1,6 +1,8 @@
 require import AllCore List FSet.
 require import ProtocolTypes ProtocolPrimitives UnauthorizedSignatureReduction.
 require import UnauthorizedOriginGame LiveKeyGame LiveBeeKemControl.
+require BeeKemKiInterface.
+clone import BeeKemKiInterface as BKI.
 
 import PG.
 
