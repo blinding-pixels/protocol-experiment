@@ -4,7 +4,7 @@ require import MutationEditProofs MutationGameProofs MutationProofs.
 require import HonestOperationContract UnauthorizedOriginPartition.
 require import AuthorizationLeanFullReplay CausalClosureRepresentation.
 require import LiveKeyGame LiveKeyWitnesses LiveAuthenticationReduction.
-require import BeeKemKiInterface LiveBeeKemControl LiveBeeKemDerived.
+require import LiveBeeKemControl LiveBeeKemDerived.
 require import LiveBeeKemOracle LiveBeeKemReduction.
 
 (* Authoritative Deliverable A entry point.

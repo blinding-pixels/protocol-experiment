@@ -9,7 +9,7 @@ import PG.
    primitive test root.  No raw BeeKEM secret is returned. *)
 module KiBackedDerived(
   Auth : ORIGIN_TRACKED_UNAUTHORIZED_ORACLE,
-  O : BEEKEM_KI_ORACLE,
+  O : BKI.BEEKEM_KI_ORACLE,
   K : MULTI_DOMAIN_KEY_SCHEDULE,
   R : LIVE_KEY_SAMPLER
 ) = {

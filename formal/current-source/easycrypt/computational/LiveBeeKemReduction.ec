@@ -1,7 +1,7 @@
 require import AllCore List FSet Distr DBool.
 require import ProtocolTypes ProtocolPrimitives UnauthorizedSignatureReduction.
 require import UnauthorizedOriginGame LiveKeyGame LiveAuthenticationReduction.
-require import LiveBeeKemKiInterface LiveBeeKemOracle.
+require import LiveBeeKemOracle.
 
 import PG.
 
@@ -15,7 +15,7 @@ module BBeeLive(
   H : NODE_HASH,
   K : MULTI_DOMAIN_KEY_SCHEDULE,
   R : LIVE_KEY_SAMPLER
-)(O : BEEKEM_KI_ORACLE) = {
+)(O : BKI.BEEKEM_KI_ORACLE) = {
   module SO = PG.LoggedSignatureOracle(S)
   module Auth = OriginTrackedCandidateEnvironment(SO, H)
   module Live = KiBackedLiveOracle(Auth, O, K, R)
@@ -50,7 +50,7 @@ module BBeeLive(
 
 (* Checker-backed connectivity control: two derived outputs at one root invoke
    the primitive Challenge oracle once and reuse its exact response. *)
-module CountingBeeKemKiOracle : BEEKEM_KI_ORACLE = {
+module CountingBeeKemKiOracle : BKI.BEEKEM_KI_ORACLE = {
   module B = TestBeeKemLiveRuntime
 
   var challenge_calls : int

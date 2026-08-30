@@ -10,7 +10,7 @@ import PG.
    outputs to [KiBackedDerived]. *)
 module KiBackedLiveOracle(
   Auth : ORIGIN_TRACKED_UNAUTHORIZED_ORACLE,
-  O : BEEKEM_KI_ORACLE,
+  O : BKI.BEEKEM_KI_ORACLE,
   K : MULTI_DOMAIN_KEY_SCHEDULE,
   R : LIVE_KEY_SAMPLER
 ) = {

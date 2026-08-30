@@ -1,14 +1,15 @@
 require import AllCore List FSet.
 require import ProtocolTypes ProtocolPrimitives UnauthorizedSignatureReduction.
 require import UnauthorizedOriginGame LiveKeyGame.
-require import LiveBeeKemKiInterface.
+require LiveBeeKemKiInterface.
+clone import LiveBeeKemKiInterface as BKI.
 
 import PG.
 
 (* Transparent control-plane adapter to the KI-DCGKA oracle.  Application key
    outputs are simulated by the derived-output layer because the production
    live core otherwise reads its local BeeKEM secret store directly. *)
-module BeeKemControlRuntime(O : BEEKEM_KI_ORACLE) = {
+module BeeKemControlRuntime(O : BKI.BEEKEM_KI_ORACLE) = {
   proc init() : unit = { }
 
   proc create_group(
@@ -86,7 +87,7 @@ op beekem_root_cache_put
    every pair inserted into this cache. *)
 module KiBackedControl(
   Auth : ORIGIN_TRACKED_UNAUTHORIZED_ORACLE,
-  O : BEEKEM_KI_ORACLE,
+  O : BKI.BEEKEM_KI_ORACLE,
   K : MULTI_DOMAIN_KEY_SCHEDULE,
   R : LIVE_KEY_SAMPLER
 ) = {
