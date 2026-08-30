@@ -27,12 +27,12 @@ concurrency:
 
 jobs:
   computational-proof:
-    name: Check active unauthorized reduction
+    name: Check complete Deliverable A closure
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
       EASYCRYPT_IMAGE: ghcr.io/easycrypt/ec-test-box@sha256:84980006e8b01fe6497bbd0ecd67deeb5e7361d8ad17e27d24924122d368e0fc
-      CHECK_EC: UnauthorizedReductionNext.ec
+      CHECK_EC: ComputationalProof.ec
     steps:
       - name: Check out exact proof source
         uses: actions/checkout@v4
@@ -72,6 +72,24 @@ jobs:
           cat "$evidence/audit-stderr.log" >&2
           exit "$status"
 
+      - name: Run executable reference suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/easycrypt-full-evidence"
+          set +e
+          python3 -m unittest discover \
+            -s formal/current-source/easycrypt/computational \
+            -p 'test_*.py' -v \
+            >"$evidence/reference-stdout.log" \
+            2>"$evidence/reference-stderr.log"
+          status=$?
+          set -e
+          printf '%s\n' "$status" >"$evidence/reference-exit-status.txt"
+          cat "$evidence/reference-stdout.log"
+          cat "$evidence/reference-stderr.log" >&2
+          exit "$status"
+
       - name: Pull immutable EasyCrypt image
         shell: bash
         run: |
@@ -83,7 +101,7 @@ jobs:
             --format '{{json .RepoDigests}}' \
             | tee "$evidence/image-repo-digests.txt"
 
-      - name: Compile active unauthorized reduction
+      - name: Compile complete Deliverable A closure
         shell: bash
         run: |
           set -euo pipefail
