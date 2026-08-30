@@ -143,11 +143,14 @@ op beekem_update_chain_between
     (id : beekem_user)
     (remaining : int)
     (lower upper : beekem_query) : bool =
-  if remaining <= 0
-  then beekem_q2op_precedes_or_equals operations lower upper
-  else
-    with candidates = [] => false
-    with candidates = candidate :: rest =>
+  with candidates = [] =>
+    if remaining <= 0
+    then beekem_q2op_precedes_or_equals operations lower upper
+    else false
+  with candidates = candidate :: rest =>
+    if remaining <= 0
+    then beekem_q2op_precedes_or_equals operations lower upper
+    else
       beekem_update_chain_between
         operations rest id remaining lower upper \/
       (beekem_successful_update_for candidate id /\
@@ -164,11 +167,12 @@ op beekem_update_chain_ending_at
     (id : beekem_user)
     (remaining : int)
     (upper : beekem_query) : bool =
-  if remaining <= 0
-  then true
-  else
-    with candidates = [] => false
-    with candidates = candidate :: rest =>
+  with candidates = [] =>
+    remaining <= 0
+  with candidates = candidate :: rest =>
+    if remaining <= 0
+    then true
+    else
       beekem_update_chain_ending_at
         operations rest id remaining upper \/
       (beekem_successful_update_for candidate id /\
