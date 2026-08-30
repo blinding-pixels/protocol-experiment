@@ -14,12 +14,19 @@ op collapsed_history_material
   with secret = BeeKemSecret value =>
     value + label.`hkl_protocol_version.
 
+op live_application_key_material
+    (key : live_application_key) : int =
+  with key = LiveApplicationKey material label => material.
+
+op history_domain_output_material
+    (output : history_domain_output) : int =
+  with output = HistoryDomainOutput material label => material.
+
 op live_history_materials_equal
-    (live : live_application_key)
-    (history : history_domain_output) : bool =
-  with live = LiveApplicationKey live_material live_label =>
-    with history = HistoryDomainOutput history_material history_label =>
-      live_material = history_material.
+    (live_key : live_application_key)
+    (history_output : history_domain_output) : bool =
+  live_application_key_material live_key =
+  history_domain_output_material history_output.
 
 module CollapsedLiveHistoryKeySchedule : MULTI_DOMAIN_KEY_SCHEDULE = {
   proc derive_live(
@@ -126,6 +133,7 @@ proof.
     /history_label_of /live_label_of
     /test_live_material /test_history_material
     /collapsed_history_material /live_history_materials_equal
+    /live_application_key_material /history_domain_output_material
     /all_nodes_known /all_nodes_known_list
     /all_predecessors_delivered /all_predecessors_delivered_list
     /causal_relation_extend /predecessor_reaches_list
@@ -172,6 +180,7 @@ proof.
     /history_label_of /live_label_of
     /test_live_material /test_history_material
     /collapsed_history_material /live_history_materials_equal
+    /live_application_key_material /history_domain_output_material
     /all_nodes_known /all_nodes_known_list
     /all_predecessors_delivered /all_predecessors_delivered_list
     /causal_relation_extend /predecessor_reaches_list
