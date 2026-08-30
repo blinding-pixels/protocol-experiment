@@ -10,6 +10,7 @@ require import LivePrfReduction.
 require import LivePrfTypes LivePrfGame LivePrfApplicationReduction.
 require import LivePrfIdeal LivePrfControls LivePrfIdealControls.
 require import LivePrfApplicationHop LivePrfApplicationControls.
+require import LivePrfDomainSeparationControls.
 
 (* Authoritative Deliverable A entry point.
 
@@ -83,3 +84,9 @@ print LivePrfControls.prf_control_fixed_real.
 print LivePrfControls.prf_control_fixed_random.
 print LivePrfControls.insecure_test_kdf_prf_game_probability_one.
 print LivePrfControls.insecure_test_kdf_prf_normalized_advantage_half.
+
+(* Live/history domain-separation mutation control. *)
+print LivePrfDomainSeparationControls.collapsed_live_history_application_fixed_real.
+print LivePrfDomainSeparationControls.collapsed_live_history_application_fixed_random.
+print LivePrfDomainSeparationControls.collapsed_live_history_application_game_probability_one.
+print LivePrfDomainSeparationControls.collapsed_live_history_application_normalized_advantage_half.

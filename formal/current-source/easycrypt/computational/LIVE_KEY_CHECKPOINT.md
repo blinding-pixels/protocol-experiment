@@ -27,7 +27,9 @@ application PRF and ideal-game checkpoints.
 - Application controls prove that every PRF oracle path is reachable, that a
   rejected application challenge consumes no primitive challenge and closes the
   wrapper switch, and that an intentionally insecure KDF loses the primitive
-  game with probability one.
+  game with probability one. A separate application-level mutation removes only
+  live/history domain separation and lets the history disclosure distinguish the
+  live challenge with probability one.
 
 ## Explicit provisional boundary
 
@@ -57,8 +59,8 @@ replacement obligations are in `BEEKEM_APPLICATION_ADAPTER_OBLIGATIONS.md`.
   `BeeKemSafety.bee_safe_kappa`;
 - connect actual application challenge/member-addition counters to the imported
   BeeKEM Theorem 1 side conditions;
-- add the live/history domain-collapse mutation control and remaining
-  anti-triviality witnesses;
+- retain the checker-backed application-level live/history domain-collapse
+  mutation control and add any remaining exact-adapter anti-triviality witnesses;
 - expose the final L0--L4 theorem with the imported BeeKEM term, the concrete
   multi-domain PRF term, ideal zero, and Deliverable A's named loss expansion.
 
