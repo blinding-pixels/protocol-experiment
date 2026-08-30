@@ -86,9 +86,12 @@ type beekem_direct_message = {
   bdm_payload : beekem_direct_payload
 }.
 
-(* Figure 8 distinguishes epsilon (an algorithm failed to return an output)
-   from bottom (the operation legitimately establishes no group secret, as for
-   BeeKEM Add and Remove).  An option alone cannot preserve that distinction. *)
+(* Figure 8 uses two distinct non-key values.  [BeeSecretUndefined] models
+   epsilon: an uninitialized entry or failed algorithm output.
+   [BeeSecretNoOutput] models bottom: a defined protocol result with no group
+   secret (BeeKEM Create/Add/Remove and some conflict states), and the value
+   returned by a rejected oracle call.  Collapsing these cases would make the
+   Figure 8 consistency checks and challenge reachability incorrect. *)
 type beekem_secret_output = [
   | BeeSecretNoOutput
   | BeeSecretUndefined
@@ -193,6 +196,11 @@ op beekem_secret_output_is_no_output (output : beekem_secret_output) : bool =
   with output = BeeSecretUndefined => false
   with output = BeeSecretValue secret => false.
 
+op beekem_secret_output_is_undefined (output : beekem_secret_output) : bool =
+  with output = BeeSecretNoOutput => false
+  with output = BeeSecretUndefined => true
+  with output = BeeSecretValue secret => false.
+
 op beekem_secret_output_is_value (output : beekem_secret_output) : bool =
   with output = BeeSecretNoOutput => false
   with output = BeeSecretUndefined => false
@@ -203,6 +211,17 @@ op beekem_secret_output_value
   with output = BeeSecretNoOutput => None
   with output = BeeSecretUndefined => None
   with output = BeeSecretValue secret => Some secret.
+
+(* [bms_current_personal_secret] is the newest personal secret; the list holds
+   older retained secrets.  Thus finite-kappa retention bounds the current
+   secret plus the retained suffix, matching "the kappa most recent personal
+   secrets" rather than allowing kappa old secrets in addition to the current
+   one. *)
+op beekem_member_retention_valid
+  (kappa : int)
+  (member_state : beekem_member_state) : bool =
+  1 <= kappa /\
+  1 + size member_state.`bms_retained_personal_secrets <= kappa.
 
 op beekem_operation_key
   (operation : beekem_operation) : beekem_message_key =
@@ -273,7 +292,7 @@ op beekem_empty_protocol_state
      bps_counters = fun id => 0;
      bps_messages = fun key => None;
      bps_direct_messages = fun key => None;
-     bps_secrets = fun key => BeeSecretNoOutput;
+     bps_secrets = fun key => BeeSecretUndefined;
      bps_add_targets = fun key => None;
      bps_challenge_marks = fun key => false;
      bps_needs_responses = fun key => false;

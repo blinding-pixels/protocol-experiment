@@ -130,6 +130,9 @@ module BeeKemOracleEnvironment(
       id <- head witness remaining;
       remaining <- behead remaining;
       initialized <@ P.init(id, group, kappa);
+      if (! beekem_member_retention_valid kappa initialized) {
+        protocol_consistency_failure <- true;
+      }
       state <-
         {| state with
            bps_initialized_users =
@@ -507,8 +510,11 @@ module BeeKemOracleEnvironment(
 
     if (accepted) {
       result <@ P.create(oget creator_state, initial_members);
+      if (! beekem_member_retention_valid state.`bps_kappa result.`bpr_state) {
+        protocol_consistency_failure <- true;
+      }
       if (result.`bpr_control = None \/
-          beekem_secret_output_is_no_output result.`bpr_secret) {
+          beekem_secret_output_is_undefined result.`bpr_secret) {
         protocol_consistency_failure <- true;
       }
 
@@ -600,8 +606,11 @@ module BeeKemOracleEnvironment(
         result <@ P.remove_member(oget actor_state, target);
       }
 
+      if (! beekem_member_retention_valid state.`bps_kappa result.`bpr_state) {
+        protocol_consistency_failure <- true;
+      }
       if (result.`bpr_control = None \/
-          beekem_secret_output_is_no_output result.`bpr_secret) {
+          beekem_secret_output_is_undefined result.`bpr_secret) {
         protocol_consistency_failure <- true;
       }
 
@@ -689,8 +698,11 @@ module BeeKemOracleEnvironment(
 
     if (accepted) {
       result <@ P.update(oget actor_state);
+      if (! beekem_member_retention_valid state.`bps_kappa result.`bpr_state) {
+        protocol_consistency_failure <- true;
+      }
       if (result.`bpr_control = None \/
-          beekem_secret_output_is_no_output result.`bpr_secret) {
+          beekem_secret_output_is_undefined result.`bpr_secret) {
         protocol_consistency_failure <- true;
       }
 
@@ -821,6 +833,9 @@ module BeeKemOracleEnvironment(
         oget control,
         direct
       );
+      if (! beekem_member_retention_valid state.`bps_kappa result.`bxr_state) {
+        protocol_consistency_failure <- true;
+      }
 
       state <-
         {| state with
@@ -834,7 +849,7 @@ module BeeKemOracleEnvironment(
           protocol_consistency_failure <- true;
         }
       } else {
-        if (! beekem_secret_output_is_no_output sender_secret) {
+        if (! beekem_secret_output_is_undefined sender_secret) {
           protocol_consistency_failure <- true;
         }
       }
@@ -844,7 +859,7 @@ module BeeKemOracleEnvironment(
         message_adds_member;
       if (must_respond /\
           (result.`bxr_control = None \/
-           beekem_secret_output_is_no_output result.`bxr_response_secret)) {
+           beekem_secret_output_is_undefined result.`bxr_response_secret)) {
         protocol_consistency_failure <- true;
       }
 
@@ -915,7 +930,7 @@ module BeeKemOracleEnvironment(
     accepted <- true;
     rejection <- None;
 
-    if (beekem_secret_output_is_no_output secret) {
+    if (beekem_secret_output_is_undefined secret) {
       accepted <- false;
       rejection <- Some BeeRejectMissingSecret;
     }
@@ -964,7 +979,7 @@ module BeeKemOracleEnvironment(
     accepted <- true;
     rejection <- None;
 
-    if (beekem_secret_output_is_no_output secret) {
+    if (beekem_secret_output_is_undefined secret) {
       accepted <- false;
       rejection <- Some BeeRejectMissingSecret;
     }
