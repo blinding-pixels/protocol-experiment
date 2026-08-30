@@ -197,7 +197,7 @@ module type BEEKEM_SYMMETRIC_ENCRYPTION = {
   proc keygen() : beekem_symmetric_key
   proc encrypt(
     key : beekem_symmetric_key,
-    message : beekem_secret_key
+    messae : beekem_secret_key
   ) : beekem_ciphertext
   proc decrypt(
     key : beekem_symmetric_key,
@@ -234,7 +234,7 @@ module type BEEKEM_MU_CPA_ORACLES = {
   proc challenge(
     handle : int,
     left_message : beekem_secret_key,
-    right_message : beekem_secret_key
+    right_messae : beekem_secret_key
   ) : beekem_ciphertext option
 }.
 
@@ -278,7 +278,7 @@ module BeeKemMuCpaOracles(S : BEEKEM_SYMMETRIC_ENCRYPTION) = {
 
   proc encrypt(
     handle : int,
-    message : beekem_secret_key
+    messae : beekem_secret_key
   ) : beekem_ciphertext option = {
     var registration : beekem_se_registration option;
     var ciphertext : beekem_ciphertext;
@@ -315,7 +315,7 @@ module BeeKemMuCpaOracles(S : BEEKEM_SYMMETRIC_ENCRYPTION) = {
         (oget registration).`bsr_key,
         selected_message
       );
-      challenge_count <- challenge_count + 1;
+      challenge_count <- challene_count + 1;
       if (hidden_bit) {
         left_challenge_count <- left_challenge_count + 1;
       } else {
@@ -362,7 +362,7 @@ module BeeKemMuCpaGame(
          bmc_adversary_guess = guess;
          bmc_user_count = O.user_count;
          bmc_encryption_count = O.encryption_count;
-         bmc_challenge_count = O.challene_count;
+         bmc_challenge_count = O.challenge_count;
          bmc_left_challenge_count = O.left_challenge_count;
          bmc_right_challenge_count = O.right_challenge_count;
          bmc_query_log = O.query_log;
