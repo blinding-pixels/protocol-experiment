@@ -108,7 +108,7 @@ section LiveAuthenticationHop.
   declare module A <: LIVE_KEY_ADVERSARY.
   declare module S <: SIGNATURE_SCHEME.
   declare module H <: NODE_HASH.
-  declare module B <: BEEKEM_LIVE_RUNTIME,
+  declare module B <: BEEKEM_LIVE_RUNTIME.
   declare module K <: MULTI_DOMAIN_KEY_SCHEDULE.
   declare module R <: LIVE_KEY_SAMPLER.
 
