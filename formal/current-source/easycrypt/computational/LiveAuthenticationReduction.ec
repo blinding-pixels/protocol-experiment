@@ -86,15 +86,16 @@ module LiveAuthenticationGame(
   K : MULTI_DOMAIN_KEY_SCHEDULE,
   R : LIVE_KEY_SAMPLER
 ) = {
-  module BA = BLiveAuthentication(A, B, K, R)
-  module GP = UnauthorizedOriginPartitionGame(BA, S, H)
+  module GP = UnauthorizedOriginPartitionGame(
+    BLiveAuthentication(A, B, K, R), S, H
+  )
 
   proc main() : live_authentication_result = {
     var partition : origin_partition_result;
 
     partition <@ GP.main(live_auth_initial_state);
     return
-      {| lar_live_success = BA.live_success;
+      {| lar_live_success = GP.A.live_success;
          lar_authentication_failure = partition.`opr_real;
          lar_bad_operation = partition.`opr_bad_operation;
          lar_bad_fact = partition.`opr_bad_fact;
@@ -110,14 +111,19 @@ section LiveAuthenticationHop.
   declare module K <: MULTI_DOMAIN_KEY_SCHEDULE.
   declare module R <: LIVE_KEY_SAMPLER.
 
-  module BA = BLiveAuthentication(A, B, K, R).
   module LAG = LiveAuthenticationGame(A, S, H, B, K, R).
-  module GP = UnauthorizedOriginPartitionGame(BA, S, H).
-  module EUFOP =
-    PG.MultiUserEUFCMAGame(BSignOriginOperationDirect(BA, H), S).
-  module EUFFACT =
-    PG.MultiUserEUFCMAGame(BSignOriginFactWitness(BA, H), S).
-  module COLL = PG.NodeCollisionGame(BHashOrigin(BA, S), H).
+  module GP = UnauthorizedOriginPartitionGame(
+    BLiveAuthentication(A, B, K, R), S, H
+  ).
+  module EUFOP = PG.MultiUserEUFCMAGame(
+    BSignOriginOperationDirect(BLiveAuthentication(A, B, K, R), H), S
+  ).
+  module EUFFACT = PG.MultiUserEUFCMAGame(
+    BSignOriginFactWitness(BLiveAuthentication(A, B, K, R), H), S
+  ).
+  module COLL = PG.NodeCollisionGame(
+    BHashOrigin(BLiveAuthentication(A, B, K, R), S), H
+  ).
 
   (* L0 is partitioned into an authenticated live execution and the exact
      origin-aware unauthorized event raised by Deliverable A.  This is only
@@ -162,7 +168,7 @@ section LiveAuthenticationHop.
 
   (* Exact AuthLoss expansion for the live adversary.  Every nonzero term is
      the named Deliverable A primitive game with the concrete live reduction
-     adversary [BA]; the two factors and the encoding term are the already
+     adversary [BLiveAuthentication]; the two factors and the encoding term are the already
      proved Deliverable A constants. *)
   lemma live_authentication_failure_bound &m :
     Pr[LAG.main() @ &m : res.`lar_authentication_failure] <=
