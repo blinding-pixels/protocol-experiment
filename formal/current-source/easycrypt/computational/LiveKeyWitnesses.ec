@@ -1,8 +1,8 @@
 require import AllCore List FSet.
 require import ProtocolTypes CanonicalEncoding ProtocolPrimitives AuthorizationState.
-require import ProtocolChecks UnauthorizedOriginGame LiveKeyGame.
-require PrimitiveGames.
-clone import PrimitiveGames as PG.
+require import ProtocolChecks UnauthorizedSignatureReduction UnauthorizedOriginGame LiveKeyGame.
+
+import PG.
 
 op live_witness_creator : principal =
   {| p_verification_key = VerificationKey 700;

@@ -1,10 +1,11 @@
 require import AllCore List FSet.
 require import ProtocolTypes CanonicalEncoding ProtocolPrimitives AuthorizationState.
-require import AuthorizationAncestry UnauthorizedOriginGame.
+require import AuthorizationAncestry UnauthorizedSignatureReduction UnauthorizedOriginGame.
 require import UnauthorizedOriginPartition UnauthorizedOriginFinalBound.
 require import OriginOperationDirectInvariant OriginFactReductionWitness.
 require import UnauthorizedOriginHashReduction LiveKeyGame.
 
+import PG.
 
 (* Deliverable A is a suffix theorem over an already materialized public
    protocol state.  These abstract values are ordinary universally quantified
@@ -83,7 +84,7 @@ module LiveAuthenticationGame(
   K : MULTI_DOMAIN_KEY_SCHEDULE,
   R : LIVE_KEY_SAMPLER
 ) = {
-  module SO = UnauthorizedSignatureReduction.PG.LoggedSignatureOracle(S)
+  module SO = PG.LoggedSignatureOracle(S)
   module O = OriginTrackedCandidateEnvironment(SO, H)
   module BA = BLiveAuthentication(A, B, K, R, O)
 
@@ -113,13 +114,13 @@ section LiveAuthenticationHop.
   module GP = UnauthorizedOriginPartitionGame(
     BLiveAuthentication(A, B, K, R), S, H
   ).
-  module EUFOP = UnauthorizedSignatureReduction.PG.MultiUserEUFCMAGame(
+  module EUFOP = PG.MultiUserEUFCMAGame(
     BSignOriginOperationDirect(BLiveAuthentication(A, B, K, R), H), S
   ).
-  module EUFFACT = UnauthorizedSignatureReduction.PG.MultiUserEUFCMAGame(
+  module EUFFACT = PG.MultiUserEUFCMAGame(
     BSignOriginFactWitness(BLiveAuthentication(A, B, K, R), H), S
   ).
-  module COLL = UnauthorizedSignatureReduction.PG.NodeCollisionGame(
+  module COLL = PG.NodeCollisionGame(
     BHashOrigin(BLiveAuthentication(A, B, K, R), S), H
   ).
 

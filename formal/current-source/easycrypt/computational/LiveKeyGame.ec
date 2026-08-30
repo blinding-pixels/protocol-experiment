@@ -1,9 +1,9 @@
 require import AllCore List FSet Distr DBool.
 require import ProtocolTypes CanonicalEncoding ProtocolPrimitives AuthorizationState.
 require import ProtocolChecks ProtocolOracles AuthorizationAncestry.
-require PrimitiveGames.
-clone import PrimitiveGames as PG.
-require import UnauthorizedOriginGame.
+require import UnauthorizedSignatureReduction UnauthorizedOriginGame.
+
+import PG.
 
 (* ------------------------------------------------------------------------- *)
 (* Deliverable L, checkpoint 1: executable application live-key experiment.   *)
