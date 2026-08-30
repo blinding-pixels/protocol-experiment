@@ -197,7 +197,7 @@ module type BEEKEM_SYMMETRIC_ENCRYPTION = {
   proc keygen() : beekem_symmetric_key
   proc encrypt(
     key : beekem_symmetric_key,
-    messae : beekem_secret_key
+    message : beekem_secret_key
   ) : beekem_ciphertext
   proc decrypt(
     key : beekem_symmetric_key,
@@ -234,7 +234,7 @@ module type BEEKEM_MU_CPA_ORACLES = {
   proc challenge(
     handle : int,
     left_message : beekem_secret_key,
-    right_messae : beekem_secret_key
+    right_message : beekem_secret_key
   ) : beekem_ciphertext option
 }.
 
@@ -278,7 +278,7 @@ module BeeKemMuCpaOracles(S : BEEKEM_SYMMETRIC_ENCRYPTION) = {
 
   proc encrypt(
     handle : int,
-    messae : beekem_secret_key
+    message : beekem_secret_key
   ) : beekem_ciphertext option = {
     var registration : beekem_se_registration option;
     var ciphertext : beekem_ciphertext;
@@ -319,7 +319,7 @@ module BeeKemMuCpaOracles(S : BEEKEM_SYMMETRIC_ENCRYPTION) = {
       if (hidden_bit) {
         left_challenge_count <- left_challenge_count + 1;
       } else {
-        right_challenge_count <- right_challenge_count + 1;
+        right_challenge_count <- right_challene_count + 1;
       }
     }
     query_log <- rcons query_log
