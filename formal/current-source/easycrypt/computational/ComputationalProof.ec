@@ -5,7 +5,7 @@ require import HonestOperationContract UnauthorizedOriginPartition.
 require import AuthorizationLeanFullReplay CausalClosureRepresentation.
 require import LiveKeyGame LiveKeyWitnesses LiveAuthenticationReduction.
 require import BeeKemKiInterface LiveBeeKemControl LiveBeeKemDerived.
-require import LiveBeeKemOracle LiveBeeKemReduction LiveBeeKemWrapperControl.
+require import LiveBeeKemOracle LiveBeeKemReduction.
 
 (* Authoritative Deliverable A entry point.
 
@@ -59,4 +59,4 @@ print LiveAuthenticationReduction.live_authentication_failure_exactly_deliverabl
 print LiveAuthenticationReduction.live_authentication_failure_bound.
 
 (* Deliverable L checkpoint 3: concrete KI-DCGKA runtime adapter. *)
-print LiveBeeKemWrapperControl.beekem_live_wrapper_invokes_primitive_challenge_once.
+print LiveBeeKemReduction.beekem_live_wrapper_invokes_primitive_challenge_once.
