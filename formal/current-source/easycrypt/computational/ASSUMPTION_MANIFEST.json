@@ -1,13 +1,69 @@
 {
   "schema": "protocol-experiment.easycrypt-assumption-manifest.v1",
-  "status": "deliverable-a-complete",
-  "scope": "unauthorized-operation-acceptance",
+  "status": "deliverable-a-complete-beekem-theorem-boundary",
+  "scope": "unauthorized-operation-acceptance and BeeKEM KI-DCGKA foundation",
   "allowed_axiom_files": [
     "ImportedSecurity.eca",
     "BeeKemKiInterface.eca"
   ],
-  "declarations": [],
-  "imported_assumptions": [],
+  "declarations": [
+    {
+      "name": "beekem_theorem1_imported_normalized",
+      "file": "BeeKemKiInterface.eca",
+      "source_theorem": "Yen et al., BeeKEM, Theorem 1",
+      "paper_identifier": "Cryptology ePrint Archive 2026/1434",
+      "pdf_sha256": "129a819400898536455cabe4ba104c02d902384ea802b4900a388e8e9c0e4fb3",
+      "location": "Section 5, Theorem 1, page 10; proof in Appendix B, pages 17-19",
+      "exact_game": "BeeKemKiGame over the executable Figure 8 oracle environment, with bee_safe_kappa computed from the complete query log",
+      "adversary_interface": "BEEKEM_KI_ADVERSARY(BEEKEM_KI_ORACLES)",
+      "primitive_reductions": [
+        "BNike attacking BeeKemHkrCksGame",
+        "BSe attacking BeeKemMuCpaGame"
+      ],
+      "query_bounds": "actual bke_challenge_count <= c and bke_member_addition_count <= n with probability 1",
+      "reduction_loss": "c * h, where beekem_is_ceil_log2 n h is executable and characterizes h = ceil(log2 n)",
+      "threat_model_boundary": [
+        "honest BeeKEM execution",
+        "authenticated causal broadcast",
+        "adversarial scheduling and partitions",
+        "adaptive reveal, challenge, and snapshot compromise",
+        "finite kappa >= 1",
+        "no arbitrary Byzantine deviation by an authorized member",
+        "no application authorization theorem"
+      ],
+      "normalization": "Uniform centered bias abs(Pr[guess = bit] - 1/2) is used for KI-DCGKA, HKR-CKS, and MU-CPA. Page 10 prints raw success probability, while Appendix B pages 16-17 explicitly use absolute neighboring-game probability differences. Uniform doubling would cancel on both sides, so the theorem constants are unchanged.",
+      "machine_check_status": "The games, safety predicate, counters, side-condition games, and interface are machine checked. Appendix B and its reduction witnesses BNike/BSe are imported, not machine checked."
+    }
+  ],
+  "imported_assumptions": [
+    {
+      "name": "beekem_theorem1_imported_normalized",
+      "file": "BeeKemKiInterface.eca",
+      "source_theorem": "Yen et al., BeeKEM, Theorem 1",
+      "paper_identifier": "Cryptology ePrint Archive 2026/1434",
+      "pdf_sha256": "129a819400898536455cabe4ba104c02d902384ea802b4900a388e8e9c0e4fb3",
+      "location": "Section 5, Theorem 1, page 10; proof in Appendix B, pages 17-19",
+      "exact_game": "BeeKemKiGame over the executable Figure 8 oracle environment, with bee_safe_kappa computed from the complete query log",
+      "adversary_interface": "BEEKEM_KI_ADVERSARY(BEEKEM_KI_ORACLES)",
+      "primitive_reductions": [
+        "BNike attacking BeeKemHkrCksGame",
+        "BSe attacking BeeKemMuCpaGame"
+      ],
+      "query_bounds": "actual bke_challenge_count <= c and bke_member_addition_count <= n with probability 1",
+      "reduction_loss": "c * h, where beekem_is_ceil_log2 n h is executable and characterizes h = ceil(log2 n)",
+      "threat_model_boundary": [
+        "honest BeeKEM execution",
+        "authenticated causal broadcast",
+        "adversarial scheduling and partitions",
+        "adaptive reveal, challenge, and snapshot compromise",
+        "finite kappa >= 1",
+        "no arbitrary Byzantine deviation by an authorized member",
+        "no application authorization theorem"
+      ],
+      "normalization": "Uniform centered bias abs(Pr[guess = bit] - 1/2) is used for KI-DCGKA, HKR-CKS, and MU-CPA. Page 10 prints raw success probability, while Appendix B pages 16-17 explicitly use absolute neighboring-game probability differences. Uniform doubling would cancel on both sides, so the theorem constants are unchanged.",
+      "machine_check_status": "The games, safety predicate, counters, side-condition games, and interface are machine checked. Appendix B and its reduction witnesses BNike/BSe are imported, not machine checked."
+    }
+  ],
   "public_theorem": {
     "file": "UnauthorizedOriginFinalBound.ec",
     "name": "adv_unauthorized_origin_bound",
@@ -28,7 +84,7 @@
     },
     {
       "name": "authorization-fact-signature multi-user EUF-CMA",
-      "kind": "named game probability retained in theorem",
+      "kind": "named game probability retained in the theorem",
       "guessing_factor": 1
     },
     {
@@ -78,6 +134,17 @@
   "non_claims": [
     "No concrete signature scheme is proved secure by this manifest; the exact primitive-game probabilities remain on the theorem right-hand side.",
     "No concrete Rust serialization, hashing, persistence, erasure, crash-recovery, zeroization, or operating-system residue property is proved here.",
-    "Live-key and ungranted-content-key confidentiality are separate unfinished deliverables."
-  ]
+    "Live-key and ungranted-content-key confidentiality are separate unfinished deliverables.",
+    "BeeKEM Appendix B and the internal construction of BNike and BSe are imported paper evidence, not machine-checked EasyCrypt reductions.",
+    "Page 10 prints a raw-success advantage definition inconsistent with Appendix B hybrid differences. The imported theorem uses the uniform centered interpretation and records this source-level normalization repair explicitly."
+  ],
+  "beekem_public_theorem": {
+    "file": "BeeKemKiInterface.eca",
+    "name": "beekem_theorem1_imported_normalized",
+    "entry_point": "BeeKemInterfaceProof.ec",
+    "left_hand_side": "centered bias of the exact executable BeeKemKiGame under bee_safe_kappa",
+    "right_hand_side": "c * ceil(log2 n) times the sum of centered named HKR-CKS and MU-CPA advantages",
+    "centered_advantage_operator": "beekem_normalized_ki_advantage",
+    "centered_corollary_status": "this is the imported theorem convention; no raw-success theorem is assumed"
+  }
 }

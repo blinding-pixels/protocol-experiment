@@ -1,0 +1,73 @@
+require import AllCore List FSet.
+require import BeeKemTypes BeeKemProtocol BeeKemKiGame BeeKemPrimitiveGames.
+require import BeeKemPrimitiveContracts BeeKemTheorem1Math.
+
+(* Imported boundary for Yen et al., BeeKEM, Theorem 1.  The executable games,
+   log, safety predicate, counters, primitive games, and correctness games are
+   outside this axiom.  What remains imported is Appendix B's cryptographic
+   reduction and its two witness adversaries.  The displayed definition
+   immediately above Theorem 1 writes raw game-success probability, but
+   Appendix B bounds absolute differences of neighboring game probabilities.
+   Raw success would make the theorem false already at ceil(log2(1)) = 0.  This
+   boundary therefore uses one uniform centered-bias convention for all three
+   games.  Multiplying every advantage by two would leave the stated reduction
+   factors unchanged. *)
+section BeeKemTheorem1ImportedBoundary.
+  declare module A <: BEEKEM_KI_ADVERSARY.
+  declare module PaperBeeKem <: BEEKEM_PROTOCOL_ALGORITHMS.
+  declare module GroupSecretSampler <: BEEKEM_GROUP_SECRET_SAMPLER.
+
+  declare module Nike <: BEEKEM_NIKE.
+  declare module NikeKeySampler <: BEEKEM_NIKE_KEY_SAMPLER.
+  declare module Se <: BEEKEM_SYMMETRIC_ENCRYPTION.
+
+  (* These are the named Appendix-B witness reductions B and C.  Their
+     existence and construction are part of the imported paper theorem; the
+     surrounding primitive games they attack are executable definitions. *)
+  declare module BNike <: BEEKEM_HKR_CKS_ADVERSARY.
+  declare module BSe <: BEEKEM_MU_CPA_ADVERSARY.
+
+  module PaperGame =
+    BeeKemKiGame(A, PaperBeeKem, GroupSecretSampler).
+  module NikeReductionGame =
+    BeeKemHkrCksGame(BNike, Nike, NikeKeySampler).
+  module SeReductionGame =
+    BeeKemMuCpaGame(BSe, Se).
+  module NikeSymmetryGame =
+    BeeKemNikeSymmetryGame(Nike).
+  module SeCorrectnessGame =
+    BeeKemSeCorrectnessGame(Se).
+
+  axiom beekem_theorem1_imported_normalized
+      &m
+      (users : beekem_user list)
+      (group : beekem_group)
+      (kappa c n h : int)
+      (membership : beekem_dgm) :
+       1 <= kappa
+    => 0 <= c
+    => beekem_is_ceil_log2 n h
+    => Pr[
+         NikeSymmetryGame.main() @ &m : res
+       ] = 1%r
+    => (forall message,
+         Pr[
+           SeCorrectnessGame.main(message) @ &m : res
+         ] = 1%r)
+    => Pr[
+         PaperGame.main_with_evidence(
+           users, group, kappa, membership
+         ) @ &m :
+           res.`bke_challenge_count <= c /\
+           res.`bke_member_addition_count <= n
+       ] = 1%r
+    => beekem_normalized_ki_advantage
+         (Pr[
+            PaperGame.main(users, group, kappa, membership) @ &m : res
+          ])
+       <= beekem_theorem1_loss c h *
+          (beekem_hkr_cks_advantage
+             (Pr[NikeReductionGame.main() @ &m : res]) +
+           beekem_mu_cpa_advantage
+             (Pr[SeReductionGame.main() @ &m : res])).
+end section BeeKemTheorem1ImportedBoundary.

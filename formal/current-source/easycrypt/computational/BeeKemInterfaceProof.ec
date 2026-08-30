@@ -1,4 +1,6 @@
-require import BeeKemTypes BeeKemQueryLog BeeKemProtocol BeeKemSafety BeeKemKiGame BeeKemPrimitiveGames.
+require import BeeKemTypes BeeKemQueryLog BeeKemProtocol BeeKemSafety BeeKemKiGame BeeKemPrimitiveGames BeeKemPrimitiveContracts BeeKemTheorem1Math.
+require BeeKemKiInterface.
+clone import BeeKemKiInterface as BKI.
 require import BeeKemSafetyProofs BeeKemProtocolSemanticsProofs.
 
 (* Public closure for the executable Figure 8 oracle environment and exact
@@ -59,3 +61,13 @@ print beekem_hkr_cks_advantage.
 print beekem_se_registration_for.
 print beekem_mu_cpa_evidence.
 print beekem_mu_cpa_advantage.
+print BeeKemNikeSymmetryGame.
+print BeeKemSeCorrectnessGame.
+
+(* Exact imported BeeKEM Theorem 1 boundary under the uniform centered-bias
+   interpretation required by Appendix B's hybrid inequalities. *)
+print beekem_is_ceil_log2.
+print beekem_theorem1_loss.
+print beekem_ceil_log2_one.
+print beekem_ceil_log2_two.
+print BKI.beekem_theorem1_imported_normalized.
