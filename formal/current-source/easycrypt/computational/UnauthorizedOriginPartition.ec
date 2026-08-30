@@ -101,7 +101,7 @@ section OriginEnvironmentPartition.
         apply origin_partition_update.
         * assumption.
         * move=> semantic.
-          have partition := origin_unauthorized_implies_bad_or_ideal
+          have partition := origin_unauthorized_implies_bad_or_lean_certified_ideal
             operation envelope view state_before sign_queries semantic.
           smt().
     + auto.
@@ -110,8 +110,9 @@ end section OriginEnvironmentPartition.
 
 (* A5 is proved for the same origin-aware adversary interface as A0.  The
    signing procedures cannot affect the ideal flag, while every accepted
-   submission inherits the public validator's checked ideal-authorization
-   postcondition from the exact pre-state. *)
+   submission inherits the validator's policy-valid authorization result and
+   its independent Lean-fold representation certificate from the exact
+   pre-state. *)
 section OriginIdealInvariant.
   declare module S <: SIGNATURE_SCHEME.
   declare module H <: NODE_HASH.
@@ -142,13 +143,13 @@ section OriginIdealInvariant.
       ! OI.ideal_unauthorized ==> ! OI.ideal_unauthorized].
   proof.
     proc.
-    call (candidate_submit_acceptance_implies_ideal_authorization
+    call (candidate_submit_acceptance_implies_lean_certified_authorization
       operation view state_before).
     if.
     + call (_ : true ==> true).
       while (! OI.ideal_unauthorized); first by auto.
       auto=> />.
-      rewrite /ideal_authorized_candidate.
+      rewrite /lean_certified_ideal_authorized_candidate.
       smt().
     + auto.
   qed.

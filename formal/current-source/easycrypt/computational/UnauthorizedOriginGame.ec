@@ -1,6 +1,6 @@
 require import AllCore List FSet.
 require import ProtocolTypes CanonicalEncoding ProtocolPrimitives AuthorizationState.
-require import ProtocolChecks ProtocolOracles AuthorizationAncestry UnauthorizedReduction UnauthorizedIdeal.
+require import ProtocolChecks ProtocolOracles AuthorizationAncestry UnauthorizedReduction UnauthorizedIdeal UnauthorizedLeanCertifiedIdeal.
 require import UnauthorizedSignatureReduction.
 
 import PG.
@@ -88,9 +88,10 @@ op origin_unauthorized_acceptance_condition
   \/ ! operation_body_valid_for_envelope envelope.
 
 (* If every accepted signature has origin, authenticated replay is the A5
-   replay over the complete exact view.  Hence a real unauthorized event must
-   expose an operation forgery, a fact forgery, or an A5 ideal violation. *)
-lemma origin_unauthorized_implies_bad_or_ideal
+   replay over the complete exact view.  The A5 branch additionally carries
+   the checked representation certificate connecting that replay to the
+   independent Lean-style observed-remove fold. *)
+lemma origin_unauthorized_implies_bad_or_lean_certified_ideal
     (operation : signed_operation)
     (envelope : operation_envelope)
     (view : public_view)
@@ -100,7 +101,8 @@ lemma origin_unauthorized_implies_bad_or_ideal
     operation envelope view state sign_queries =>
      ! operation_signature_originated operation envelope sign_queries
   \/ ! all_fact_signatures_originated view.`pv_facts sign_queries
-  \/ ! ideal_decoded_authorized operation envelope view state.
+  \/ ! lean_certified_ideal_decoded_authorized
+       operation envelope view state.
 proof.
   move=> unauthorized.
   case (operation_signature_originated
@@ -108,7 +110,10 @@ proof.
   + case (all_fact_signatures_originated
             view.`pv_facts sign_queries) => facts_originated.
     + right; right.
-      apply contraT => ideal.
+      apply contraT => certified.
+      have ideal :=
+        lean_certified_ideal_decoded_authorized_implies_ideal
+          operation envelope view state certified.
       rewrite /origin_unauthorized_acceptance_condition
         /authenticated_authorization_state
         (all_originated_filter_identity
@@ -276,7 +281,8 @@ module OriginTrackedCandidateEnvironment(
       ideal_unauthorized <-
         ideal_unauthorized \/
         (semantic_unauthorized /\ operation_originated /\ facts_originated /\
-         ! ideal_decoded_authorized operation envelope view state_before);
+         ! lean_certified_ideal_decoded_authorized
+             operation envelope view state_before);
       unauthorized_accepted <-
         unauthorized_accepted \/ semantic_unauthorized;
     }
