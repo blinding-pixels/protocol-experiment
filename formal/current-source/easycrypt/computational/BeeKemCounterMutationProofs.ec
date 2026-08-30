@@ -79,3 +79,41 @@ proof.
   rewrite -cardE fcardU1 fcard1 in_fset1.
   smt(in_fset0 in_fset1 size_rcons size_ge0).
 qed.
+
+(* Rows 9 and 10 of the mutation matrix are deliberately separated below.
+   Each theorem runs the same exact KI game and changes one derived theorem
+   factor only: either the challenge count [c], or the member-addition count
+   used to select [ceil(log2 n)]. *)
+lemma mutation_drop_challenge_count_changes_theorem_factor :
+  hoare [BeeKemCounterFactorGame.main_with_fixed_bit :
+       users = [beekem_witness_user]
+    /\ group = beekem_witness_group
+    /\ kappa = 1
+    /\ membership = beekem_witness_membership
+    /\ hidden_bit = true
+    ==>
+       res.`bke_challenge_count = 1
+    /\ beekem_theorem1_loss res.`bke_challenge_count 1 = 1%r
+    /\ beekem_theorem1_loss
+         (beekem_drop_one_count res.`bke_challenge_count) 1 = 0%r].
+proof.
+  conseq beekem_actual_counter_factors_are_nonzero => //.
+qed.
+
+lemma mutation_drop_addition_count_changes_logarithmic_factor :
+  hoare [BeeKemCounterFactorGame.main_with_fixed_bit :
+       users = [beekem_witness_user]
+    /\ group = beekem_witness_group
+    /\ kappa = 1
+    /\ membership = beekem_witness_membership
+    /\ hidden_bit = true
+    ==>
+       res.`bke_member_addition_count = 2
+    /\ beekem_is_ceil_log2 res.`bke_member_addition_count 1
+    /\ beekem_is_ceil_log2
+         (beekem_drop_one_count res.`bke_member_addition_count) 0
+    /\ beekem_theorem1_loss res.`bke_challenge_count 1 = 1%r
+    /\ beekem_theorem1_loss res.`bke_challenge_count 0 = 0%r].
+proof.
+  conseq beekem_actual_counter_factors_are_nonzero => //.
+qed.
