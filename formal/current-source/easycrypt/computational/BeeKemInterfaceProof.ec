@@ -4,6 +4,7 @@ clone import BeeKemKiInterface as BKI.
 require import BeeKemSafetyProofs BeeKemSafetyMutations BeeKemProtocolSemanticsProofs BeeKemGameWitnesses BeeKemQueryCounterProofs BeeKemCounterMutationProofs BeeKemMutationGameProofs BeeKemForkGameWitnesses BeeKemForkMutationProofs BeeKemRevealMutationProofs BeeKemRetentionMutationProofs BeeKemPrimitiveWitnesses BeeKemNormalizationProofs BeeKemFixedBitProjection BeeKemProjectedNormalization.
 require import LiveBeeKemAuthoritativePrimitiveBound.
 require import LiveBeeKemAuthoritativeComposition.
+require import LivePrfExactIdeal.
 
 (* Public closure for the executable Figure 8 oracle environment and exact
    finite-kappa Figure 3 safety predicate.  The trace theorems below force all
@@ -133,6 +134,10 @@ print BKI.beekem_theorem1_imported_normalized.
 print authoritative_projected_beekem_advantage_bound.
 print authoritative_beekem_random_projection_exactly_prf_game_real.
 print authoritative_live_beekem_prf_composed_bound.
+
+(* Exact executable PRF-random to bit-free ideal boundary. *)
+print authoritative_prf_random_fixed_bit_exactly_ideal.
+print authoritative_exact_ideal_live_key_advantage_zero.
 
 (* Checker-reachable non-vacuity controls for the exact KI game. *)
 print beekem_witness_real_branch_reachable.
