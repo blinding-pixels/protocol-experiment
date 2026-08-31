@@ -34,46 +34,46 @@ op application_beekem_attempt_kind_matches_query_for
     (kind : application_beekem_attempt_kind)
     (attempt : application_beekem_attempt)
     (query : beekem_query) : bool =
-  with kind = ApplicationBeeKemCreateAttempt (actor, initial_members) =>
+  with kind = ApplicationBeeKemCreateAttempt create_payload =>
          query.`bq_kind = BeeQueryCreate
-      /\ registry.`aur_user_of actor = Some query.`bq_actor
+      /\ registry.`aur_user_of create_payload.`1 = Some query.`bq_actor
       /\ query.`bq_target = None
       /\ query.`bq_target_frontier = fset0
-  with kind = ApplicationBeeKemAddAttempt (actor, target) =>
+  with kind = ApplicationBeeKemAddAttempt add_payload =>
          query.`bq_kind = BeeQueryAdd
-      /\ registry.`aur_user_of actor = Some query.`bq_actor
-      /\ registry.`aur_user_of target = query.`bq_target
-  with kind = ApplicationBeeKemRemoveAttempt (actor, target) =>
+      /\ registry.`aur_user_of add_payload.`1 = Some query.`bq_actor
+      /\ registry.`aur_user_of add_payload.`2 = query.`bq_target
+  with kind = ApplicationBeeKemRemoveAttempt remove_payload =>
          query.`bq_kind = BeeQueryRemove
-      /\ registry.`aur_user_of actor = Some query.`bq_actor
-      /\ registry.`aur_user_of target = query.`bq_target
+      /\ registry.`aur_user_of remove_payload.`1 = Some query.`bq_actor
+      /\ registry.`aur_user_of remove_payload.`2 = query.`bq_target
   with kind = ApplicationBeeKemUpdateAttempt actor =>
          query.`bq_kind = BeeQuerySendUpdate
       /\ registry.`aur_user_of actor = Some query.`bq_actor
       /\ query.`bq_target = None
       /\ query.`bq_target_frontier = fset0
-  with kind = ApplicationBeeKemDeliverAttempt (node, recipient) =>
+  with kind = ApplicationBeeKemDeliverAttempt deliver_payload =>
          query.`bq_kind = BeeQueryDeliver
       /\ attempt.`aba_address <> None
-      /\ attempt.`aba_node = Some node
-      /\ (oget attempt.`aba_address).`aba_node = node
+      /\ attempt.`aba_node = Some deliver_payload.`1
+      /\ (oget attempt.`aba_address).`aba_node = deliver_payload.`1
       /\ query.`bq_actor = (oget attempt.`aba_address).`aba_user
-      /\ registry.`aur_user_of recipient = query.`bq_target
-  with kind = ApplicationBeeKemRevealAttempt (member, node) =>
+      /\ registry.`aur_user_of deliver_payload.`2 = query.`bq_target
+  with kind = ApplicationBeeKemRevealAttempt reveal_payload =>
          query.`bq_kind = BeeQueryReveal
-      /\ registry.`aur_user_of member <> None
+      /\ registry.`aur_user_of reveal_payload.`1 <> None
       /\ attempt.`aba_address <> None
-      /\ attempt.`aba_node = Some node
-      /\ (oget attempt.`aba_address).`aba_node = node
+      /\ attempt.`aba_node = Some reveal_payload.`2
+      /\ (oget attempt.`aba_address).`aba_node = reveal_payload.`2
       /\ query.`bq_actor = (oget attempt.`aba_address).`aba_user
       /\ query.`bq_target = None
       /\ query.`bq_target_frontier = fset0
-  with kind = ApplicationBeeKemChallengeAttempt (member, node) =>
+  with kind = ApplicationBeeKemChallengeAttempt challenge_payload =>
          query.`bq_kind = BeeQueryChallenge
-      /\ registry.`aur_user_of member <> None
+      /\ registry.`aur_user_of challenge_payload.`1 <> None
       /\ attempt.`aba_address <> None
-      /\ attempt.`aba_node = Some node
-      /\ (oget attempt.`aba_address).`aba_node = node
+      /\ attempt.`aba_node = Some challenge_payload.`2
+      /\ (oget attempt.`aba_address).`aba_node = challenge_payload.`2
       /\ query.`bq_actor = (oget attempt.`aba_address).`aba_user
       /\ query.`bq_target = None
       /\ query.`bq_target_frontier = fset0
