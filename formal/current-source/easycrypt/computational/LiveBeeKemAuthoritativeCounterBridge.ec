@@ -9,15 +9,18 @@ require import LiveBeeKemAuthoritativeQueryBridge.
 (* Application-side counters are computed only from forwarded, canonically
    accepted attempts.  Create contributes its actual initial-member cardinality;
    Add contributes one; rejected and locally rejected attempts contribute zero. *)
+op application_beekem_member_addition_kind_delta
+    (kind : application_beekem_attempt_kind) : int =
+  with kind = ApplicationBeeKemCreateAttempt payload =>
+    size (elems payload.`2)
+  with kind = ApplicationBeeKemAddAttempt payload => 1
+  with kind = _ => 0.
+
 op application_beekem_member_addition_delta
     (kind : application_beekem_attempt_kind)
     (forwarded accepted : bool) : int =
   if ! forwarded \/ ! accepted then 0
-  else
-    with kind = ApplicationBeeKemCreateAttempt payload =>
-      size (elems payload.`2)
-    with kind = ApplicationBeeKemAddAttempt payload => 1
-    with kind = _ => 0.
+  else application_beekem_member_addition_kind_delta kind.
 
 op application_beekem_member_addition_count
     (attempts : application_beekem_attempt_log) : int =
@@ -28,13 +31,16 @@ op application_beekem_member_addition_count
       attempt.`aba_canonical_accepted
     + application_beekem_member_addition_count rest.
 
+op application_beekem_challenge_kind_delta
+    (kind : application_beekem_attempt_kind) : int =
+  with kind = ApplicationBeeKemChallengeAttempt payload => 1
+  with kind = _ => 0.
+
 op application_beekem_challenge_delta
     (kind : application_beekem_attempt_kind)
     (forwarded accepted : bool) : int =
   if ! forwarded \/ ! accepted then 0
-  else
-    with kind = ApplicationBeeKemChallengeAttempt payload => 1
-    with kind = _ => 0.
+  else application_beekem_challenge_kind_delta kind.
 
 op application_beekem_challenge_count
     (attempts : application_beekem_attempt_log) : int =
@@ -181,8 +187,10 @@ proof.
     /application_beekem_output_mapping_exact
     /application_beekem_challenge_count
     /application_beekem_challenge_delta
+    /application_beekem_challenge_kind_delta
     /application_beekem_member_addition_count
     /application_beekem_member_addition_delta
+    /application_beekem_member_addition_kind_delta
     /beekem_witness_membership /beekem_witness_initial_member_state
     /beekem_member_retention_valid /beekem_witness_personal_secret
     /beekem_witness_after_create /beekem_witness_control
