@@ -95,7 +95,7 @@ module AuthoritativeLiveProtocolOracle(
   }
 
   proc send_beekem_update(author : principal) : node_id option = {
-    var result : noe_id option;
+    var result : node_id option;
     result <@ Bee.send_update(author, current_authorization_digest);
     return result;
   }
@@ -150,7 +150,7 @@ module AuthoritativeLiveProtocolOracle(
 
     if (! revealed_live member node /\
         ! challenged_live member node /\ digest <> None) {
-      output <P Bee.Core.reveal(member, node);
+      output <@ Bee.Core.reveal(member, node);
       root <- application_beekem_output_root output.`abo_secret_output;
       if (output.`abo_runtime_fault) {
         runtime_fault <- true;
@@ -160,7 +160,7 @@ module AuthoritativeLiveProtocolOracle(
       }
       if (root <> None) {
         label <- live_label_of public_state node (oget digest);
-        key <P K.derive_live(oget root, label);
+        key <@ K.derive_live(oget root, label);
         revealed_live <- authoritative_application_mark_store_put
           revealed_live member node true;
         derived_queries <- rcons derived_queries
@@ -190,10 +190,10 @@ module AuthoritativeLiveProtocolOracle(
 
     if (! revealed_live member node /\
         ! challenged_live member node /\ digest <> None) {
-      root <P acquire_challenge_root(member, node);
+      root <@ acquire_challenge_root(member, node);
       if (root <> None) {
         label <- live_label_of public_state node (oget digest);
-        key <P K.derive_live(oget root, label);
+        key <@ K.derive_live(oget root, label);
         challenged_live <- authoritative_application_mark_store_put
           challenged_live member node true;
         derived_queries <- rcons derived_queries
@@ -223,10 +223,10 @@ module AuthoritativeLiveProtocolOracle(
     result <- None;
 
     if (digest <> None) {
-      root <P acquire_challenge_root(member, node);
+      root <@ acquire_challenge_root(member, node);
       if (root <> None) {
         label <- history_label_of public_state segment (oget digest);
-        output <P K.derive_history(oget root, label);
+        output <@ K.derive_history(oget root, label);
         derived_queries <- rcons derived_queries
           {| lq_kind = LiveHistoryOutputQuery member segment;
              lq_operation = Some node |};
@@ -249,16 +249,16 @@ module AuthoritativeLiveProtocolOracle(
     var result : history_capability_output option;
 
     root <- None;
-    digest <- Bee.Core.digests node;
+    digest <- Bee.Core.digests noe;
     label <- witness;
     output <- witness;
     result <- None;
 
     if (digest <> None) {
-      root <P acquire_challenge_root(member, node);
+      root <@ acquire_challenge_root(member, node);
       if (root <> None) {
         label <- history_label_of public_state segment (oget digest);
-        output <P K.derive_history_capability(oget root, label, cover);
+        output <@ K.derive_history_capability(oget root, label, cover);
         derived_queries <- rcons derived_queries
           {| lq_kind = LiveHistoryCapabilityQuery member segment;
              lq_operation = Some node |};
@@ -272,7 +272,7 @@ module AuthoritativeLiveProtocolOracle(
     member : principal
   ) : beekem_member_state option = {
     var result : beekem_member_state option;
-    result <P Bee.compromise(member);
+    result <@ Bee.compromise(member);
     return result;
   }
 
@@ -287,7 +287,7 @@ module AuthoritativeLiveProtocolOracle(
     envelope <- decode_operation operation.`so_raw;
     identifier <- if envelope = None then None
       else Some (oget envelope).`oe_operation_id;
-    accepted <P Auth.submit(operation, view);
+    accepted <@ Auth.submit(operation, view);
     if (accepted /\ envelope <> None) {
       current_authorization_digest <-
         (oget envelope).`oe_authorization_digest;
