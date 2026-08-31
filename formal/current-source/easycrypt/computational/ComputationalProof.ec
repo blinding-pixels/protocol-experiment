@@ -8,6 +8,7 @@ require import LiveAuthenticationReduction.
 require import LiveBeeKemControl LiveBeeKemDerived.
 require import LiveBeeKemAuthoritativeApplicationControls.
 require import LiveBeeKemAuthoritativeQueryBridge.
+require import LiveBeeKemAuthoritativeCounterBridge.
 require import BeeKemNormalizationProofs BeeKemInterfaceProof.
 require import LiveBeeKemOracle LiveBeeKemReduction.
 require import LivePrfReduction.
@@ -85,6 +86,7 @@ print LiveBeeKemReduction.beekem_live_wrapper_invokes_primitive_challenge_once.
 print LiveBeeKemAuthoritativeTypes.authoritative_adapter_nonvacuity.
 print LiveBeeKemAuthoritativeApplicationControls.authoritative_application_adapter_real_branch_reachable.
 print LiveBeeKemAuthoritativeQueryBridge.authoritative_application_query_log_bridge_reachable.
+print LiveBeeKemAuthoritativeCounterBridge.authoritative_rejected_create_is_retained_exactly.
 
 (* BeeKEM normalization repair: unsafe executable traces contribute zero safe
    mass and cannot satisfy the imported all-safe theorem boundary. *)
