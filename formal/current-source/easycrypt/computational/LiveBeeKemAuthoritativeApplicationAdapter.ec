@@ -12,11 +12,11 @@ op application_beekem_address_of_control
     (user : beekem_user)
     (counter : beekem_counter)
     (operation : beekem_operation_id) : application_beekem_address =
-  {| aba_node = node;
-     aba_principal = principal;
+  {| aba_principal = principal;
      aba_user = user;
      aba_counter = counter;
-     aba_operation = operation |}.
+     aba_operation = operation;
+     aba_node = node |}.
 
 (* Stateful application translation over the authoritative Figure-8 oracle.
    This module owns only cross-layer identity/address metadata.  It owns no
