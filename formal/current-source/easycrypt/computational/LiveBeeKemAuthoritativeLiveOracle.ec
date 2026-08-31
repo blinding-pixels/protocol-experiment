@@ -10,7 +10,7 @@ require import LiveBeeKemAuthoritativeLiveTypes.
 
 import PG.
 
-** Full authenticated application wrapper over the authoritative Figure-8
+(* Full authenticated application wrapper over the authoritative Figure-8
    oracle.  All BeeKEM control, delivery, reveal, challenge, and compromise
    calls are delegated to [AuthoritativeApplicationBeeKemCore].  This module
    owns only public authorization-label state, derived-output routing, and the
@@ -135,7 +135,6 @@ module AuthoritativeLiveProtocolOracle(
     member : principal,
     node : node_id
   ) : live_application_key option = {
-    var output : application_beekem_output_result;
     var root : beekem_secret option;
     var digest : authorization_digest option;
     var label : live_key_label;
@@ -150,7 +149,8 @@ module AuthoritativeLiveProtocolOracle(
 
     if (! revealed_live member node /\
         ! challenged_live member node /\ digest <> None) {
-      output <@ Bee.Core.reveal(member, node);
+      var output : application_beekem_output_result;
+      output <P Bee.Core.reveal(member, node);
       root <- application_beekem_output_root output.`abo_secret_output;
       if (output.`abo_runtime_fault) {
         runtime_fault <- true;
@@ -160,7 +160,7 @@ module AuthoritativeLiveProtocolOracle(
       }
       if (root <> None) {
         label <- live_label_of public_state node (oget digest);
-        key <@ K.derive_live(oget root, label);
+        key <P K.derive_live(oget root, label);
         revealed_live <- authoritative_application_mark_store_put
           revealed_live member node true;
         derived_queries <- rcons derived_queries
@@ -190,10 +190,10 @@ module AuthoritativeLiveProtocolOracle(
 
     if (! revealed_live member node /\
         ! challenged_live member node /\ digest <> None) {
-      root <@ acquire_challenge_root(member, node);
+      root <P acquire_challenge_root(member, node);
       if (root <> None) {
         label <- live_label_of public_state node (oget digest);
-        key <@ K.derive_live(oget root, label);
+        key <P K.derive_live(oget root, label);
         challenged_live <- authoritative_application_mark_store_put
           challenged_live member node true;
         derived_queries <- rcons derived_queries
@@ -223,10 +223,10 @@ module AuthoritativeLiveProtocolOracle(
     result <- None;
 
     if (digest <> None) {
-      root <@ acquire_challenge_root(member, node);
+      root <P acquire_challenge_root(member, node);
       if (root <> None) {
         label <- history_label_of public_state segment (oget digest);
-        output <@ K.derive_history(oget root, label);
+        output <P K.derive_history(oget root, label);
         derived_queries <- rcons derived_queries
           {| lq_kind = LiveHistoryOutputQuery member segment;
              lq_operation = Some node |};
@@ -255,10 +255,10 @@ module AuthoritativeLiveProtocolOracle(
     result <- None;
 
     if (digest <> None) {
-      root <@ acquire_challenge_root(member, node);
+      root <P acquire_challenge_root(member, node);
       if (root <> None) {
         label <- history_label_of public_state segment (oget digest);
-        output <@ K.derive_history_capability(oget root, label, cover);
+        output <P K.derive_history_capability(oget root, label, cover);
         derived_queries <- rcons derived_queries
           {| lq_kind = LiveHistoryCapabilityQuery member segment;
              lq_operation = Some node |};
@@ -272,7 +272,7 @@ module AuthoritativeLiveProtocolOracle(
     member : principal
   ) : beekem_member_state option = {
     var result : beekem_member_state option;
-    result <@ Bee.compromise(member);
+    result <P Bee.compromise(member);
     return result;
   }
 
@@ -287,7 +287,7 @@ module AuthoritativeLiveProtocolOracle(
     envelope <- decode_operation operation.`so_raw;
     identifier <- if envelope = None then None
       else Some (oget envelope).`oe_operation_id;
-    accepted <@ Auth.submit(operation, view);
+    accepted <P Auth.submit(operation, view);
     if (accepted /\ envelope <> None) {
       current_authorization_digest <-
         (oget envelope).`oe_authorization_digest;
