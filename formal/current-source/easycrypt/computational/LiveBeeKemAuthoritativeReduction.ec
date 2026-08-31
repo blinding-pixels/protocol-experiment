@@ -154,7 +154,7 @@ module AuthoritativeBeeKemApplicationBit(
       live_auth_initial_authorization <> None;
     application_challenge_count <-
       challenge_query_count Core.derived_queries;
-    beekem_safe <- bee_safe_kappa
+    beekem_safe <- BeeKemSafety.bee_safe_kappa
       live_auth_retention_kappa
       Bee.Environment.state.`bps_operations
       Bee.Environment.query_log;
