@@ -8,6 +8,7 @@ require import LiveBeeKemAuthoritativeLiveTypes.
 require import LiveBeeKemAuthoritativeLiveOracle.
 require import LivePrfAuthoritativeAdapter.
 require import LivePrfAuthoritativeReduction.
+require import LivePrfAuthoritativeProof.
 
 import PG.
 
