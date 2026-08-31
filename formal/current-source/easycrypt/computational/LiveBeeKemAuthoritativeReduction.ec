@@ -9,6 +9,7 @@ clone import BeeKemKiInterface as BKI.
 require import LiveBeeKemAuthoritativeTypes.
 require import LiveBeeKemAuthoritativeLiveTypes.
 require import LiveBeeKemAuthoritativeLiveOracle.
+require import LivePrfGame LivePrfApplicationReduction.
 require import LivePrfAuthoritativeAdapter.
 require import LivePrfAuthoritativeReduction.
 require import LivePrfAuthoritativeProof.
@@ -22,11 +23,11 @@ import PG.
    a BeeKEM root: every application challenge reaches [O.challenge] through
    [AuthoritativeLiveProtocolOracle].
 
-   The real application schedule mirrors the exact primitive PRF call trace:
-   ordinary live reveals and both history domains are real-only, while the
-   distinguished application challenge evaluates the real KDF and one unused
-   sampler call.  Thus the BeeKEM hybrid and the PRF-real endpoint can later be
-   related by exact program equivalence rather than a transcript premise.
+   The live derivation is routed through the actual multi-domain PRF oracle
+   fixed to its real branch.  Ordinary live reveals and both history domains
+   remain real-only, while an accepted live challenge executes the primitive
+   real KDF and sampler call in its canonical order.  The BeeKEM hybrid and the
+   PRF-real endpoint therefore share the primitive implementation directly.
 
    Authentication failure and adapter inconsistency are computed from the
    shared execution and filter the reduction guess.  They are not supplied by
@@ -41,7 +42,8 @@ module BBeeLive(
 )(O : BEEKEM_KI_ORACLES) = {
   module SO = PG.LoggedSignatureOracle(S)
   module Auth = OriginTrackedCandidateEnvironment(SO, H)
-  module KReal = RealChallengeKeySchedule(K, R)
+  module Prf = MultiDomainPrfOracle(K, R)
+  module KReal = PrfOracleBackedKeySchedule(Prf)
   module Core = AuthoritativeLiveProtocolOracle(Auth, O, KReal)
   module Live = AuthoritativePrfBackedLiveOracle(Core, KReal)
   module A = A(Live)
@@ -56,6 +58,7 @@ module BBeeLive(
   proc attack() : bool = {
     SO.init();
     Auth.init(live_auth_initial_state);
+    Prf.init(true);
     KReal.init();
     Core.init(
       authoritative_live_initial_registry,
