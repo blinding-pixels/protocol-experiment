@@ -6,6 +6,7 @@ require import BeeKemTypes BeeKemProtocol BeeKemKiGame BeeKemConstruction.
 require import LiveBeeKemAuthoritativeTypes.
 require import LiveBeeKemAuthoritativeLiveTypes.
 require import LiveBeeKemAuthoritativeLiveOracle.
+require import LivePrfAuthoritativeAdapter.
 require import LivePrfAuthoritativeReduction.
 
 import PG.
