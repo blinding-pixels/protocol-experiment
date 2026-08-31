@@ -231,7 +231,7 @@ section AuthoritativeBeeKemProjection.
        ]).
   proof.
     rewrite -authoritative_beekem_random_root_exactly_prf_real.
-    exact mdprf_fixed_bit_triangle
+    exact (mdprf_fixed_bit_triangle
       (Pr[
          ProjectedRealRoot.main() @ &m :
            res.`mpar_eligible /\ res.`mpar_guess
@@ -243,6 +243,6 @@ section AuthoritativeBeeKemProjection.
       (Pr[
          PrfRandomEndpoint.main() @ &m :
            res.`mpar_eligible /\ res.`mpar_guess
-       ]).
+       ])).
   qed.
 end section AuthoritativeBeeKemProjection.
