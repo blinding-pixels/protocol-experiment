@@ -87,14 +87,15 @@ op application_beekem_users_of_set
     (registry : application_user_registry)
     (members : principal fset) : beekem_user fset option =
   let mapped = application_beekem_users_of_list registry (elems members) in
-  if mapped = None then None else Some (oflist (oget mapped)).
+  if mapped = None then None else Some
+    (LiveBeeKemAuthoritativeTypes.oflist (oget mapped)).
 
 lemma application_beekem_users_of_empty_set
     (registry : application_user_registry) :
   application_beekem_users_of_set registry fset0 = Some fset0.
 proof.
   rewrite /application_beekem_users_of_set /application_beekem_users_of_list.
-  rewrite elems_fset0 /oflist.
+  rewrite elems_fset0 /LiveBeeKemAuthoritativeTypes.oflist.
   done.
 qed.
 
