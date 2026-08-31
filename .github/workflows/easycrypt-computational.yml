@@ -5,6 +5,7 @@ on:
     branches:
       - formal/easycrypt-computational-m1
       - formal/easycrypt-unauthorized-reduction
+      - formal/easycrypt-beekem-interface
     paths:
       - '.github/workflows/easycrypt-computational.yml'
       - 'formal/current-source/easycrypt/computational/**'
@@ -27,12 +28,13 @@ concurrency:
 
 jobs:
   computational-proof:
-    name: Check complete Deliverable A closure
+    name: Check computational proof closure
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
       EASYCRYPT_IMAGE: ghcr.io/easycrypt/ec-test-box@sha256:84980006e8b01fe6497bbd0ecd67deeb5e7361d8ad17e27d24924122d368e0fc
-      CHECK_EC: ComputationalProof.ec
+      CHECK_EC: ${{ (github.ref == 'refs/heads/formal/easycrypt-beekem-interface' || github.head_ref == 'formal/easycrypt-beekem-interface') && 'BeeKemInterfaceProof.ec' || 'ComputationalProof.ec' }}
+      BEEKEM_PDF_SHA256: 129a819400898536455cabe4ba104c02d902384ea802b4900a388e8e9c0e4fb3
     steps:
       - name: Check out exact proof source
         uses: actions/checkout@v4
@@ -44,14 +46,92 @@ jobs:
           evidence="$RUNNER_TEMP/easycrypt-full-evidence"
           source_dir="formal/current-source/easycrypt/computational"
           mkdir -p "$evidence/checked-source"
-          cp -R "$source_dir"/. "$evidence/checked-source"/
-          git rev-parse HEAD | tee "$evidence/source-commit.txt"
-          find "$source_dir" -maxdepth 1 -type f \
-            \( -name '*.ec' -o -name '*.eca' \) -print0 \
-            | LC_ALL=C sort -z \
-            | xargs -0 sha256sum \
-            | tee "$evidence/source-sha256.txt"
-          git status --short --branch | tee "$evidence/git-status.txt"
+
+          set +e
+          (
+            set -euo pipefail
+            cp -R "$source_dir"/. "$evidence/checked-source"/
+            git rev-parse HEAD | tee "$evidence/source-commit.txt"
+            find "$source_dir" -maxdepth 1 -type f \
+              \( -name '*.ec' -o -name '*.eca' \) -print0 \
+              | LC_ALL=C sort -z \
+              | xargs -0 sha256sum \
+              | tee "$evidence/source-sha256.txt"
+            git status --short --branch | tee "$evidence/git-status.txt"
+          )
+          status=$?
+          set -e
+          printf '%s\n' "$status" >"$evidence/source-identity-exit-status.txt"
+          exit "$status"
+
+      - name: Compute BeeKEM dependency closure
+        if: github.ref == 'refs/heads/formal/easycrypt-beekem-interface' || github.head_ref == 'formal/easycrypt-beekem-interface'
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/easycrypt-full-evidence"
+          source_dir="formal/current-source/easycrypt/computational"
+          closure="$evidence/beekem-dependency-closure.txt"
+
+          set +e
+          python3 tools/easycrypt/beekem_dependency_closure.py \
+            --root "$source_dir" \
+            --entry "$CHECK_EC" \
+            --repository-relative \
+            >"$closure" \
+            2>"$evidence/dependency-closure-stderr.log"
+          status=$?
+          set -e
+          printf '%s\n' "$status" \
+            >"$evidence/dependency-closure-exit-status.txt"
+          cat "$closure"
+          cat "$evidence/dependency-closure-stderr.log" >&2
+          if [ "$status" -ne 0 ]; then
+            exit "$status"
+          fi
+
+          grep -Fx "$source_dir/$CHECK_EC" "$closure"
+          grep -Fx "$source_dir/BeeKemSafety.ec" "$closure"
+          while IFS= read -r dependency; do
+            test -f "$dependency"
+            sha256sum "$dependency"
+          done <"$closure" \
+            | tee "$evidence/beekem-dependency-sha256.txt"
+          sha256sum "$closure" "$evidence/beekem-dependency-sha256.txt" \
+            | tee "$evidence/beekem-dependency-manifest-sha256.txt"
+          printf '0\n' >"$evidence/dependency-hash-exit-status.txt"
+
+      - name: Verify BeeKEM primary source
+        if: github.ref == 'refs/heads/formal/easycrypt-beekem-interface' || github.head_ref == 'formal/easycrypt-beekem-interface'
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/easycrypt-full-evidence"
+          pdf="$evidence/BeeKEM-2026-1434.pdf"
+          text="$evidence/BeeKEM-2026-1434.txt"
+
+          set +e
+          (
+            set -euo pipefail
+            curl --fail --location --retry 5 --retry-all-errors \
+              --output "$pdf" \
+              https://eprint.iacr.org/2026/1434.pdf
+            printf '%s  %s\n' "$BEEKEM_PDF_SHA256" "$pdf" \
+              | sha256sum --check \
+              | tee "$evidence/beekem-source-hash.log"
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends poppler-utils
+            dpkg-query -W -f='${Package} ${Version}\n' poppler-utils \
+              | tee "$evidence/beekem-extractor-version.txt"
+            pdftotext -layout "$pdf" "$text"
+            file "$pdf" | tee "$evidence/beekem-source-file.log"
+            wc -c "$pdf" "$text" | tee "$evidence/beekem-source-size.log"
+          )
+          status=$?
+          set -e
+          printf '%s\n' "$status" \
+            >"$evidence/beekem-source-verification-exit-status.txt"
+          exit "$status"
 
       - name: Verify active proof source
         shell: bash
@@ -71,6 +151,71 @@ jobs:
           cat "$evidence/audit-stdout.log"
           cat "$evidence/audit-stderr.log" >&2
           exit "$status"
+
+      - name: Prove theorem-boundary audit mutation
+        if: github.ref == 'refs/heads/formal/easycrypt-beekem-interface' || github.head_ref == 'formal/easycrypt-beekem-interface'
+        shell: bash
+        run: |
+          set -euo pipefail
+          source_dir="$GITHUB_WORKSPACE/formal/current-source/easycrypt/computational"
+          mutant_dir="$RUNNER_TEMP/easycrypt-theorem-boundary-mutation"
+          evidence="$RUNNER_TEMP/easycrypt-full-evidence"
+          mkdir -p "$mutant_dir"
+          cp -R "$source_dir"/. "$mutant_dir"/
+
+          target="$mutant_dir/BeeKemKiInterface.eca"
+          sha256sum "$target" \
+            | tee "$evidence/theorem-boundary-mutation-source-sha256.txt"
+          python3 - "$target" <<'PY'
+          from pathlib import Path
+          import sys
+
+          path = Path(sys.argv[1])
+          text = path.read_text(encoding="utf-8")
+          needle = "    => exists (BNike <: BEEKEM_HKR_CKS_ADVERSARY),\n"
+          count = text.count(needle)
+          if count != 1:
+              raise SystemExit(
+                  f"expected exactly one BNike existential, found {count}"
+              )
+          path.write_text(
+              text.replace(needle, "    => true =>\n", 1),
+              encoding="utf-8",
+          )
+          PY
+          grep -F '=> true =>' "$target" \
+            | tee "$evidence/theorem-boundary-mutation-edit.txt"
+
+          set +e
+          python3 tools/easycrypt/audit_computational.py \
+            --root "$mutant_dir" \
+            >"$evidence/theorem-boundary-mutation-stdout.log" \
+            2>"$evidence/theorem-boundary-mutation-stderr.log"
+          status=$?
+          set -e
+          printf '%s\n' "$status" \
+            >"$evidence/theorem-boundary-mutation-raw-audit-status.txt"
+          cat "$evidence/theorem-boundary-mutation-stdout.log"
+          cat "$evidence/theorem-boundary-mutation-stderr.log" >&2
+
+          if [ "$status" -eq 0 ]; then
+            echo "theorem-boundary mutation unexpectedly passed audit" >&2
+            printf '1\n' \
+              >"$evidence/theorem-boundary-mutation-assertion-exit-status.txt"
+            exit 1
+          fi
+          if ! grep -Fq \
+              'must existentially produce the HKR-CKS reduction' \
+              "$evidence/theorem-boundary-mutation-stdout.log" \
+              "$evidence/theorem-boundary-mutation-stderr.log"; then
+            echo "theorem-boundary mutant failed for an unrelated reason" >&2
+            printf '1\n' \
+              >"$evidence/theorem-boundary-mutation-assertion-exit-status.txt"
+            exit 1
+          fi
+          printf '0\n' \
+            >"$evidence/theorem-boundary-mutation-assertion-exit-status.txt"
+          echo "theorem-boundary audit mutation rejected as expected"
 
       - name: Run executable reference suite
         shell: bash
@@ -95,13 +240,58 @@ jobs:
         run: |
           set -euo pipefail
           evidence="$RUNNER_TEMP/easycrypt-full-evidence"
-          docker pull "$EASYCRYPT_IMAGE" 2>&1 | tee "$evidence/image-pull.log"
-          docker image inspect "$EASYCRYPT_IMAGE" >"$evidence/image-inspect.json"
-          docker image inspect "$EASYCRYPT_IMAGE" \
-            --format '{{json .RepoDigests}}' \
-            | tee "$evidence/image-repo-digests.txt"
 
-      - name: Compile complete Deliverable A closure
+          set +e
+          (
+            set -euo pipefail
+            docker pull "$EASYCRYPT_IMAGE" 2>&1 \
+              | tee "$evidence/image-pull.log"
+            docker image inspect "$EASYCRYPT_IMAGE" \
+              >"$evidence/image-inspect.json"
+            docker image inspect "$EASYCRYPT_IMAGE" \
+              --format '{{json .RepoDigests}}' \
+              | tee "$evidence/image-repo-digests.txt"
+          )
+          status=$?
+          set -e
+          printf '%s\n' "$status" >"$evidence/image-pull-exit-status.txt"
+          exit "$status"
+
+      - name: Record pinned checker versions
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/easycrypt-full-evidence"
+
+          set +e
+          docker run --rm "$EASYCRYPT_IMAGE" bash -lc '
+            set -u
+            echo "--- EasyCrypt configuration ---"
+            opam exec -- easycrypt config
+            echo "--- Why3 ---"
+            opam exec -- why3 --version
+            echo "--- installed solver executables ---"
+            for solver in alt-ergo z3 cvc5 cvc4; do
+              if command -v "$solver" >/dev/null 2>&1; then
+                echo "[$solver] $(command -v "$solver")"
+                "$solver" --version 2>&1 \
+                  || "$solver" -version 2>&1 \
+                  || true
+              else
+                echo "[$solver] not on PATH"
+              fi
+            done
+          ' >"$evidence/checker-versions-stdout.log" \
+            2>"$evidence/checker-versions-stderr.log"
+          status=$?
+          set -e
+          printf '%s\n' "$status" \
+            >"$evidence/checker-versions-exit-status.txt"
+          cat "$evidence/checker-versions-stdout.log"
+          cat "$evidence/checker-versions-stderr.log" >&2
+          exit "$status"
+
+      - name: Compile active computational closure
         shell: bash
         run: |
           set -euo pipefail
@@ -138,6 +328,69 @@ jobs:
           cat "$evidence/checker-stdout.log"
           cat "$evidence/checker-stderr.log" >&2
           exit "$status"
+
+      - name: Prove required-module dependency mutation
+        if: github.ref == 'refs/heads/formal/easycrypt-beekem-interface' || github.head_ref == 'formal/easycrypt-beekem-interface'
+        shell: bash
+        run: |
+          set -euo pipefail
+          source_dir="$GITHUB_WORKSPACE/formal/current-source/easycrypt/computational"
+          mutant_dir="$RUNNER_TEMP/easycrypt-dependency-removal"
+          evidence="$RUNNER_TEMP/easycrypt-full-evidence"
+          target="$CHECK_EC"
+          required="BeeKemSafety.ec"
+          closure="$evidence/beekem-dependency-closure.txt"
+          mkdir -p "$mutant_dir"
+          cp -R "$source_dir"/. "$mutant_dir"/
+
+          grep -Fx "formal/current-source/easycrypt/computational/$required" \
+            "$closure" \
+            | tee "$evidence/dependency-removal-selected.txt"
+          sha256sum "$mutant_dir/$required" \
+            | tee "$evidence/dependency-removal-source-sha256.txt"
+          rm "$mutant_dir/$required"
+          test ! -e "$mutant_dir/$required"
+
+          set +e
+          docker run --rm \
+            -v "$mutant_dir:/proof" \
+            -w /proof \
+            "$EASYCRYPT_IMAGE" \
+            bash -lc "
+              set -uo pipefail
+              echo CHECKING-MUTANT $target WITHOUT $required
+              opam exec -- easycrypt compile -no-eco $target
+              status=\$?
+              if [ \"\$status\" -ne 0 ]; then
+                opam exec -- easycrypt llm -lastgoals $target || true
+              fi
+              exit \"\$status\"
+            " >"$evidence/dependency-removal-stdout.log" \
+              2>"$evidence/dependency-removal-stderr.log"
+          status=$?
+          set -e
+          printf '%s\n' "$status" \
+            >"$evidence/dependency-removal-raw-checker-status.txt"
+          cat "$evidence/dependency-removal-stdout.log"
+          cat "$evidence/dependency-removal-stderr.log" >&2
+
+          if [ "$status" -eq 0 ]; then
+            echo "dependency-removal mutation unexpectedly compiled" >&2
+            printf '1\n' \
+              >"$evidence/dependency-removal-assertion-exit-status.txt"
+            exit 1
+          fi
+          if ! grep -q 'BeeKemSafety' \
+              "$evidence/dependency-removal-stdout.log" \
+              "$evidence/dependency-removal-stderr.log"; then
+            echo "mutant failed for an unrelated reason" >&2
+            printf '1\n' \
+              >"$evidence/dependency-removal-assertion-exit-status.txt"
+            exit 1
+          fi
+          printf '0\n' \
+            >"$evidence/dependency-removal-assertion-exit-status.txt"
+          echo "required-module dependency mutation rejected as expected"
 
       - name: Upload checker evidence
         if: always()

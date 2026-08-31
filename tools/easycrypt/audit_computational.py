@@ -49,6 +49,8 @@ FINAL_GAME_NAMES = {
     "AdvLive",
     "AdvContent",
 }
+BEEKEM_THEOREM_AXIOM = "beekem_theorem1_imported_normalized"
+BEEKEM_THEOREM_FILE = "BeeKemKiInterface.eca"
 
 
 @dataclass(frozen=True)
@@ -150,6 +152,157 @@ def _declaration_end(clean: str, start: int) -> int:
     return len(clean)
 
 
+def _require_pattern(
+    findings: list[Finding],
+    path: Path,
+    line: int,
+    text: str,
+    pattern: str,
+    message: str,
+) -> None:
+    if re.search(pattern, text, flags=re.DOTALL) is None:
+        findings.append(Finding(path, line, message))
+
+
+def audit_beekem_theorem_boundary(
+    path: Path,
+    clean: str,
+    declaration: str,
+    line: int,
+) -> list[Finding]:
+    """Reject theorem-boundary shapes that can make Theorem 1 vacuous/stronger.
+
+    Appendix B states reductions produced for the challenged KI adversary and
+    the concrete BeeKEM instance.  The source encodes that dependency with the
+    quantifier order ``forall A, PaperInstance ... exists BNike, BSe``.  A
+    section-level ``declare module BNike`` or ``declare module BSe`` would make
+    those adversaries unrelated universal parameters and must never pass CI.
+    """
+
+    findings: list[Finding] = []
+
+    required_file_patterns = (
+        (
+            r"\bdeclare\s+module\s+A\s*<:\s*BEEKEM_KI_ADVERSARY\s*\.",
+            "BeeKEM theorem boundary must universally quantify the KI adversary A",
+        ),
+        (
+            r"\bdeclare\s+module\s+PaperInstance\s*<:\s*BEEKEM_PAPER_INSTANCE\s*\.",
+            "BeeKEM theorem boundary must universally quantify one paper instance",
+        ),
+        (
+            r"\bmodule\s+PaperBeeKem\s*=\s*BeeKemProtocolOfPaperInstance\s*\(\s*PaperInstance\s*\)\s*\.",
+            "BeeKEM protocol game must use the protocol adapter of PaperInstance",
+        ),
+        (
+            r"\bmodule\s+Nike\s*=\s*BeeKemNikeOfPaperInstance\s*\(\s*PaperInstance\s*\)\s*\.",
+            "HKR-CKS game must use the NIKE adapter of PaperInstance",
+        ),
+        (
+            r"\bmodule\s+NikeKeySampler\s*=\s*BeeKemNikeSamplerOfPaperInstance\s*\(\s*PaperInstance\s*\)\s*\.",
+            "HKR-CKS random branch must use the sampler of PaperInstance",
+        ),
+        (
+            r"\bmodule\s+Se\s*=\s*BeeKemSeOfPaperInstance\s*\(\s*PaperInstance\s*\)\s*\.",
+            "MU-CPA game must use the encryption adapter of PaperInstance",
+        ),
+        (
+            r"\bmodule\s+PaperGame\s*=\s*BeeKemKiGame\s*\(\s*A\s*,\s*PaperBeeKem\s*\)\s*\.",
+            "BeeKEM KI game must be instantiated by A and PaperInstance",
+        ),
+    )
+    for pattern, message in required_file_patterns:
+        _require_pattern(findings, path, line, clean, pattern, message)
+
+    for reduction_name in ("BNike", "BSe"):
+        match = re.search(
+            rf"\bdeclare\s+module\s+{re.escape(reduction_name)}\b", clean
+        )
+        if match is not None:
+            findings.append(
+                Finding(
+                    path,
+                    line_for_offset(clean, match.start()),
+                    f"{reduction_name} must be an existential Appendix-B witness, not a universal declared module",
+                )
+            )
+
+    required_axiom_patterns = (
+        (
+            r"\b1\s*<=\s*kappa\b",
+            "BeeKEM theorem axiom must require finite positive kappa",
+        ),
+        (
+            r"\b0\s*<=\s*c\b",
+            "BeeKEM theorem axiom must require a nonnegative challenge bound",
+        ),
+        (
+            r"\bbeekem_is_ceil_log2\s+n\s+h\b",
+            "BeeKEM theorem axiom must bind h to ceil(log2 n)",
+        ),
+        (
+            r"\bNikeSymmetryGame\s*\.\s*main\s*\(\s*\)\s*@\s*&m\s*:\s*res\s*\]\s*=\s*1%r",
+            "BeeKEM theorem axiom must require NIKE correctness/symmetry",
+        ),
+        (
+            r"\bSeCorrectnessGame\s*\.\s*main\s*\(\s*message\s*\)\s*@\s*&m\s*:\s*res\s*\]\s*=\s*1%r",
+            "BeeKEM theorem axiom must state the exact perfect-correctness specialization",
+        ),
+        (
+            r"\bPaperGame\s*\.\s*main_with_evidence\s*\(",
+            "BeeKEM theorem axiom must derive query bounds from executable game evidence",
+        ),
+        (
+            r"res\s*\.\s*`bke_challenge_count\s*<=\s*c\b",
+            "BeeKEM theorem axiom must bound executed challenge queries by c",
+        ),
+        (
+            r"res\s*\.\s*`bke_member_addition_count\s*<=\s*n\b",
+            "BeeKEM theorem axiom must bound executed member additions by n",
+        ),
+        (
+            r"\bexists\s*\(\s*BNike\s*<:\s*BEEKEM_HKR_CKS_ADVERSARY\s*\)\s*,",
+            "BeeKEM theorem axiom must existentially produce the HKR-CKS reduction",
+        ),
+        (
+            r"\bexists\s*\(\s*BSe\s*<:\s*BEEKEM_MU_CPA_ADVERSARY\s*\)\s*,",
+            "BeeKEM theorem axiom must existentially produce the MU-CPA reduction",
+        ),
+        (
+            r"\bbeekem_normalized_ki_advantage\s*\(\s*Pr\s*\[\s*PaperGame\s*\.\s*main\s*\(",
+            "BeeKEM theorem axiom must bound the named executable KI game",
+        ),
+        (
+            r"\bbeekem_theorem1_loss\s+c\s+h\b",
+            "BeeKEM theorem axiom must retain the c * ceil(log2 n) loss",
+        ),
+        (
+            r"\bbeekem_hkr_cks_advantage\s*\(\s*Pr\s*\[\s*BeeKemHkrCksGame\s*\(\s*BNike\s*,",
+            "BeeKEM theorem axiom must connect BNike to the named HKR-CKS game",
+        ),
+        (
+            r"\bbeekem_mu_cpa_advantage\s*\(\s*Pr\s*\[\s*BeeKemMuCpaGame\s*\(\s*BSe\s*,",
+            "BeeKEM theorem axiom must connect BSe to the named MU-CPA game",
+        ),
+    )
+    for pattern, message in required_axiom_patterns:
+        _require_pattern(findings, path, line, declaration, pattern, message)
+
+    nike_position = declaration.find("exists (BNike")
+    se_position = declaration.find("exists (BSe")
+    bound_position = declaration.find("beekem_normalized_ki_advantage")
+    if not (0 <= nike_position < se_position < bound_position):
+        findings.append(
+            Finding(
+                path,
+                line,
+                "BeeKEM theorem axiom must quantify BNike then BSe before the reduction bound",
+            )
+        )
+
+    return findings
+
+
 def audit_source(path: Path, root: Path, manifest_names: set[str]) -> list[Finding]:
     findings: list[Finding] = []
     raw = path.read_text(encoding="utf-8")
@@ -168,6 +321,7 @@ def audit_source(path: Path, root: Path, manifest_names: set[str]) -> list[Findi
         if token == "negl":
             findings.append(Finding(path, line, "unexplained negl operator is forbidden"))
 
+    target_axioms = 0
     for keyword in ("axiom",):
         for name, line, declaration in declarations(clean, keyword):
             if path.name not in ALLOWED_AXIOM_FILES:
@@ -182,6 +336,29 @@ def audit_source(path: Path, root: Path, manifest_names: set[str]) -> list[Findi
                 findings.append(
                     Finding(path, line, f"axiom {name} has adjacent-game conclusion shape")
                 )
+            if name == BEEKEM_THEOREM_AXIOM:
+                target_axioms += 1
+                if path.name != BEEKEM_THEOREM_FILE:
+                    findings.append(
+                        Finding(
+                            path,
+                            line,
+                            f"{BEEKEM_THEOREM_AXIOM} must live only in {BEEKEM_THEOREM_FILE}",
+                        )
+                    )
+                else:
+                    findings.extend(
+                        audit_beekem_theorem_boundary(path, clean, declaration, line)
+                    )
+
+    if path.name == BEEKEM_THEOREM_FILE and target_axioms != 1:
+        findings.append(
+            Finding(
+                path,
+                1,
+                f"{BEEKEM_THEOREM_FILE} must contain exactly one {BEEKEM_THEOREM_AXIOM} axiom",
+            )
+        )
 
     for match in re.finditer(r"\baccept\s*\(\s*\)", clean):
         findings.append(
