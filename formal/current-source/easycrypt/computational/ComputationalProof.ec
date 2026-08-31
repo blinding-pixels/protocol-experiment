@@ -14,6 +14,7 @@ require import LiveBeeKemAuthoritativeCounterBridge.
 require import LiveBeeKemAuthoritativeAdditionControls.
 require import LiveBeeKemAuthoritativeSafetyControls.
 require import LiveBeeKemAuthoritativeReduction.
+require import LiveBeeKemAuthoritativeHop.
 require import BeeKemNormalizationProofs BeeKemInterfaceProof.
 require import LiveBeeKemOracle LiveBeeKemReduction.
 require import LivePrfReduction.
