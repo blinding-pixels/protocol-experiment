@@ -4,7 +4,7 @@ require import BeeKemTypes BeeKemProtocol BeeKemKiGame BeeKemConstruction.
 require import BeeKemPrimitiveGames BeeKemPrimitiveContracts BeeKemTheorem1Math.
 require import BeeKemProjectedNormalization.
 require import LiveKeyGame LivePrfGame.
-require import LiveAuthenticationReduction.
+require import LiveAuthenticationReduction LivePrfAuthoritativeReduction.
 require import LiveBeeKemAuthoritativeLiveTypes.
 require import LiveBeeKemAuthoritativeReduction.
 
