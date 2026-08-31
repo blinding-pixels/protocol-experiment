@@ -2,6 +2,7 @@ require import AllCore List.
 require import ProtocolTypes CanonicalEncoding ProtocolPrimitives.
 require import LiveKeyGame BeeKemConstruction.
 require import LivePrfTypes LivePrfGame.
+require import LiveAuthenticationReduction.
 require import LiveBeeKemAuthoritativeLiveTypes.
 require import LivePrfAuthoritativeReduction.
 
