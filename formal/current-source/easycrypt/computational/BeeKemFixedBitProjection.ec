@@ -225,4 +225,126 @@ section BeeKemFixedBitProjection.
 
     smt().
   qed.
+
+  lemma beekem_fixed_false_semantic_probability_is_boolean_event
+      &m
+      (users : beekem_user list)
+      (group : beekem_group)
+      (kappa : int)
+      (membership : beekem_dgm) :
+    Pr[
+      G.main_with_fixed_bit(
+        users, group, kappa, membership, false
+      ) @ &m :
+        beekem_ki_final_win
+          res.`bke_safe
+          res.`bke_protocol_consistency_failure
+          res.`bke_adversary_guess
+          res.`bke_hidden_bit
+    ] =
+    Pr[
+      G.main_with_fixed_bit(
+        users, group, kappa, membership, false
+      ) @ &m :
+        res.`bke_safe /\
+        (res.`bke_protocol_consistency_failure \/
+         ! res.`bke_adversary_guess)
+    ].
+  proof.
+    byequiv
+      (_ : ={users, group, kappa, membership, glob A, glob P}
+           ==>
+           beekem_ki_final_win
+             res{1}.`bke_safe
+             res{1}.`bke_protocol_consistency_failure
+             res{1}.`bke_adversary_guess
+             res{1}.`bke_hidden_bit =
+           (res{2}.`bke_safe /\
+            (res{2}.`bke_protocol_consistency_failure \/
+             ! res{2}.`bke_adversary_guess))) => //.
+    proc.
+    call (_ : true).
+    call (_ : true).
+    auto.
+  qed.
+
+  (* On the random-root branch, the KI win event and the projected one-event
+     form an exact partition of the challenger-computed safe mass. *)
+  lemma beekem_fixed_false_win_probability_is_projected_complement
+      &m
+      (users : beekem_user list)
+      (group : beekem_group)
+      (kappa : int)
+      (membership : beekem_dgm) :
+    Pr[
+      G.main_with_fixed_bit(
+        users, group, kappa, membership, false
+      ) @ &m : res.`bke_safe
+    ] = 1%r =>
+    Pr[
+      G.main_with_fixed_bit(
+        users, group, kappa, membership, false
+      ) @ &m : res.`bke_win
+    ] =
+    1%r -
+    Pr[
+      G.main_with_fixed_bit(
+        users, group, kappa, membership, false
+      ) @ &m :
+        res.`bke_safe /\
+        ! res.`bke_protocol_consistency_failure /\
+        res.`bke_adversary_guess
+    ].
+  proof.
+    move=> Hsafe.
+    rewrite
+      (beekem_fixed_bit_win_probability_is_semantic
+         &m users group kappa membership false)
+      (beekem_fixed_false_semantic_probability_is_boolean_event
+         &m users group kappa membership).
+
+    have Hsafe_partition :
+      Pr[
+        G.main_with_fixed_bit(
+          users, group, kappa, membership, false
+        ) @ &m : res.`bke_safe
+      ] =
+      Pr[
+        G.main_with_fixed_bit(
+          users, group, kappa, membership, false
+        ) @ &m :
+          res.`bke_safe /\
+          (res.`bke_protocol_consistency_failure \/
+           ! res.`bke_adversary_guess)
+      ] +
+      Pr[
+        G.main_with_fixed_bit(
+          users, group, kappa, membership, false
+        ) @ &m :
+          res.`bke_safe /\
+          ! res.`bke_protocol_consistency_failure /\
+          res.`bke_adversary_guess
+      ].
+    + have -> :
+        Pr[
+          G.main_with_fixed_bit(
+            users, group, kappa, membership, false
+          ) @ &m : res.`bke_safe
+        ] =
+        Pr[
+          G.main_with_fixed_bit(
+            users, group, kappa, membership, false
+          ) @ &m :
+            (res.`bke_safe /\
+             (res.`bke_protocol_consistency_failure \/
+              ! res.`bke_adversary_guess)) \/
+            (res.`bke_safe /\
+             ! res.`bke_protocol_consistency_failure /\
+             res.`bke_adversary_guess)
+        ].
+      + by rewrite Pr[mu_eq] /#.
+      by rewrite Pr[mu_disjoint] 1:/#.
+
+    smt().
+  qed.
 end section BeeKemFixedBitProjection.
