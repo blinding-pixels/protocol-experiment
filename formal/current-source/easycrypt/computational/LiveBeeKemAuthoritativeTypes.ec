@@ -12,6 +12,13 @@ type application_user_registry = {
   aur_principal_of : beekem_user -> principal option
 }.
 
+(* EasyCrypt's finite-set library exposes singleton and union constructors, but
+   no list conversion at this pinned revision.  This structural conversion is
+   used only after every application principal has been mapped explicitly. *)
+op oflist (members : beekem_user list) : beekem_user fset =
+  with members = [] => fset0
+  with members = member :: rest => fset1 member `|` oflist rest.
+
 op empty_application_user_registry : application_user_registry =
   {| aur_user_of = fun _ => None;
      aur_principal_of = fun _ => None |}.
