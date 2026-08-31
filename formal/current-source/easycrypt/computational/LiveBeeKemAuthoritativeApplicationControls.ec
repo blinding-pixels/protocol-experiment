@@ -8,6 +8,15 @@ require import LiveBeeKemAuthoritativeApplicationAdapter.
 op authoritative_application_adapter_digest : authorization_digest =
   AuthorizationDigest 705.
 
+(* Export proof-only observations through a separate module.  The KI game
+   ascribes its adversary to [BEEKEM_KI_ADVERSARY], so implementation-only
+   nested modules are intentionally hidden at the game boundary. *)
+module AuthoritativeApplicationAdapterWitnessState = {
+  var forwarded_count : int
+  var attempt_count : int
+  var runtime_fault : bool
+}.
+
 module AuthoritativeApplicationAdapterWitness(
   O : BEEKEM_KI_ORACLES
 ) = {
@@ -18,6 +27,9 @@ module AuthoritativeApplicationAdapterWitness(
   var challenged : authoritative_application_root_result option
 
   proc attack() : bool = {
+    AuthoritativeApplicationAdapterWitnessState.forwarded_count <- 0;
+    AuthoritativeApplicationAdapterWitnessState.attempt_count <- 0;
+    AuthoritativeApplicationAdapterWitnessState.runtime_fault <- true;
     Adapter.init(
       authoritative_adapter_witness_registry,
       authoritative_adapter_witness_document
@@ -35,6 +47,12 @@ module AuthoritativeApplicationAdapterWitness(
       authoritative_adapter_witness_principal,
       NodeId 2
     );
+    AuthoritativeApplicationAdapterWitnessState.forwarded_count <-
+      Adapter.Core.forwarded_count;
+    AuthoritativeApplicationAdapterWitnessState.attempt_count <-
+      size Adapter.Core.attempts;
+    AuthoritativeApplicationAdapterWitnessState.runtime_fault <-
+      Adapter.Core.runtime_fault;
     return
          created = Some (NodeId 1)
       /\ updated = Some (NodeId 2)
@@ -71,9 +89,9 @@ lemma authoritative_application_adapter_real_branch_reachable :
     /\ res.`bke_random_branch_count = 0
     /\ res.`bke_random_sample_count = 0
     /\ res.`bke_win
-    /\ AuthoritativeApplicationAdapterWitnessGame.A.Adapter.Core.forwarded_count = 3
-    /\ size AuthoritativeApplicationAdapterWitnessGame.A.Adapter.Core.attempts = 3
-    /\ ! AuthoritativeApplicationAdapterWitnessGame.A.Adapter.Core.runtime_fault].
+    /\ AuthoritativeApplicationAdapterWitnessState.forwarded_count = 3
+    /\ AuthoritativeApplicationAdapterWitnessState.attempt_count = 3
+    /\ ! AuthoritativeApplicationAdapterWitnessState.runtime_fault].
 proof.
   proc.
   inline *.
