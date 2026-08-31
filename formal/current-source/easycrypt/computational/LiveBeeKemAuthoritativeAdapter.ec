@@ -19,13 +19,13 @@ type authoritative_adapter_rejection = [
 ].
 
 type authoritative_adapter_query_kind = [
-  | AdapterCreateQuery of principal & principal fset
-  | AdapterAddQuery of principal & principal
-  | AdapterRemoveQuery of principal & principal
+  | AdapterCreateQuery of principal * principal fset
+  | AdapterAddQuery of principal * principal
+  | AdapterRemoveQuery of principal * principal
   | AdapterUpdateQuery of principal
-  | AdapterDeliverQuery of node_id & principal
-  | AdapterRevealQuery of principal & node_id
-  | AdapterChallengeQuery of principal & node_id
+  | AdapterDeliverQuery of node_id * principal
+  | AdapterRevealQuery of principal * node_id
+  | AdapterChallengeQuery of principal * node_id
   | AdapterCompromiseQuery of principal
 ].
 
@@ -285,7 +285,7 @@ module AuthoritativeApplicationBeeKemAdapter(
     }
 
     record(
-      {| aaq_kind = AdapterCreateQuery creator initial_members;
+      {| aaq_kind = AdapterCreateQuery (creator, initial_members);
          aaq_forwarded = canonical_query <> None;
          aaq_canonical_query = canonical_query;
          aaq_accepted = accepted;
@@ -368,7 +368,7 @@ module AuthoritativeApplicationBeeKemAdapter(
     }
 
     record(
-      {| aaq_kind = AdapterAddQuery author target;
+      {| aaq_kind = AdapterAddQuery (author, target);
          aaq_forwarded = canonical_query <> None;
          aaq_canonical_query = canonical_query;
          aaq_accepted = accepted;
@@ -451,7 +451,7 @@ module AuthoritativeApplicationBeeKemAdapter(
     }
 
     record(
-      {| aaq_kind = AdapterRemoveQuery author target;
+      {| aaq_kind = AdapterRemoveQuery (author, target);
          aaq_forwarded = canonical_query <> None;
          aaq_canonical_query = canonical_query;
          aaq_accepted = accepted;
@@ -623,7 +623,7 @@ module AuthoritativeApplicationBeeKemAdapter(
     }
 
     record(
-      {| aaq_kind = AdapterDeliverQuery node recipient;
+      {| aaq_kind = AdapterDeliverQuery (node, recipient);
          aaq_forwarded = canonical_query <> None;
          aaq_canonical_query = canonical_query;
          aaq_accepted = accepted;
@@ -676,7 +676,7 @@ module AuthoritativeApplicationBeeKemAdapter(
     }
 
     record(
-      {| aaq_kind = AdapterRevealQuery member node;
+      {| aaq_kind = AdapterRevealQuery (member, node);
          aaq_forwarded = canonical_query <> None;
          aaq_canonical_query = canonical_query;
          aaq_accepted = mapped_output <> None /\
@@ -729,7 +729,7 @@ module AuthoritativeApplicationBeeKemAdapter(
     }
 
     record(
-      {| aaq_kind = AdapterChallengeQuery member node;
+      {| aaq_kind = AdapterChallengeQuery (member, node);
          aaq_forwarded = canonical_query <> None;
          aaq_canonical_query = canonical_query;
          aaq_accepted = mapped_output <> None /\
