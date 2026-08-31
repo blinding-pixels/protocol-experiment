@@ -95,7 +95,7 @@ module AuthoritativeLiveProtocolOracle(
   }
 
   proc send_beekem_update(author : principal) : node_id option = {
-    var result : node_id option;
+    var result : noe_id option;
     result <@ Bee.send_update(author, current_authorization_digest);
     return result;
   }
@@ -140,6 +140,7 @@ module AuthoritativeLiveProtocolOracle(
     var label : live_key_label;
     var key : live_application_key;
     var result : live_application_key option;
+    var output : application_beekem_output_result;
 
     root <- None;
     digest <- Bee.Core.digests node;
@@ -149,7 +150,6 @@ module AuthoritativeLiveProtocolOracle(
 
     if (! revealed_live member node /\
         ! challenged_live member node /\ digest <> None) {
-      var output : application_beekem_output_result;
       output <P Bee.Core.reveal(member, node);
       root <- application_beekem_output_root output.`abo_secret_output;
       if (output.`abo_runtime_fault) {
