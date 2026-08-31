@@ -51,6 +51,9 @@ section AuthoritativeBeeKemProjection.
 
   module G = AuthoritativeLiveBeeKemGame(A, S, H, K, R, I).
   module Direct = AuthoritativePrfApplicationBit(A, S, H, K, R, I).
+  module Prf = MultiDomainPrfGame(
+    BPRFLiveAuthoritative(A, S, H, I), K, R
+  ).
 
   module ProjectedRealRoot = {
     proc main() : mdprf_adversary_result = {
@@ -109,6 +112,100 @@ section AuthoritativeBeeKemProjection.
       return result;
     }
   }.
+
+  lemma authoritative_prf_real_endpoint_exact
+      &m :
+    Pr[
+      PrfRealEndpoint.main() @ &m :
+        res.`mpar_eligible /\ res.`mpar_guess
+    ] =
+    Pr[
+      Direct.main(
+        live_auth_initial_state,
+        live_auth_initial_facts,
+        live_auth_retention_kappa,
+        true
+      ) @ &m :
+        res.`mpar_eligible /\ res.`mpar_guess
+    ].
+  proof.
+    byequiv
+      (_ : ={glob A, glob S, glob H, glob K, glob R, glob I}
+           ==>
+           (res{1}.`mpar_eligible /\ res{1}.`mpar_guess) =
+           (res{2}.`mpar_eligible /\ res{2}.`mpar_guess)) => //.
+    proc.
+    inline PrfRealEndpoint.main.
+    sim.
+  qed.
+
+  lemma authoritative_prf_random_endpoint_exact
+      &m :
+    Pr[
+      PrfRandomEndpoint.main() @ &m :
+        res.`mpar_eligible /\ res.`mpar_guess
+    ] =
+    Pr[
+      Direct.main(
+        live_auth_initial_state,
+        live_auth_initial_facts,
+        live_auth_retention_kappa,
+        false
+      ) @ &m :
+        res.`mpar_eligible /\ res.`mpar_guess
+    ].
+  proof.
+    byequiv
+      (_ : ={glob A, glob S, glob H, glob K, glob R, glob I}
+           ==>
+           (res{1}.`mpar_eligible /\ res{1}.`mpar_guess) =
+           (res{2}.`mpar_eligible /\ res{2}.`mpar_guess)) => //.
+    proc.
+    inline PrfRandomEndpoint.main.
+    sim.
+  qed.
+
+  lemma authoritative_prf_endpoint_advantage_exactly_game
+      &m :
+    mdprf_fixed_bit_advantage
+      (Pr[
+         PrfRealEndpoint.main() @ &m :
+           res.`mpar_eligible /\ res.`mpar_guess
+       ])
+      (Pr[
+         PrfRandomEndpoint.main() @ &m :
+           res.`mpar_eligible /\ res.`mpar_guess
+       ]) =
+    mdprf_fixed_bit_advantage
+      (Pr[
+         Prf.main_with_fixed_bit(
+           live_auth_initial_state,
+           live_auth_initial_facts,
+           live_auth_retention_kappa,
+           true
+         ) @ &m :
+           res.`mpge_eligible /\ res.`mpge_guess
+       ])
+      (Pr[
+         Prf.main_with_fixed_bit(
+           live_auth_initial_state,
+           live_auth_initial_facts,
+           live_auth_retention_kappa,
+           false
+         ) @ &m :
+           res.`mpge_eligible /\ res.`mpge_guess
+       ]).
+  proof.
+    rewrite
+      (authoritative_prf_real_endpoint_exact &m)
+      (authoritative_prf_random_endpoint_exact &m).
+    exact
+      (authoritative_application_fixed_bit_advantage_exactly_prf
+         A S H K R I &m
+         live_auth_initial_state
+         live_auth_initial_facts
+         live_auth_retention_kappa).
+  qed.
 
   lemma authoritative_beekem_real_projection_exact
       &m :
@@ -244,5 +341,50 @@ section AuthoritativeBeeKemProjection.
          PrfRandomEndpoint.main() @ &m :
            res.`mpar_eligible /\ res.`mpar_guess
        ])).
+  qed.
+
+  lemma authoritative_live_hybrid_triangle_prf_game &m :
+    mdprf_fixed_bit_advantage
+      (Pr[
+         ProjectedRealRoot.main() @ &m :
+           res.`mpar_eligible /\ res.`mpar_guess
+       ])
+      (Pr[
+         PrfRandomEndpoint.main() @ &m :
+           res.`mpar_eligible /\ res.`mpar_guess
+       ])
+    <=
+    mdprf_fixed_bit_advantage
+      (Pr[
+         ProjectedRealRoot.main() @ &m :
+           res.`mpar_eligible /\ res.`mpar_guess
+       ])
+      (Pr[
+         ProjectedRandomRoot.main() @ &m :
+           res.`mpar_eligible /\ res.`mpar_guess
+       ])
+    +
+    mdprf_fixed_bit_advantage
+      (Pr[
+         Prf.main_with_fixed_bit(
+           live_auth_initial_state,
+           live_auth_initial_facts,
+           live_auth_retention_kappa,
+           true
+         ) @ &m :
+           res.`mpge_eligible /\ res.`mpge_guess
+       ])
+      (Pr[
+         Prf.main_with_fixed_bit(
+           live_auth_initial_state,
+           live_auth_initial_facts,
+           live_auth_retention_kappa,
+           false
+         ) @ &m :
+           res.`mpge_eligible /\ res.`mpge_guess
+       ]).
+  proof.
+    rewrite -(authoritative_prf_endpoint_advantage_exactly_game &m).
+    exact (authoritative_live_hybrid_triangle &m).
   qed.
 end section AuthoritativeBeeKemProjection.
