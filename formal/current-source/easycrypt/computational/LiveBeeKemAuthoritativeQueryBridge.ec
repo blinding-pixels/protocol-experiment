@@ -34,18 +34,18 @@ op application_beekem_attempt_kind_matches_query
     (attempt : application_beekem_attempt)
     (query : beekem_query) : bool =
   with attempt.`aba_kind =
-      ApplicationBeeKemCreateAttempt (actor, initial_members) =>
+      ApplicationBeeKemCreateAttempt actor initial_members =>
          query.`bq_kind = BeeQueryCreate
       /\ registry.`aur_user_of actor = Some query.`bq_actor
       /\ query.`bq_target = None
       /\ query.`bq_target_frontier = fset0
   with attempt.`aba_kind =
-      ApplicationBeeKemAddAttempt (actor, target) =>
+      ApplicationBeeKemAddAttempt actor target =>
          query.`bq_kind = BeeQueryAdd
       /\ registry.`aur_user_of actor = Some query.`bq_actor
       /\ registry.`aur_user_of target = query.`bq_target
   with attempt.`aba_kind =
-      ApplicationBeeKemRemoveAttempt (actor, target) =>
+      ApplicationBeeKemRemoveAttempt actor target =>
          query.`bq_kind = BeeQueryRemove
       /\ registry.`aur_user_of actor = Some query.`bq_actor
       /\ registry.`aur_user_of target = query.`bq_target
@@ -55,7 +55,7 @@ op application_beekem_attempt_kind_matches_query
       /\ query.`bq_target = None
       /\ query.`bq_target_frontier = fset0
   with attempt.`aba_kind =
-      ApplicationBeeKemDeliverAttempt (node, recipient) =>
+      ApplicationBeeKemDeliverAttempt node recipient =>
          query.`bq_kind = BeeQueryDeliver
       /\ attempt.`aba_address <> None
       /\ attempt.`aba_node = Some node
@@ -63,7 +63,7 @@ op application_beekem_attempt_kind_matches_query
       /\ query.`bq_actor = (oget attempt.`aba_address).`aba_user
       /\ registry.`aur_user_of recipient = query.`bq_target
   with attempt.`aba_kind =
-      ApplicationBeeKemRevealAttempt (member, node) =>
+      ApplicationBeeKemRevealAttempt member node =>
          query.`bq_kind = BeeQueryReveal
       /\ registry.`aur_user_of member <> None
       /\ attempt.`aba_address <> None
@@ -73,7 +73,7 @@ op application_beekem_attempt_kind_matches_query
       /\ query.`bq_target = None
       /\ query.`bq_target_frontier = fset0
   with attempt.`aba_kind =
-      ApplicationBeeKemChallengeAttempt (member, node) =>
+      ApplicationBeeKemChallengeAttempt member node =>
          query.`bq_kind = BeeQueryChallenge
       /\ registry.`aur_user_of member <> None
       /\ attempt.`aba_address <> None
