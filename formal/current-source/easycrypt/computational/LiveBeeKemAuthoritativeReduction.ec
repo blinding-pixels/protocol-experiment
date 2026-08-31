@@ -6,20 +6,9 @@ require import BeeKemTypes BeeKemProtocol BeeKemKiGame BeeKemConstruction.
 require import LiveBeeKemAuthoritativeTypes.
 require import LiveBeeKemAuthoritativeLiveTypes.
 require import LiveBeeKemAuthoritativeLiveOracle.
-require import LivePrfAuthoritativeAdapter.
+require import LivePrfAuthoritativeReduction.
 
 import PG.
-
-(* Application configuration carried into the concrete BeeKEM reduction.
-   These are ordinary universally interpreted game inputs, not security
-   assumptions.  The exact Figure-8 challenger still owns BeeKEM initialization,
-   hidden-bit sampling, the complete query log, safety, and counters. *)
-op authoritative_live_initial_registry : application_user_registry.
-op authoritative_live_initial_users : beekem_user list.
-op authoritative_live_initial_membership : beekem_dgm.
-
-op authoritative_live_initial_group : beekem_group =
-  application_group_of_document live_auth_initial_state.`ps_document_id.
 
 (* Concrete application adversary for the authoritative KI-DCGKA game.  The
    wrapper exposes the complete application surface, including production
