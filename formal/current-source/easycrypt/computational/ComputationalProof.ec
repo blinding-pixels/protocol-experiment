@@ -6,6 +6,7 @@ require import AuthorizationLeanFullReplay CausalClosureRepresentation.
 require import LiveKeyGame LiveKeyWitnesses LiveChallengeThenRevealControl.
 require import LiveAuthenticationReduction.
 require import LiveBeeKemControl LiveBeeKemDerived.
+require import LiveBeeKemAuthoritativeApplicationControls.
 require import LiveBeeKemOracle LiveBeeKemReduction.
 require import LivePrfReduction.
 require import LivePrfTypes LivePrfGame LivePrfApplicationReduction.
@@ -77,6 +78,10 @@ print LiveAuthenticationReduction.live_authentication_failure_bound.
 
 (* Deliverable L provisional BeeKEM seam: challenge-call connectivity only. *)
 print LiveBeeKemReduction.beekem_live_wrapper_invokes_primitive_challenge_once.
+
+(* Authoritative BeeKEM application adapter: real canonical trace non-vacuity. *)
+print LiveBeeKemAuthoritativeTypes.authoritative_adapter_nonvacuity.
+print LiveBeeKemAuthoritativeApplicationControls.authoritative_application_adapter_real_branch_reachable.
 
 (* Deliverable L application multi-domain PRF hop and ideal-zero checkpoint. *)
 print LivePrfTypes.mdprf_live_query_is_not_live_challenge.
