@@ -99,83 +99,32 @@ module AuthoritativeLiveBeeKemGame(
     BeeKemProtocolOfPaperInstance(I)
   ).
 
-(* Fixed-bit application projection of the authoritative BeeKEM hybrid.  This
-   is the direct H0/H1 endpoint: the BeeKEM bit alone changes the challenge
-   root, while the live challenge remains on the real multi-domain KDF
-   schedule.  Its eligibility is computed from the same canonical graph, log,
-   authorization state, adapter fault, and protocol-consistency state as the
-   authoritative PRF endpoint. *)
+(* The application endpoint is a projection of the canonical fixed-bit BeeKEM
+   evidence, not a second hand-written execution.  The reduction guess already
+   contains initial authorization validity, an actual accepted live challenge,
+   absence of Deliverable-A authentication failure, absence of adapter fault,
+   and the application adversary's guess.  The projection adds only the
+   challenger-computed canonical safety event and the explicit protocol-
+   consistency boundary. *)
+op authoritative_beekem_application_result
+    (evidence : beekem_ki_evidence) : mdprf_adversary_result =
+  {| mpar_eligible =
+       evidence.`bke_safe /\
+       ! evidence.`bke_protocol_consistency_failure;
+     mpar_guess = evidence.`bke_adversary_guess |}.
+
+lemma authoritative_beekem_application_result_event_exact
+    (evidence : beekem_ki_evidence) :
+  (authoritative_beekem_application_result evidence).`mpar_eligible /\
+  (authoritative_beekem_application_result evidence).`mpar_guess =
+    evidence.`bke_safe /\
+    ! evidence.`bke_protocol_consistency_failure /\
+    evidence.`bke_adversary_guess.
+proof.
+  by rewrite /authoritative_beekem_application_result.
+qed.
+
 module AuthoritativeBeeKemApplicationBit(
-  A : AUTHORITATIVE_LIVE_KEY_ADVERSARY,
-  S : SIGNATURE_SCHEME,
-  H : NODE_HASH,
-  K : MULTI_DOMAIN_KEY_SCHEDULE,
-  R : LIVE_KEY_SAMPLER,
-  I : BEEKEM_PAPER_INSTANCE
-) = {
-  module Bee = BeeKemKiOracles(BeeKemProtocolOfPaperInstance(I))
-  module SO = PG.LoggedSignatureOracle(S)
-  module Auth = OriginTrackedCandidateEnvironment(SO, H)
-  module KReal = RealChallengeKeySchedule(K, R)
-  module Core = AuthoritativeLiveProtocolOracle(Auth, Bee, KReal)
-  module Live = AuthoritativePrfBackedLiveOracle(Core, KReal)
-  module A = A(Live)
-
-  proc main(input_bit : bool) : mdprf_adversary_result = {
-    var initial_authorization_valid : bool;
-    var application_challenge_count : int;
-    var beekem_safe : bool;
-    var authentication_failure : bool;
-    var adapter_fault : bool;
-    var protocol_failure : bool;
-    var adversary_guess : bool;
-    var eligible : bool;
-
-    Bee.initialize(
-      authoritative_live_initial_users,
-      authoritative_live_initial_group,
-      live_auth_retention_kappa,
-      authoritative_live_initial_membership,
-      input_bit
-    );
-    SO.init();
-    Auth.init(live_auth_initial_state);
-    KReal.init();
-    Core.init(
-      authoritative_live_initial_registry,
-      live_auth_initial_state,
-      live_auth_initial_digest
-    );
-
-    A.attack();
-    adversary_guess <@ A.guess();
-
-    initial_authorization_valid <-
-      live_auth_initial_authorization <> None;
-    application_challenge_count <-
-      challenge_query_count Core.derived_queries;
-    beekem_safe <- BeeKemSafety.bee_safe_kappa
-      live_auth_retention_kappa
-      Bee.Environment.state.`bps_operations
-      Bee.Environment.query_log;
-    authentication_failure <- Auth.unauthorized_accepted;
-    adapter_fault <- Core.runtime_fault;
-    protocol_failure <- Bee.Environment.protocol_consistency_failure;
-    eligible <- authoritative_live_eligible
-      initial_authorization_valid
-      application_challenge_count
-      beekem_safe
-      authentication_failure
-      adapter_fault
-      protocol_failure;
-
-    return
-      {| mpar_eligible = eligible;
-         mpar_guess = adversary_guess |};
-  }
-}.
-
-module AuthoritativeLiveBeeKemFixedProjection(
   A : AUTHORITATIVE_LIVE_KEY_ADVERSARY,
   S : SIGNATURE_SCHEME,
   H : NODE_HASH,
@@ -185,7 +134,7 @@ module AuthoritativeLiveBeeKemFixedProjection(
 ) = {
   module G = AuthoritativeLiveBeeKemGame(A, S, H, K, R, I)
 
-  proc main(input_bit : bool) : beekem_ki_evidence = {
+  proc main(input_bit : bool) : mdprf_adversary_result = {
     var evidence : beekem_ki_evidence;
     evidence <@ G.main_with_fixed_bit(
       authoritative_live_initial_users,
@@ -194,7 +143,7 @@ module AuthoritativeLiveBeeKemFixedProjection(
       authoritative_live_initial_membership,
       input_bit
     );
-    return evidence;
+    return authoritative_beekem_application_result evidence;
   }
 }.
 
@@ -245,42 +194,14 @@ section AuthoritativeLiveBeeKemEndpointBridge.
   declare module R <: LIVE_KEY_SAMPLER.
   declare module I <: BEEKEM_PAPER_INSTANCE.
 
-  module Direct = AuthoritativeBeeKemApplicationBit(A, S, H, K, R, I).
-  module Fixed = AuthoritativeLiveBeeKemFixedProjection(A, S, H, K, R, I).
   module RandomRoot =
     AuthoritativeBeeKemRandomProjection(A, S, H, K, R, I).
   module PrfReal = AuthoritativePrfRealProjection(A, S, H, K, R, I).
 
-  lemma authoritative_beekem_fixed_bit_one_event_exact
-      &m (input_bit : bool) :
-    Pr[
-      Direct.main(input_bit) @ &m :
-        res.`mpar_eligible /\ res.`mpar_guess
-    ] =
-    Pr[
-      Fixed.main(input_bit) @ &m :
-        res.`bke_safe /\
-        ! res.`bke_protocol_consistency_failure /\
-        res.`bke_adversary_guess
-    ].
-  proof.
-    byequiv
-      (_ : input_bit{1} = input_bit{2} /\
-           ={glob A, glob S, glob H, glob K, glob R, glob I}
-           ==>
-           (res{1}.`mpar_eligible /\ res{1}.`mpar_guess) =
-           (res{2}.`bke_safe /\
-            ! res{2}.`bke_protocol_consistency_failure /\
-            res{2}.`bke_adversary_guess)) => //.
-    proc.
-    inline *.
-    sim.
-  qed.
-
-  (* The H1 endpoint is definitionally the same execution on both sides: the
-     BeeKEM challenger supplies its random-root branch and the PRF challenger
-     is fixed to its real branch.  Both schedules evaluate K and the unused R
-     call in the same order at each accepted live challenge. *)
+  (* The H1 endpoint is the same execution on both sides: the BeeKEM
+     challenger supplies its random-root branch and the PRF challenger is fixed
+     to its real branch.  Both schedules evaluate K and the unused R call in
+     the same order at each accepted live challenge. *)
   lemma authoritative_beekem_random_root_exactly_prf_real &m :
     Pr[
       RandomRoot.main() @ &m :
