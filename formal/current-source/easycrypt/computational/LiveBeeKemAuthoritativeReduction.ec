@@ -9,6 +9,7 @@ clone import BeeKemKiInterface as BKI.
 require import LiveBeeKemAuthoritativeTypes.
 require import LiveBeeKemAuthoritativeLiveTypes.
 require import LiveBeeKemAuthoritativeLiveOracle.
+require import LivePrfTypes.
 require import LivePrfAuthoritativeAdapter.
 require import LivePrfAuthoritativeReduction.
 require import LivePrfAuthoritativeProof.
