@@ -3,6 +3,7 @@ require import ProtocolTypes ProtocolPrimitives UnauthorizedSignatureReduction.
 require import UnauthorizedOriginGame LiveKeyGame.
 require import LiveBeeKemAuthoritativeTypes LiveBeeKemAuthoritativeAdapter.
 require import LiveBeeKemAuthoritativeApplicationState.
+require import LiveBeeKemAuthoritativeApplicationAdapter.
 require LiveBeeKemKiInterface.
 clone import LiveBeeKemKiInterface as BKI.
 
