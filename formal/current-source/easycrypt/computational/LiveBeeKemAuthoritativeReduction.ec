@@ -47,6 +47,7 @@ module BBeeLive(
   module A = A(Live)
 
   var initial_authorization_valid : bool
+  var application_challenge_count : int
   var authentication_failure : bool
   var adapter_fault : bool
   var adversary_guess : bool
@@ -67,10 +68,13 @@ module BBeeLive(
 
     initial_authorization_valid <-
       live_auth_initial_authorization <> None;
+    application_challenge_count <-
+      challenge_query_count Core.derived_queries;
     authentication_failure <- Auth.unauthorized_accepted;
     adapter_fault <- Core.runtime_fault;
     reduction_guess <-
          initial_authorization_valid
+      /\ 0 < application_challenge_count
       /\ ! authentication_failure
       /\ ! adapter_fault
       /\ adversary_guess;
