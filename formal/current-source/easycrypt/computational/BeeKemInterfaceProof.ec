@@ -1,7 +1,7 @@
 require import BeeKemTypes BeeKemQueryLog BeeKemProtocol BeeKemSafety BeeKemKiGame BeeKemPrimitiveGames BeeKemPrimitiveContracts BeeKemTheorem1Math BeeKemConstruction.
 require BeeKemKiInterface.
 clone import BeeKemKiInterface as BKI.
-require import BeeKemSafetyProofs BeeKemSafetyMutations BeeKemProtocolSemanticsProofs BeeKemGameWitnesses BeeKemQueryCounterProofs BeeKemCounterMutationProofs BeeKemMutationGameProofs BeeKemForkGameWitnesses BeeKemForkMutationProofs BeeKemRevealMutationProofs BeeKemRetentionMutationProofs BeeKemPrimitiveWitnesses BeeKemNormalizationProofs.
+require import BeeKemSafetyProofs BeeKemSafetyMutations BeeKemProtocolSemanticsProofs BeeKemGameWitnesses BeeKemQueryCounterProofs BeeKemCounterMutationProofs BeeKemMutationGameProofs BeeKemForkGameWitnesses BeeKemForkMutationProofs BeeKemRevealMutationProofs BeeKemRetentionMutationProofs BeeKemPrimitiveWitnesses BeeKemNormalizationProofs BeeKemFixedBitProjection.
 
 (* Public closure for the executable Figure 8 oracle environment and exact
    finite-kappa Figure 3 safety predicate.  The trace theorems below force all
@@ -83,6 +83,7 @@ print beekem_normalized_ki_advantage.
 print beekem_safe_mass_normalized_ki_advantage.
 print beekem_safe_mass_normalization_zero.
 print beekem_safe_mass_normalization_all_safe.
+print beekem_fixed_bit_win_probability_is_semantic.
 
 
 (* Unsafe traces have zero safe mass, zero exact-game success, and zero
