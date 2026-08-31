@@ -102,7 +102,7 @@ module AuthoritativeApplicationBeeKemCore(
     var operation : beekem_operation;
     var node : node_id;
     var address : application_beekem_address;
-    var exact : bool;
+    var control_exact : bool;
     var fresh : bool;
     var output : beekem_secret_output;
     var result : application_beekem_step_result;
@@ -112,7 +112,7 @@ module AuthoritativeApplicationBeeKemCore(
     operation <- witness;
     node <- witness;
     address <- witness;
-    exact <- false;
+    control_exact <- false;
     fresh <- false;
     output <- BeeSecretUndefined;
     result <-
@@ -137,14 +137,14 @@ module AuthoritativeApplicationBeeKemCore(
            aba_user = user;
            aba_counter = counter;
            aba_operation = operation.`bo_id |};
-      exact <-
+      control_exact <-
            operation.`bo_group = group
         /\ operation.`bo_author = user
         /\ operation.`bo_author_counter = counter
         /\ operation.`bo_kind = expected_kind
         /\ operation.`bo_target = expected_target;
       fresh <- application_beekem_address_fresh addresses address;
-      if (! exact \/ ! fresh) {
+      if (! control_exact \/ ! fresh) {
         runtime_fault <- true;
         result <- {| result with abs_runtime_fault = true |};
       } else {
