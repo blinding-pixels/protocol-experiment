@@ -14,12 +14,14 @@ require import BeeKemPrimitiveContracts BeeKemTheorem1Math BeeKemConstruction.
 
    (1) requires the exact executable trace to satisfy bee-safe with probability
        one, rather than treating an unsafe exclusion as a distinguisher; and
-   (2) uses the centered convention uniformly with the KI baseline expressed as
-       half of the executable safe mass.
+   (2) applies the ordinary centered convention only after that all-safe
+       premise has been discharged.  The executable general-game operator in
+       [BeeKemKiGame] instead centers at half of the safe mass, and its checked
+       all-safe lemma proves these two quantities coincide here.
 
-   Under the explicit all-safe premise this KI operator equals the ordinary
-   centered bias, so applying the same factor-two convention to KI, HKR-CKS,
-   and MU-CPA leaves the paper's reduction factors unchanged. *)
+   Applying the same factor-two convention to KI, HKR-CKS, and MU-CPA therefore
+   leaves the paper's reduction factors unchanged without assigning advantage
+   to an unsafe trace. *)
 section BeeKemTheorem1ImportedBoundary.
   declare module A <: BEEKEM_KI_ADVERSARY.
   declare module PaperInstance <: BEEKEM_PAPER_INSTANCE.
@@ -71,14 +73,9 @@ section BeeKemTheorem1ImportedBoundary.
        ] = 1%r
     => exists (BNike <: BEEKEM_HKR_CKS_ADVERSARY),
        exists (BSe <: BEEKEM_MU_CPA_ADVERSARY),
-         beekem_safe_mass_normalized_ki_advantage
+         beekem_normalized_ki_advantage
            (Pr[
               PaperGame.main(users, group, kappa, membership) @ &m : res
-            ])
-           (Pr[
-              PaperGame.main_with_evidence(
-                users, group, kappa, membership
-              ) @ &m : res.`bke_safe
             ])
          <= beekem_theorem1_loss c h *
             (beekem_hkr_cks_advantage
