@@ -1,5 +1,5 @@
 require import AllCore List FSet.
-require import ProtocolTypes ProtocolPrimitives.
+require import ProtocolTypes ProtocolPrimitives CanonicalEncoding.
 require import LiveKeyGame BeeKemConstruction.
 require import LiveBeeKemAuthoritativeLiveTypes.
 require import LivePrfGame LivePrfAuthoritativeReduction.
