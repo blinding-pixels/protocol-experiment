@@ -31,18 +31,22 @@ op authoritative_live_initial_group : beekem_group =
    A distinguished application live challenge must actually occur.  BeeKEM
    safety is evaluated from the complete canonical operation graph and query
    log.  Authentication and adapter faults are read from the shared executable
-   environments rather than supplied by the adversary. *)
+   environments rather than supplied by the adversary.  Protocol-consistency
+   failure is an explicit implementation-faithfulness boundary: it is not
+   encoded as an adversary guess in the PRF game. *)
 op authoritative_live_eligible
     (initial_authorization_valid : bool)
     (application_challenge_count : int)
     (beekem_safe : bool)
     (authentication_failure : bool)
-    (adapter_fault : bool) : bool =
+    (adapter_fault : bool)
+    (protocol_failure : bool) : bool =
      initial_authorization_valid
   /\ 0 < application_challenge_count
   /\ beekem_safe
   /\ ! authentication_failure
-  /\ ! adapter_fault.
+  /\ ! adapter_fault
+  /\ ! protocol_failure.
 
 (* Direct H1/H2 endpoint.  BeeKEM is fixed to its random-root branch and the
    PRF bit alone selects real KDF output or an independent ideal live key.  All
@@ -118,13 +122,14 @@ module AuthoritativePrfApplicationBit(
     authentication_failure <- Auth.unauthorized_accepted;
     adapter_fault <- Core.runtime_fault;
     protocol_failure <- Bee.Environment.protocol_consistency_failure;
-    endpoint_guess <- protocol_failure \/ adversary_guess;
+    endpoint_guess <- adversary_guess;
     eligible <- authoritative_live_eligible
       initial_authorization_valid
       application_challenge_count
       beekem_safe
       authentication_failure
-      adapter_fault;
+      adapter_fault
+      protocol_failure;
 
     return
       {| mpar_eligible = eligible;
@@ -200,13 +205,14 @@ module BPRFLiveAuthoritative(
     authentication_failure <- Auth.unauthorized_accepted;
     adapter_fault <- Core.runtime_fault;
     protocol_failure <- Bee.Environment.protocol_consistency_failure;
-    endpoint_guess <- protocol_failure \/ adversary_guess;
+    endpoint_guess <- adversary_guess;
     eligible <- authoritative_live_eligible
       initial_authorization_valid
       application_challenge_count
       beekem_safe
       authentication_failure
-      adapter_fault;
+      adapter_fault
+      protocol_failure;
 
     return
       {| mpar_eligible = eligible;
