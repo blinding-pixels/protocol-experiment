@@ -1,5 +1,6 @@
 require import AllCore List FSet.
 require import ProtocolTypes ProtocolPrimitives.
+require import LiveBeeKemAuthoritativeLiveTypes.
 require import LivePrfGame LivePrfAuthoritativeReduction.
 
 section AuthoritativeApplicationPrfExactHop.
