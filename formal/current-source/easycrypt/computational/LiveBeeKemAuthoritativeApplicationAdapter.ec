@@ -3,6 +3,21 @@ require import ProtocolTypes BeeKemTypes BeeKemQueryLog BeeKemKiGame.
 require import LiveBeeKemAuthoritativeTypes LiveBeeKemAuthoritativeAdapter.
 require import LiveBeeKemAuthoritativeApplicationState.
 
+(* Typed constructor kept outside procedure syntax because [aba_node] is also
+   a field of the application-attempt evidence record.  The explicit result
+   type prevents EasyCrypt from mixing those two record namespaces. *)
+op application_beekem_address_of_control
+    (node : node_id)
+    (principal : principal)
+    (user : beekem_user)
+    (counter : beekem_counter)
+    (operation : beekem_operation_id) : application_beekem_address =
+  {| aba_node = node;
+     aba_principal = principal;
+     aba_user = user;
+     aba_counter = counter;
+     aba_operation = operation |}.
+
 (* Stateful application translation over the authoritative Figure-8 oracle.
    This module owns only cross-layer identity/address metadata.  It owns no
    BeeKEM protocol state, query log, safety predicate, hidden bit, or random
@@ -131,12 +146,8 @@ module AuthoritativeApplicationBeeKemCore(
     } else {
       operation <- (oget control).`bgm_operation;
       node <- NodeId next_node_value;
-      address <-
-        {| aba_node = node;
-           aba_principal = actor;
-           aba_user = user;
-           aba_counter = counter;
-           aba_operation = operation.`bo_id |};
+      address <- application_beekem_address_of_control
+        node actor user counter operation.`bo_id;
       control_exact <-
            operation.`bo_group = group
         /\ operation.`bo_author = user
