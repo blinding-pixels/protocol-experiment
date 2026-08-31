@@ -2,6 +2,7 @@ require import AllCore List FSet.
 require import ProtocolTypes ProtocolPrimitives UnauthorizedSignatureReduction.
 require import UnauthorizedOriginGame LiveKeyGame.
 require import LiveBeeKemAuthoritativeTypes LiveBeeKemAuthoritativeAdapter.
+require import LiveBeeKemAuthoritativeApplicationState.
 require LiveBeeKemKiInterface.
 clone import LiveBeeKemKiInterface as BKI.
 
