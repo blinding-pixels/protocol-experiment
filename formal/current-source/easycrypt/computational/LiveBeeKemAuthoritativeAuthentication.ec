@@ -21,6 +21,16 @@ import PG.
    BeeKEM safety predicate, adapter state, and protocol-consistency state.
    Authentication filtering removes only Deliverable A's executable
    unauthorized-acceptance event. *)
+type authoritative_live_application_core_evidence = {
+  alce_application_bit : bool;
+  alce_initial_authorization_valid : bool;
+  alce_application_challenge_count : int;
+  alce_beekem_safe : bool;
+  alce_adapter_fault : bool;
+  alce_protocol_failure : bool;
+  alce_adversary_guess : bool
+}.
+
 type authoritative_live_application_evidence = {
   alae_application_bit : bool;
   alae_initial_authorization_valid : bool;
@@ -65,6 +75,59 @@ op authoritative_live_authenticated_eligible
     protocol_failure
   /\ ! authentication_failure.
 
+op authoritative_live_core_raw_eligible
+    (core : authoritative_live_application_core_evidence) : bool =
+  authoritative_live_raw_eligible
+    core.`alce_initial_authorization_valid
+    core.`alce_application_challenge_count
+    core.`alce_beekem_safe
+    core.`alce_adapter_fault
+    core.`alce_protocol_failure.
+
+op authoritative_live_core_authenticated_eligible
+    (core : authoritative_live_application_core_evidence)
+    (authentication_failure : bool) : bool =
+  authoritative_live_authenticated_eligible
+    core.`alce_initial_authorization_valid
+    core.`alce_application_challenge_count
+    core.`alce_beekem_safe
+    authentication_failure
+    core.`alce_adapter_fault
+    core.`alce_protocol_failure.
+
+op authoritative_live_application_evidence_of
+    (core : authoritative_live_application_core_evidence)
+    (authentication_failure : bool)
+    : authoritative_live_application_evidence =
+  {| alae_application_bit = core.`alce_application_bit;
+     alae_initial_authorization_valid =
+       core.`alce_initial_authorization_valid;
+     alae_application_challenge_count =
+       core.`alce_application_challenge_count;
+     alae_beekem_safe = core.`alce_beekem_safe;
+     alae_authentication_failure = authentication_failure;
+     alae_adapter_fault = core.`alce_adapter_fault;
+     alae_protocol_failure = core.`alce_protocol_failure;
+     alae_adversary_guess = core.`alce_adversary_guess;
+     alae_raw_eligible = authoritative_live_core_raw_eligible core;
+     alae_authenticated_eligible =
+       authoritative_live_core_authenticated_eligible
+         core authentication_failure;
+     alae_raw_decision =
+       authoritative_live_core_raw_eligible core /\
+       core.`alce_adversary_guess;
+     alae_authenticated_decision =
+       authoritative_live_core_authenticated_eligible
+         core authentication_failure /\
+       core.`alce_adversary_guess;
+     alae_raw_win =
+       (authoritative_live_core_raw_eligible core /\
+        core.`alce_adversary_guess) = core.`alce_application_bit;
+     alae_authenticated_win =
+       (authoritative_live_core_authenticated_eligible
+          core authentication_failure /\
+        core.`alce_adversary_guess) = core.`alce_application_bit |}.
+
 lemma authoritative_live_authenticated_implies_raw
     (initial_authorization_valid : bool)
     (application_challenge_count : int)
@@ -93,7 +156,9 @@ qed.
    Deliverable A reduction adversary below.  The supplied authentication oracle
    is the only source of signing and validation.  The BeeKEM root bit is fixed
    separately from the application challenge bit, and every derived domain is
-   routed through the actual multi-domain PRF oracle. *)
+   routed through the actual multi-domain PRF oracle.  Authentication failure
+   is deliberately not read here: the abstract Deliverable A interface exposes
+   only its three procedures. *)
 module AuthoritativeLiveApplicationExecution(
   A : AUTHORITATIVE_LIVE_KEY_ADVERSARY,
   K : MULTI_DOMAIN_KEY_SCHEDULE,
@@ -110,21 +175,14 @@ module AuthoritativeLiveApplicationExecution(
   proc run(
     beekem_bit : bool,
     application_bit : bool
-  ) : authoritative_live_application_evidence = {
+  ) : authoritative_live_application_core_evidence = {
     var initial_authorization : authorization_state option;
     var initial_authorization_valid : bool;
     var application_challenge_count : int;
     var beekem_safe : bool;
-    var authentication_failure : bool;
     var adapter_fault : bool;
     var protocol_failure : bool;
     var adversary_guess : bool;
-    var raw_eligible : bool;
-    var authenticated_eligible : bool;
-    var raw_decision : bool;
-    var authenticated_decision : bool;
-    var raw_win : bool;
-    var authenticated_win : bool;
 
     initial_authorization <- live_auth_initial_authorization;
 
@@ -152,49 +210,25 @@ module AuthoritativeLiveApplicationExecution(
       live_auth_retention_kappa
       Bee.Environment.state.`bps_operations
       Bee.Environment.query_log;
-    authentication_failure <- Auth.unauthorized_accepted;
     adapter_fault <- Core.runtime_fault;
     protocol_failure <- Bee.Environment.protocol_consistency_failure;
-    raw_eligible <- authoritative_live_raw_eligible
-      initial_authorization_valid
-      application_challenge_count
-      beekem_safe
-      adapter_fault
-      protocol_failure;
-    authenticated_eligible <- authoritative_live_authenticated_eligible
-      initial_authorization_valid
-      application_challenge_count
-      beekem_safe
-      authentication_failure
-      adapter_fault
-      protocol_failure;
-    raw_decision <- raw_eligible /\ adversary_guess;
-    authenticated_decision <- authenticated_eligible /\ adversary_guess;
-    raw_win <- raw_decision = application_bit;
-    authenticated_win <- authenticated_decision = application_bit;
 
     return
-      {| alae_application_bit = application_bit;
-         alae_initial_authorization_valid = initial_authorization_valid;
-         alae_application_challenge_count = application_challenge_count;
-         alae_beekem_safe = beekem_safe;
-         alae_authentication_failure = authentication_failure;
-         alae_adapter_fault = adapter_fault;
-         alae_protocol_failure = protocol_failure;
-         alae_adversary_guess = adversary_guess;
-         alae_raw_eligible = raw_eligible;
-         alae_authenticated_eligible = authenticated_eligible;
-         alae_raw_decision = raw_decision;
-         alae_authenticated_decision = authenticated_decision;
-         alae_raw_win = raw_win;
-         alae_authenticated_win = authenticated_win |};
+      {| alce_application_bit = application_bit;
+         alce_initial_authorization_valid = initial_authorization_valid;
+         alce_application_challenge_count = application_challenge_count;
+         alce_beekem_safe = beekem_safe;
+         alce_adapter_fault = adapter_fault;
+         alce_protocol_failure = protocol_failure;
+         alce_adversary_guess = adversary_guess |};
   }
 }.
 
 (* Public authoritative L0 game.  BeeKEM executes its real branch in both
    application worlds; only the application challenge bit changes the live
-   KDF response.  The sampled presentation and the fixed-bit projections use
-   this same procedure body. *)
+   KDF response.  Keep the concrete authentication environment observable by
+   the enclosing game while exposing to the shared execution only transparent
+   one-call forwarding procedures. *)
 module AuthoritativeLiveRealGame(
   A : AUTHORITATIVE_LIVE_KEY_ADVERSARY,
   S : SIGNATURE_SCHEME,
@@ -204,28 +238,62 @@ module AuthoritativeLiveRealGame(
   I : BEEKEM_PAPER_INSTANCE
 ) = {
   module SO = PG.LoggedSignatureOracle(S)
-  module Auth = OriginTrackedCandidateEnvironment(SO, H)
-  module E = AuthoritativeLiveApplicationExecution(A, K, R, I, Auth)
+  module O = OriginTrackedCandidateEnvironment(SO, H)
+
+  module Forward = {
+    proc sign_operation(
+      envelope : operation_envelope
+    ) : signed_operation = {
+      var operation : signed_operation;
+      operation <@ O.sign_operation(envelope);
+      return operation;
+    }
+
+    proc sign_authorization_fact(
+      fact : authorization_fact
+    ) : signed_authorization_fact = {
+      var signed_fact : signed_authorization_fact;
+      signed_fact <@ O.sign_authorization_fact(fact);
+      return signed_fact;
+    }
+
+    proc submit(
+      operation : signed_operation,
+      view : public_view
+    ) : bool = {
+      var accepted : bool;
+      accepted <@ O.submit(operation, view);
+      return accepted;
+    }
+  }
+
+  module E = AuthoritativeLiveApplicationExecution(A, K, R, I, Forward)
 
   proc main_with_fixed_bit(
     application_bit : bool
   ) : authoritative_live_application_evidence = {
+    var core : authoritative_live_application_core_evidence;
     var evidence : authoritative_live_application_evidence;
 
     SO.init();
-    Auth.init(live_auth_initial_state);
-    evidence <@ E.run(true, application_bit);
+    O.init(live_auth_initial_state);
+    core <@ E.run(true, application_bit);
+    evidence <- authoritative_live_application_evidence_of
+      core O.unauthorized_accepted;
     return evidence;
   }
 
   proc main_with_evidence() : authoritative_live_application_evidence = {
     var application_bit : bool;
+    var core : authoritative_live_application_core_evidence;
     var evidence : authoritative_live_application_evidence;
 
     SO.init();
-    Auth.init(live_auth_initial_state);
+    O.init(live_auth_initial_state);
     application_bit <$ dbool;
-    evidence <@ E.run(true, application_bit);
+    core <@ E.run(true, application_bit);
+    evidence <- authoritative_live_application_evidence_of
+      core O.unauthorized_accepted;
     return evidence;
   }
 
@@ -256,10 +324,10 @@ module BAuthoritativeLiveOriginAdversary(
 
   proc attack() : unit = {
     var application_bit : bool;
-    var evidence : authoritative_live_application_evidence;
+    var core : authoritative_live_application_core_evidence;
 
     application_bit <$ dbool;
-    evidence <@ E.run(true, application_bit);
+    core <@ E.run(true, application_bit);
   }
 }.
 
@@ -323,7 +391,7 @@ section AuthoritativeLiveAuthenticationHop.
       + Pr[COLL.main(live_auth_initial_state) @ &m : res]
       + encoding_failure_probability.
   proof.
-    rewrite authoritative_live_authentication_failure_exactly_deliverable_a.
+    rewrite (authoritative_live_authentication_failure_exactly_deliverable_a &m).
     exact
       (UnauthorizedOriginFinalBound.adv_unauthorized_origin_bound
          &m live_auth_initial_state).
