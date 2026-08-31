@@ -2,7 +2,7 @@ require import AllCore List FSet.
 require import ProtocolTypes ProtocolPrimitives AuthorizationState.
 require import UnauthorizedSignatureReduction UnauthorizedOriginGame.
 require import LiveKeyGame LiveAuthenticationReduction.
-require import BeeKemTypes BeeKemKiGame BeeKemConstruction.
+require import BeeKemTypes BeeKemProtocol BeeKemKiGame BeeKemConstruction.
 require import LiveBeeKemAuthoritativeTypes.
 require import LiveBeeKemAuthoritativeLiveTypes.
 require import LiveBeeKemAuthoritativeLiveOracle.
