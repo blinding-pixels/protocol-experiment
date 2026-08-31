@@ -102,4 +102,56 @@ section BeeKemProjectedNormalization.
               res.`bke_adversary_guess
           ])).
   qed.
+
+  (* The random-branch premise above is not independent.  The imported
+     theorem's sampled all-safe condition yields it through the executable
+     fair-bit safety decomposition. *)
+  lemma beekem_projected_fixed_bit_advantage_from_sampled_safe
+      &m
+      (users : beekem_user list)
+      (group : beekem_group)
+      (kappa : int)
+      (membership : beekem_dgm) :
+    Pr[
+      G.main_with_fixed_bit(
+        users, group, kappa, membership, true
+      ) @ &m :
+        res.`bke_safe /\
+        ! res.`bke_protocol_consistency_failure
+    ] = 1%r =>
+    Pr[
+      G.main_with_evidence(users, group, kappa, membership) @ &m :
+        res.`bke_safe
+    ] = 1%r =>
+    mdprf_fixed_bit_advantage
+      (Pr[
+         G.main_with_fixed_bit(
+           users, group, kappa, membership, true
+         ) @ &m :
+           res.`bke_safe /\
+           ! res.`bke_protocol_consistency_failure /\
+           res.`bke_adversary_guess
+       ])
+      (Pr[
+         G.main_with_fixed_bit(
+           users, group, kappa, membership, false
+         ) @ &m :
+           res.`bke_safe /\
+           ! res.`bke_protocol_consistency_failure /\
+           res.`bke_adversary_guess
+       ]) / 2%r =
+    beekem_normalized_ki_advantage
+      (Pr[
+         G.main(users, group, kappa, membership) @ &m : res
+       ]).
+  proof.
+    move=> Hreal Hsampled.
+    have Hfixed :=
+      beekem_sampled_safe_one_implies_fixed_safe_one
+        A P &m users group kappa membership Hsampled.
+    elim Hfixed => Htrue Hfalse.
+    exact
+      (beekem_projected_fixed_bit_advantage_exactly_normalized_ki
+         A P &m users group kappa membership Hreal Hfalse).
+  qed.
 end section BeeKemProjectedNormalization.
