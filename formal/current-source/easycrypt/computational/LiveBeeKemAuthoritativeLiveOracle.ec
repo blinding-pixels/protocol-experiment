@@ -249,7 +249,7 @@ module AuthoritativeLiveProtocolOracle(
     var result : history_capability_output option;
 
     root <- None;
-    digest <- Bee.Core.digests noe;
+    digest <- Bee.Core.digests node;
     label <- witness;
     output <- witness;
     result <- None;
