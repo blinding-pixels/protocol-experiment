@@ -7,6 +7,7 @@ require import LiveKeyGame LiveKeyWitnesses LiveChallengeThenRevealControl.
 require import LiveAuthenticationReduction.
 require import LiveBeeKemControl LiveBeeKemDerived.
 require import LiveBeeKemAuthoritativeApplicationControls.
+require import LiveBeeKemAuthoritativeRootBridge.
 require import LiveBeeKemAuthoritativeQueryBridge.
 require import LiveBeeKemAuthoritativeCounterBridge.
 require import LiveBeeKemAuthoritativeAdditionControls.
@@ -86,6 +87,8 @@ print LiveBeeKemReduction.beekem_live_wrapper_invokes_primitive_challenge_once.
 
 (* Authoritative BeeKEM application adapter: real canonical trace non-vacuity. *)
 print LiveBeeKemAuthoritativeTypes.authoritative_adapter_nonvacuity.
+print LiveBeeKemAuthoritativeRootBridge.application_beekem_root_bridge_cases_distinct.
+print LiveBeeKemAuthoritativeRootBridge.authoritative_application_witness_root_bridge_exact.
 print LiveBeeKemAuthoritativeApplicationControls.authoritative_application_adapter_real_branch_reachable.
 print LiveBeeKemAuthoritativeQueryBridge.authoritative_application_query_log_bridge_reachable.
 print LiveBeeKemAuthoritativeCounterBridge.authoritative_rejected_create_is_retained_exactly.
