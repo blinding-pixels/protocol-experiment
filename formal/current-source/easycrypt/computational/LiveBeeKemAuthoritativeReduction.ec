@@ -121,7 +121,7 @@ module AuthoritativeBeeKemApplicationBit(
   module Live = AuthoritativePrfBackedLiveOracle(Core, KReal)
   module A = A(Live)
 
-  proc main(beekem_bit : bool) : mdprf_adversary_result = {
+  proc main(input_bit : bool) : mdprf_adversary_result = {
     var initial_authorization_valid : bool;
     var application_challenge_count : int;
     var beekem_safe : bool;
@@ -136,7 +136,7 @@ module AuthoritativeBeeKemApplicationBit(
       authoritative_live_initial_group,
       live_auth_retention_kappa,
       authoritative_live_initial_membership,
-      beekem_bit
+      input_bit
     );
     SO.init();
     Auth.init(live_auth_initial_state);
@@ -185,14 +185,14 @@ module AuthoritativeLiveBeeKemFixedProjection(
 ) = {
   module G = AuthoritativeLiveBeeKemGame(A, S, H, K, R, I)
 
-  proc main(beekem_bit : bool) : beekem_ki_evidence = {
+  proc main(input_bit : bool) : beekem_ki_evidence = {
     var evidence : beekem_ki_evidence;
     evidence <@ G.main_with_fixed_bit(
       authoritative_live_initial_users,
       authoritative_live_initial_group,
       live_auth_retention_kappa,
       authoritative_live_initial_membership,
-      beekem_bit
+      input_bit
     );
     return evidence;
   }
@@ -252,20 +252,21 @@ section AuthoritativeLiveBeeKemEndpointBridge.
   module PrfReal = AuthoritativePrfRealProjection(A, S, H, K, R, I).
 
   lemma authoritative_beekem_fixed_bit_one_event_exact
-      &m (beekem_bit : bool) :
+      &m (input_bit : bool) :
     Pr[
-      Direct.main(beekem_bit) @ &m :
+      Direct.main(input_bit) @ &m :
         res.`mpar_eligible /\ res.`mpar_guess
     ] =
     Pr[
-      Fixed.main(beekem_bit) @ &m :
+      Fixed.main(input_bit) @ &m :
         res.`bke_safe /\
         ! res.`bke_protocol_consistency_failure /\
         res.`bke_adversary_guess
     ].
   proof.
     byequiv
-      (_ : ={beekem_bit, glob A, glob S, glob H, glob K, glob R, glob I}
+      (_ : input_bit{1} = input_bit{2} /\
+           ={glob A, glob S, glob H, glob K, glob R, glob I}
            ==>
            (res{1}.`mpar_eligible /\ res{1}.`mpar_guess) =
            (res{2}.`bke_safe /\
