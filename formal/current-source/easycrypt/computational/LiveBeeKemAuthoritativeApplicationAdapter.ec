@@ -195,31 +195,33 @@ module AuthoritativeApplicationBeeKemCore(
         ApplicationBeeKemCreateAttempt (creator, initial_members),
         ApplicationBeeKemUnmappedActor
       );
-    } else if (mapped_members = None) {
-      record_local_rejection(
-        ApplicationBeeKemCreateAttempt (creator, initial_members),
-        ApplicationBeeKemUnmappedInitialMember
-      );
     } else {
-      query_id <- application_beekem_next_query_id forwarded_count;
-      canonical_accepted <@ F.create_group(
-        oget creator_user, oget mapped_members
-      );
-      forwarded_count <- forwarded_count + 1;
-      if (canonical_accepted) {
-        counters <- application_beekem_counter_store_put counters creator 1;
-        result <@ finish_control(
-          creator, oget creator_user, 1, Some digest,
-          BeeCreate, None, query_id
+      if (mapped_members = None) {
+        record_local_rejection(
+          ApplicationBeeKemCreateAttempt (creator, initial_members),
+          ApplicationBeeKemUnmappedInitialMember
         );
       } else {
-        result <- {| result with abs_canonical_query_id = Some query_id |};
+        query_id <- application_beekem_next_query_id forwarded_count;
+        canonical_accepted <@ F.create_group(
+          oget creator_user, oget mapped_members
+        );
+        forwarded_count <- forwarded_count + 1;
+        if (canonical_accepted) {
+          counters <- application_beekem_counter_store_put counters creator 1;
+          result <@ finish_control(
+            creator, oget creator_user, 1, Some digest,
+            BeeCreate, None, query_id
+          );
+        } else {
+          result <- {| result with abs_canonical_query_id = Some query_id |};
+        }
+        record_step(
+          ApplicationBeeKemCreateAttempt (creator, initial_members),
+          canonical_accepted,
+          result
+        );
       }
-      record_step(
-        ApplicationBeeKemCreateAttempt (creator, initial_members),
-        canonical_accepted,
-        result
-      );
     }
     return result;
   }
@@ -251,30 +253,32 @@ module AuthoritativeApplicationBeeKemCore(
         ApplicationBeeKemAddAttempt (actor, target),
         ApplicationBeeKemUnmappedActor
       );
-    } else if (target_user = None) {
-      record_local_rejection(
-        ApplicationBeeKemAddAttempt (actor, target),
-        ApplicationBeeKemUnmappedTarget
-      );
     } else {
-      query_id <- application_beekem_next_query_id forwarded_count;
-      canonical_accepted <@ F.add_member(oget actor_user, oget target_user);
-      forwarded_count <- forwarded_count + 1;
-      if (canonical_accepted) {
-        counters <-
-          application_beekem_counter_store_put counters actor counter_value;
-        result <@ finish_control(
-          actor, oget actor_user, counter_value, Some digest,
-          BeeAdd, Some (oget target_user), query_id
+      if (target_user = None) {
+        record_local_rejection(
+          ApplicationBeeKemAddAttempt (actor, target),
+          ApplicationBeeKemUnmappedTarget
         );
       } else {
-        result <- {| result with abs_canonical_query_id = Some query_id |};
+        query_id <- application_beekem_next_query_id forwarded_count;
+        canonical_accepted <@ F.add_member(oget actor_user, oget target_user);
+        forwarded_count <- forwarded_count + 1;
+        if (canonical_accepted) {
+          counters <-
+            application_beekem_counter_store_put counters actor counter_value;
+          result <@ finish_control(
+            actor, oget actor_user, counter_value, Some digest,
+            BeeAdd, Some (oget target_user), query_id
+          );
+        } else {
+          result <- {| result with abs_canonical_query_id = Some query_id |};
+        }
+        record_step(
+          ApplicationBeeKemAddAttempt (actor, target),
+          canonical_accepted,
+          result
+        );
       }
-      record_step(
-        ApplicationBeeKemAddAttempt (actor, target),
-        canonical_accepted,
-        result
-      );
     }
     return result;
   }
@@ -306,32 +310,34 @@ module AuthoritativeApplicationBeeKemCore(
         ApplicationBeeKemRemoveAttempt (actor, target),
         ApplicationBeeKemUnmappedActor
       );
-    } else if (target_user = None) {
-      record_local_rejection(
-        ApplicationBeeKemRemoveAttempt (actor, target),
-        ApplicationBeeKemUnmappedTarget
-      );
     } else {
-      query_id <- application_beekem_next_query_id forwarded_count;
-      canonical_accepted <@ F.remove_member(
-        oget actor_user, oget target_user
-      );
-      forwarded_count <- forwarded_count + 1;
-      if (canonical_accepted) {
-        counters <-
-          application_beekem_counter_store_put counters actor counter_value;
-        result <@ finish_control(
-          actor, oget actor_user, counter_value, Some digest,
-          BeeRemove, Some (oget target_user), query_id
+      if (target_user = None) {
+        record_local_rejection(
+          ApplicationBeeKemRemoveAttempt (actor, target),
+          ApplicationBeeKemUnmappedTarget
         );
       } else {
-        result <- {| result with abs_canonical_query_id = Some query_id |};
+        query_id <- application_beekem_next_query_id forwarded_count;
+        canonical_accepted <@ F.remove_member(
+          oget actor_user, oget target_user
+        );
+        forwarded_count <- forwarded_count + 1;
+        if (canonical_accepted) {
+          counters <-
+            application_beekem_counter_store_put counters actor counter_value;
+          result <@ finish_control(
+            actor, oget actor_user, counter_value, Some digest,
+            BeeRemove, Some (oget target_user), query_id
+          );
+        } else {
+          result <- {| result with abs_canonical_query_id = Some query_id |};
+        }
+        record_step(
+          ApplicationBeeKemRemoveAttempt (actor, target),
+          canonical_accepted,
+          result
+        );
       }
-      record_step(
-        ApplicationBeeKemRemoveAttempt (actor, target),
-        canonical_accepted,
-        result
-      );
     }
     return result;
   }
@@ -421,77 +427,79 @@ module AuthoritativeApplicationBeeKemCore(
         ApplicationBeeKemDeliverAttempt (node, recipient),
         ApplicationBeeKemUnknownNode
       );
-    } else if (recipient_user = None) {
-      record_local_rejection(
-        ApplicationBeeKemDeliverAttempt (node, recipient),
-        ApplicationBeeKemUnmappedTarget
-      );
     } else {
-      control <@ F.get_control_message(
-        (oget address).`aba_user,
-        (oget address).`aba_counter
-      );
-      direct <@ F.get_direct_message(
-        (oget address).`aba_user,
-        (oget address).`aba_counter,
-        oget recipient_user
-      );
-      query_id <- application_beekem_next_query_id forwarded_count;
-      canonical_accepted <@ F.deliver(
-        (oget address).`aba_user,
-        (oget address).`aba_counter,
-        oget recipient_user
-      );
-      forwarded_count <- forwarded_count + 1;
-
-      if (canonical_accepted) {
-        deliveries <-
-          application_beekem_delivery_store_put
-            deliveries recipient node true;
-        if (control = None) {
-          runtime_fault <- true;
-        }
-
-        response_counter_value <- counters recipient + 1;
-        response_counter <- BeeKemCounter response_counter_value;
-        response_control <@ F.get_control_message(
-          oget recipient_user,
-          response_counter
+      if (recipient_user = None) {
+        record_local_rejection(
+          ApplicationBeeKemDeliverAttempt (node, recipient),
+          ApplicationBeeKemUnmappedTarget
         );
-        if (response_control <> None) {
-          counters <-
-            application_beekem_counter_store_put
-              counters recipient response_counter_value;
-          response_step <@ finish_control(
-            recipient, oget recipient_user, response_counter_value, None,
-            BeeResponse, None, query_id
-          );
-          response_node <- response_step.`abs_node;
-        }
-      }
+      } else {
+        control <@ F.get_control_message(
+          (oget address).`aba_user,
+          (oget address).`aba_counter
+        );
+        direct <@ F.get_direct_message(
+          (oget address).`aba_user,
+          (oget address).`aba_counter,
+          oget recipient_user
+        );
+        query_id <- application_beekem_next_query_id forwarded_count;
+        canonical_accepted <@ F.deliver(
+          (oget address).`aba_user,
+          (oget address).`aba_counter,
+          oget recipient_user
+        );
+        forwarded_count <- forwarded_count + 1;
 
-      result <-
-        {| abd_accepted = canonical_accepted /\ ! runtime_fault;
-           abd_control = control;
-           abd_direct = direct;
-           abd_response_node = response_node;
-           abd_canonical_query_id = Some query_id;
-           abd_runtime_fault = runtime_fault |};
-      record(
-        {| aba_kind = ApplicationBeeKemDeliverAttempt (node, recipient);
-           aba_forwarded = true;
-           aba_canonical_query_id = Some query_id;
-           aba_canonical_accepted = canonical_accepted;
-           aba_node = Some node;
-           aba_address = address;
-           aba_control = control;
-           aba_direct = direct;
-           aba_secret_output = None;
-           aba_root_output = None;
-           aba_compromise = None;
-           aba_compromise_frontier = fset0;
-           aba_mapping_rejection = None |}
-      );
+        if (canonical_accepted) {
+          deliveries <-
+            application_beekem_delivery_store_put
+              deliveries recipient node true;
+          if (control = None) {
+            runtime_fault <- true;
+          }
+
+          response_counter_value <- counters recipient + 1;
+          response_counter <- BeeKemCounter response_counter_value;
+          response_control <@ F.get_control_message(
+            oget recipient_user,
+            response_counter
+          );
+          if (response_control <> None) {
+            counters <-
+              application_beekem_counter_store_put
+                counters recipient response_counter_value;
+            response_step <@ finish_control(
+              recipient, oget recipient_user, response_counter_value, None,
+              BeeResponse, None, query_id
+            );
+            response_node <- response_step.`abs_node;
+          }
+        }
+
+        result <-
+          {| abd_accepted = canonical_accepted /\ ! runtime_fault;
+             abd_control = control;
+             abd_direct = direct;
+             abd_response_node = response_node;
+             abd_canonical_query_id = Some query_id;
+             abd_runtime_fault = runtime_fault |};
+        record(
+          {| aba_kind = ApplicationBeeKemDeliverAttempt (node, recipient);
+             aba_forwarded = true;
+             aba_canonical_query_id = Some query_id;
+             aba_canonical_accepted = canonical_accepted;
+             aba_node = Some node;
+             aba_address = address;
+             aba_control = control;
+             aba_direct = direct;
+             aba_secret_output = None;
+             aba_root_output = None;
+             aba_compromise = None;
+             aba_compromise_frontier = fset0;
+             aba_mapping_rejection = None |}
+        );
+      }
     }
     return result;
   }
@@ -528,49 +536,53 @@ module AuthoritativeApplicationBeeKemCore(
 
     if (member_user = None) {
       record_local_rejection(kind, ApplicationBeeKemUnmappedActor);
-    } else if (address = None) {
-      record_local_rejection(kind, ApplicationBeeKemUnknownNode);
-    } else if (! deliveries member node) {
-      record_local_rejection(kind, ApplicationBeeKemUndeliveredNode);
     } else {
-      query_id <- application_beekem_next_query_id forwarded_count;
-      if (challenging) {
-        output <@ F.challenge(
-          (oget address).`aba_user,
-          (oget address).`aba_counter
-        );
+      if (address = None) {
+        record_local_rejection(kind, ApplicationBeeKemUnknownNode);
       } else {
-        output <@ F.reveal(
-          (oget address).`aba_user,
-          (oget address).`aba_counter
-        );
+        if (! deliveries member node) {
+          record_local_rejection(kind, ApplicationBeeKemUndeliveredNode);
+        } else {
+          query_id <- application_beekem_next_query_id forwarded_count;
+          if (challenging) {
+            output <@ F.challenge(
+              (oget address).`aba_user,
+              (oget address).`aba_counter
+            );
+          } else {
+            output <@ F.reveal(
+              (oget address).`aba_user,
+              (oget address).`aba_counter
+            );
+          }
+          forwarded_count <- forwarded_count + 1;
+          canonical_accepted <- beekem_secret_output_is_value output;
+          result <-
+            {| abo_forwarded = true;
+               abo_canonical_accepted = canonical_accepted;
+               abo_secret_output = Some output;
+               abo_root_output = Some
+                 (authoritative_application_root_result_of_beekem output);
+               abo_address = address;
+               abo_canonical_query_id = Some query_id;
+               abo_runtime_fault = false |};
+          record(
+            {| aba_kind = kind;
+               aba_forwarded = true;
+               aba_canonical_query_id = Some query_id;
+               aba_canonical_accepted = canonical_accepted;
+               aba_node = Some node;
+               aba_address = address;
+               aba_control = None;
+               aba_direct = None;
+               aba_secret_output = Some output;
+               aba_root_output = result.`abo_root_output;
+               aba_compromise = None;
+               aba_compromise_frontier = fset0;
+               aba_mapping_rejection = None |}
+          );
+        }
       }
-      forwarded_count <- forwarded_count + 1;
-      canonical_accepted <- beekem_secret_output_is_value output;
-      result <-
-        {| abo_forwarded = true;
-           abo_canonical_accepted = canonical_accepted;
-           abo_secret_output = Some output;
-           abo_root_output = Some
-             (authoritative_application_root_result_of_beekem output);
-           abo_address = address;
-           abo_canonical_query_id = Some query_id;
-           abo_runtime_fault = false |};
-      record(
-        {| aba_kind = kind;
-           aba_forwarded = true;
-           aba_canonical_query_id = Some query_id;
-           aba_canonical_accepted = canonical_accepted;
-           aba_node = Some node;
-           aba_address = address;
-           aba_control = None;
-           aba_direct = None;
-           aba_secret_output = Some output;
-           aba_root_output = result.`abo_root_output;
-           aba_compromise = None;
-           aba_compromise_frontier = fset0;
-           aba_mapping_rejection = None |}
-      );
     }
     return result;
   }
