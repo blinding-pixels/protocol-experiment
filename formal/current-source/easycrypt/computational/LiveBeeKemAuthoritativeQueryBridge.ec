@@ -29,41 +29,37 @@ op application_beekem_attempt_control_matches_query
   else query.`bq_operation = Some
     (oget attempt.`aba_control).`bgm_operation.`bo_id.
 
-op application_beekem_attempt_kind_matches_query
+op application_beekem_attempt_kind_matches_query_for
     (registry : application_user_registry)
+    (kind : application_beekem_attempt_kind)
     (attempt : application_beekem_attempt)
     (query : beekem_query) : bool =
-  with attempt.`aba_kind =
-      ApplicationBeeKemCreateAttempt actor initial_members =>
+  with kind = ApplicationBeeKemCreateAttempt actor initial_members =>
          query.`bq_kind = BeeQueryCreate
       /\ registry.`aur_user_of actor = Some query.`bq_actor
       /\ query.`bq_target = None
       /\ query.`bq_target_frontier = fset0
-  with attempt.`aba_kind =
-      ApplicationBeeKemAddAttempt actor target =>
+  with kind = ApplicationBeeKemAddAttempt actor target =>
          query.`bq_kind = BeeQueryAdd
       /\ registry.`aur_user_of actor = Some query.`bq_actor
       /\ registry.`aur_user_of target = query.`bq_target
-  with attempt.`aba_kind =
-      ApplicationBeeKemRemoveAttempt actor target =>
+  with kind = ApplicationBeeKemRemoveAttempt actor target =>
          query.`bq_kind = BeeQueryRemove
       /\ registry.`aur_user_of actor = Some query.`bq_actor
       /\ registry.`aur_user_of target = query.`bq_target
-  with attempt.`aba_kind = ApplicationBeeKemUpdateAttempt actor =>
+  with kind = ApplicationBeeKemUpdateAttempt actor =>
          query.`bq_kind = BeeQuerySendUpdate
       /\ registry.`aur_user_of actor = Some query.`bq_actor
       /\ query.`bq_target = None
       /\ query.`bq_target_frontier = fset0
-  with attempt.`aba_kind =
-      ApplicationBeeKemDeliverAttempt node recipient =>
+  with kind = ApplicationBeeKemDeliverAttempt node recipient =>
          query.`bq_kind = BeeQueryDeliver
       /\ attempt.`aba_address <> None
       /\ attempt.`aba_node = Some node
       /\ (oget attempt.`aba_address).`aba_node = node
       /\ query.`bq_actor = (oget attempt.`aba_address).`aba_user
       /\ registry.`aur_user_of recipient = query.`bq_target
-  with attempt.`aba_kind =
-      ApplicationBeeKemRevealAttempt member node =>
+  with kind = ApplicationBeeKemRevealAttempt member node =>
          query.`bq_kind = BeeQueryReveal
       /\ registry.`aur_user_of member <> None
       /\ attempt.`aba_address <> None
@@ -72,8 +68,7 @@ op application_beekem_attempt_kind_matches_query
       /\ query.`bq_actor = (oget attempt.`aba_address).`aba_user
       /\ query.`bq_target = None
       /\ query.`bq_target_frontier = fset0
-  with attempt.`aba_kind =
-      ApplicationBeeKemChallengeAttempt member node =>
+  with kind = ApplicationBeeKemChallengeAttempt member node =>
          query.`bq_kind = BeeQueryChallenge
       /\ registry.`aur_user_of member <> None
       /\ attempt.`aba_address <> None
@@ -82,7 +77,7 @@ op application_beekem_attempt_kind_matches_query
       /\ query.`bq_actor = (oget attempt.`aba_address).`aba_user
       /\ query.`bq_target = None
       /\ query.`bq_target_frontier = fset0
-  with attempt.`aba_kind = ApplicationBeeKemCompromiseAttempt member =>
+  with kind = ApplicationBeeKemCompromiseAttempt member =>
          query.`bq_kind = BeeQueryCompromise
       /\ registry.`aur_user_of member = Some query.`bq_actor
       /\ query.`bq_target = None
@@ -90,6 +85,13 @@ op application_beekem_attempt_kind_matches_query
       /\ query.`bq_operation = None
       /\ query.`bq_target_frontier = fset0
       /\ attempt.`aba_compromise_frontier = query.`bq_actor_frontier.
+
+op application_beekem_attempt_kind_matches_query
+    (registry : application_user_registry)
+    (attempt : application_beekem_attempt)
+    (query : beekem_query) : bool =
+  application_beekem_attempt_kind_matches_query_for
+    registry attempt.`aba_kind attempt query.
 
 op application_beekem_attempt_matches_query_exact
     (registry : application_user_registry)
@@ -283,6 +285,7 @@ proof.
     /application_beekem_attempt_address_matches_query
     /application_beekem_attempt_control_matches_query
     /application_beekem_attempt_kind_matches_query
+    /application_beekem_attempt_kind_matches_query_for
     /application_beekem_attempt_output_exact
     /application_beekem_output_mapping_exact
     /beekem_witness_membership /beekem_witness_initial_member_state
