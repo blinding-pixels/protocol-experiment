@@ -7,12 +7,14 @@ require import LiveBeeKemAuthoritativeApplicationState.
    a field of the application-attempt evidence record.  The explicit result
    type prevents EasyCrypt from mixing those two record namespaces. *)
 op application_beekem_address_of_control
+    (base : application_beekem_address)
     (node : node_id)
     (principal : principal)
     (user : beekem_user)
     (counter : beekem_counter)
     (operation : beekem_operation_id) : application_beekem_address =
-  {| aba_principal = principal;
+  {| base with
+     aba_principal = principal;
      aba_user = user;
      aba_counter = counter;
      aba_operation = operation;
@@ -147,7 +149,7 @@ module AuthoritativeApplicationBeeKemCore(
       operation <- (oget control).`bgm_operation;
       node <- NodeId next_node_value;
       address <- application_beekem_address_of_control
-        node actor user counter operation.`bo_id;
+        address node actor user counter operation.`bo_id;
       control_exact <-
            operation.`bo_group = group
         /\ operation.`bo_author = user
