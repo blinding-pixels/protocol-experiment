@@ -168,4 +168,33 @@ section ExecutableBeeKemNormalization.
     rewrite Htrue Hfalse.
     smt().
   qed.
+
+  (* The fixed-bit runner records the challenger-computed safety event,
+     protocol-consistency flag, adversary guess, and final win bit in one
+     evidence value.  This theorem exposes their exact relation for later
+     probability algebra; it does not assume safety or correctness. *)
+  lemma beekem_fixed_bit_evidence_characterization
+      (users : beekem_user list)
+      (group : beekem_group)
+      (kappa : int)
+      (membership : beekem_dgm)
+      (hidden_bit : bool) :
+    hoare[
+      G.main_with_fixed_bit :
+        arg = (users, group, kappa, membership, hidden_bit)
+        ==>
+        res.`bke_hidden_bit = hidden_bit /\
+        res.`bke_win =
+          beekem_ki_final_win
+            res.`bke_safe
+            res.`bke_protocol_consistency_failure
+            res.`bke_adversary_guess
+            hidden_bit
+    ].
+  proof.
+    proc.
+    call (_ : true).
+    call (_ : true).
+    auto.
+  qed.
 end section ExecutableBeeKemNormalization.
