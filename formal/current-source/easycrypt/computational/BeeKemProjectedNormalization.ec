@@ -1,7 +1,7 @@
 require import AllCore List FSet.
 require import BeeKemTypes BeeKemProtocol BeeKemKiGame.
 require import BeeKemExecutableNormalization BeeKemFixedBitProjection.
-require import BeeKemSafetyBranchProjection.
+require import BeeKemSafetyBranchProjection BeeKemConsistencyBranchProjection.
 require import LivePrfGame.
 
 (* Algebraic normalization of the two application one-events.  The real-root
@@ -153,5 +153,59 @@ section BeeKemProjectedNormalization.
     exact
       (beekem_projected_fixed_bit_advantage_exactly_normalized_ki
          A P &m users group kappa membership Hreal Hfalse).
+  qed.
+
+  (* The remaining real-branch conjunction is likewise derived rather than
+     assumed.  Sampled all-safe mass gives fixed-bit safety; the only additional
+     boundary is probability-one protocol consistency for the concrete paper
+     implementation on the real branch. *)
+  lemma beekem_projected_fixed_bit_advantage_from_sampled_safe_and_consistency
+      &m
+      (users : beekem_user list)
+      (group : beekem_group)
+      (kappa : int)
+      (membership : beekem_dgm) :
+    Pr[
+      G.main_with_evidence(users, group, kappa, membership) @ &m :
+        res.`bke_safe
+    ] = 1%r =>
+    Pr[
+      G.main_with_fixed_bit(
+        users, group, kappa, membership, true
+      ) @ &m : ! res.`bke_protocol_consistency_failure
+    ] = 1%r =>
+    mdprf_fixed_bit_advantage
+      (Pr[
+         G.main_with_fixed_bit(
+           users, group, kappa, membership, true
+         ) @ &m :
+           res.`bke_safe /\
+           ! res.`bke_protocol_consistency_failure /\
+           res.`bke_adversary_guess
+       ])
+      (Pr[
+         G.main_with_fixed_bit(
+           users, group, kappa, membership, false
+         ) @ &m :
+           res.`bke_safe /\
+           ! res.`bke_protocol_consistency_failure /\
+           res.`bke_adversary_guess
+       ]) / 2%r =
+    beekem_normalized_ki_advantage
+      (Pr[
+         G.main(users, group, kappa, membership) @ &m : res
+       ]).
+  proof.
+    move=> Hsampled Hconsistent.
+    have Hfixed :=
+      beekem_sampled_safe_one_implies_fixed_safe_one
+        A P &m users group kappa membership Hsampled.
+    elim Hfixed => Htrue Hfalse.
+    have Hreal :=
+      beekem_fixed_safe_and_consistent_probability_one
+        A P &m users group kappa membership true Htrue Hconsistent.
+    exact
+      (beekem_projected_fixed_bit_advantage_from_sampled_safe
+         A P &m users group kappa membership Hreal Hsampled).
   qed.
 end section BeeKemProjectedNormalization.
