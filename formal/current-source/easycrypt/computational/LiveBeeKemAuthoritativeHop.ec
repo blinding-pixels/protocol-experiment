@@ -2,6 +2,8 @@ require import AllCore List FSet.
 require import ProtocolTypes ProtocolPrimitives.
 require import BeeKemTypes BeeKemKiGame BeeKemConstruction.
 require import LiveKeyGame LivePrfTypes.
+require import LiveAuthenticationReduction.
+require import LivePrfAuthoritativeReduction.
 require import LiveBeeKemAuthoritativeLiveTypes.
 require import LiveBeeKemAuthoritativeReduction.
 
