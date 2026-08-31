@@ -123,6 +123,20 @@ type application_beekem_address = {
   aba_operation : beekem_operation_id
 }.
 
+(* Construct the cross-layer address before application-attempt evidence adds a
+   second [aba_node] field to the global EasyCrypt record namespace. *)
+op application_beekem_address_of_control
+    (node : node_id)
+    (principal : principal)
+    (user : beekem_user)
+    (counter : beekem_counter)
+    (operation : beekem_operation_id) : application_beekem_address =
+  {| aba_node = node;
+     aba_principal = principal;
+     aba_user = user;
+     aba_counter = counter;
+     aba_operation = operation |}.
+
 type application_beekem_address_registry = {
   abar_by_node : node_id -> application_beekem_address option;
   abar_node_of_message : beekem_user -> beekem_counter -> node_id option;

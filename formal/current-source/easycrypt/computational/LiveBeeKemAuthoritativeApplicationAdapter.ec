@@ -3,23 +3,6 @@ require import ProtocolTypes BeeKemTypes BeeKemQueryLog BeeKemKiGame.
 require import LiveBeeKemAuthoritativeTypes LiveBeeKemAuthoritativeAdapter.
 require import LiveBeeKemAuthoritativeApplicationState.
 
-(* Typed constructor kept outside procedure syntax because [aba_node] is also
-   a field of the application-attempt evidence record.  The explicit result
-   type prevents EasyCrypt from mixing those two record namespaces. *)
-op application_beekem_address_of_control
-    (base : application_beekem_address)
-    (node : node_id)
-    (principal : principal)
-    (user : beekem_user)
-    (counter : beekem_counter)
-    (operation : beekem_operation_id) : application_beekem_address =
-  {| base with
-     aba_principal = principal;
-     aba_user = user;
-     aba_counter = counter;
-     aba_operation = operation;
-     aba_node = node |}.
-
 (* Stateful application translation over the authoritative Figure-8 oracle.
    This module owns only cross-layer identity/address metadata.  It owns no
    BeeKEM protocol state, query log, safety predicate, hidden bit, or random
@@ -149,7 +132,7 @@ module AuthoritativeApplicationBeeKemCore(
       operation <- (oget control).`bgm_operation;
       node <- NodeId next_node_value;
       address <- application_beekem_address_of_control
-        address node actor user counter operation.`bo_id;
+        node actor user counter operation.`bo_id;
       control_exact <-
            operation.`bo_group = group
         /\ operation.`bo_author = user
@@ -215,20 +198,20 @@ module AuthoritativeApplicationBeeKemCore(
           ApplicationBeeKemUnmappedInitialMember
         );
       } else {
-        query_id <- application_beekem_next_query_id forwarded_count;
-        canonical_accepted <@ F.create_group(
-          oget creator_user, oget mapped_members
+      query_id <- application_beekem_next_query_id forwarded_count;
+      canonical_accepted <@ F.create_group(
+        oget creator_user, oget mapped_members
+      );
+      forwarded_count <- forwarded_count + 1;
+      if (canonical_accepted) {
+        counters <- application_beekem_counter_store_put counters creator 1;
+        result <@ finish_control(
+          creator, oget creator_user, 1, Some digest,
+          BeeCreate, None, query_id
         );
-        forwarded_count <- forwarded_count + 1;
-        if (canonical_accepted) {
-          counters <- application_beekem_counter_store_put counters creator 1;
-          result <@ finish_control(
-            creator, oget creator_user, 1, Some digest,
-            BeeCreate, None, query_id
-          );
-        } else {
-          result <- {| result with abs_canonical_query_id = Some query_id |};
-        }
+      } else {
+        result <- {| result with abs_canonical_query_id = Some query_id |};
+      }
         record_step(
           ApplicationBeeKemCreateAttempt (creator, initial_members),
           canonical_accepted,
@@ -273,19 +256,19 @@ module AuthoritativeApplicationBeeKemCore(
           ApplicationBeeKemUnmappedTarget
         );
       } else {
-        query_id <- application_beekem_next_query_id forwarded_count;
-        canonical_accepted <@ F.add_member(oget actor_user, oget target_user);
-        forwarded_count <- forwarded_count + 1;
-        if (canonical_accepted) {
-          counters <-
-            application_beekem_counter_store_put counters actor counter_value;
-          result <@ finish_control(
-            actor, oget actor_user, counter_value, Some digest,
-            BeeAdd, Some (oget target_user), query_id
-          );
-        } else {
-          result <- {| result with abs_canonical_query_id = Some query_id |};
-        }
+      query_id <- application_beekem_next_query_id forwarded_count;
+      canonical_accepted <@ F.add_member(oget actor_user, oget target_user);
+      forwarded_count <- forwarded_count + 1;
+      if (canonical_accepted) {
+        counters <-
+          application_beekem_counter_store_put counters actor counter_value;
+        result <@ finish_control(
+          actor, oget actor_user, counter_value, Some digest,
+          BeeAdd, Some (oget target_user), query_id
+        );
+      } else {
+        result <- {| result with abs_canonical_query_id = Some query_id |};
+      }
         record_step(
           ApplicationBeeKemAddAttempt (actor, target),
           canonical_accepted,
@@ -330,21 +313,21 @@ module AuthoritativeApplicationBeeKemCore(
           ApplicationBeeKemUnmappedTarget
         );
       } else {
-        query_id <- application_beekem_next_query_id forwarded_count;
-        canonical_accepted <@ F.remove_member(
-          oget actor_user, oget target_user
+      query_id <- application_beekem_next_query_id forwarded_count;
+      canonical_accepted <@ F.remove_member(
+        oget actor_user, oget target_user
+      );
+      forwarded_count <- forwarded_count + 1;
+      if (canonical_accepted) {
+        counters <-
+          application_beekem_counter_store_put counters actor counter_value;
+        result <@ finish_control(
+          actor, oget actor_user, counter_value, Some digest,
+          BeeRemove, Some (oget target_user), query_id
         );
-        forwarded_count <- forwarded_count + 1;
-        if (canonical_accepted) {
-          counters <-
-            application_beekem_counter_store_put counters actor counter_value;
-          result <@ finish_control(
-            actor, oget actor_user, counter_value, Some digest,
-            BeeRemove, Some (oget target_user), query_id
-          );
-        } else {
-          result <- {| result with abs_canonical_query_id = Some query_id |};
-        }
+      } else {
+        result <- {| result with abs_canonical_query_id = Some query_id |};
+      }
         record_step(
           ApplicationBeeKemRemoveAttempt (actor, target),
           canonical_accepted,
@@ -447,56 +430,56 @@ module AuthoritativeApplicationBeeKemCore(
           ApplicationBeeKemUnmappedTarget
         );
       } else {
-        control <@ F.get_control_message(
-          (oget address).`aba_user,
-          (oget address).`aba_counter
-        );
-        direct <@ F.get_direct_message(
-          (oget address).`aba_user,
-          (oget address).`aba_counter,
-          oget recipient_user
-        );
-        query_id <- application_beekem_next_query_id forwarded_count;
-        canonical_accepted <@ F.deliver(
-          (oget address).`aba_user,
-          (oget address).`aba_counter,
-          oget recipient_user
-        );
-        forwarded_count <- forwarded_count + 1;
+      control <@ F.get_control_message(
+        (oget address).`aba_user,
+        (oget address).`aba_counter
+      );
+      direct <@ F.get_direct_message(
+        (oget address).`aba_user,
+        (oget address).`aba_counter,
+        oget recipient_user
+      );
+      query_id <- application_beekem_next_query_id forwarded_count;
+      canonical_accepted <@ F.deliver(
+        (oget address).`aba_user,
+        (oget address).`aba_counter,
+        oget recipient_user
+      );
+      forwarded_count <- forwarded_count + 1;
 
-        if (canonical_accepted) {
-          deliveries <-
-            application_beekem_delivery_store_put
-              deliveries recipient node true;
-          if (control = None) {
-            runtime_fault <- true;
-          }
-
-          response_counter_value <- counters recipient + 1;
-          response_counter <- BeeKemCounter response_counter_value;
-          response_control <@ F.get_control_message(
-            oget recipient_user,
-            response_counter
-          );
-          if (response_control <> None) {
-            counters <-
-              application_beekem_counter_store_put
-                counters recipient response_counter_value;
-            response_step <@ finish_control(
-              recipient, oget recipient_user, response_counter_value, None,
-              BeeResponse, None, query_id
-            );
-            response_node <- response_step.`abs_node;
-          }
+      if (canonical_accepted) {
+        deliveries <-
+          application_beekem_delivery_store_put
+            deliveries recipient node true;
+        if (control = None) {
+          runtime_fault <- true;
         }
 
-        result <-
-          {| abd_accepted = canonical_accepted /\ ! runtime_fault;
-             abd_control = control;
-             abd_direct = direct;
-             abd_response_node = response_node;
-             abd_canonical_query_id = Some query_id;
-             abd_runtime_fault = runtime_fault |};
+        response_counter_value <- counters recipient + 1;
+        response_counter <- BeeKemCounter response_counter_value;
+        response_control <@ F.get_control_message(
+          oget recipient_user,
+          response_counter
+        );
+        if (response_control <> None) {
+          counters <-
+            application_beekem_counter_store_put
+              counters recipient response_counter_value;
+          response_step <@ finish_control(
+            recipient, oget recipient_user, response_counter_value, None,
+            BeeResponse, None, query_id
+          );
+          response_node <- response_step.`abs_node;
+        }
+      }
+
+      result <-
+        {| abd_accepted = canonical_accepted /\ ! runtime_fault;
+           abd_control = control;
+           abd_direct = direct;
+           abd_response_node = response_node;
+           abd_canonical_query_id = Some query_id;
+           abd_runtime_fault = runtime_fault |};
         record(
           {| aba_kind = ApplicationBeeKemDeliverAttempt (node, recipient);
              aba_forwarded = true;
@@ -556,29 +539,29 @@ module AuthoritativeApplicationBeeKemCore(
         if (! deliveries member node) {
           record_local_rejection(kind, ApplicationBeeKemUndeliveredNode);
         } else {
-          query_id <- application_beekem_next_query_id forwarded_count;
-          if (challenging) {
-            output <@ F.challenge(
-              (oget address).`aba_user,
-              (oget address).`aba_counter
-            );
-          } else {
-            output <@ F.reveal(
-              (oget address).`aba_user,
-              (oget address).`aba_counter
-            );
-          }
-          forwarded_count <- forwarded_count + 1;
-          canonical_accepted <- beekem_secret_output_is_value output;
-          result <-
-            {| abo_forwarded = true;
-               abo_canonical_accepted = canonical_accepted;
-               abo_secret_output = Some output;
-               abo_root_output = Some
-                 (authoritative_application_root_result_of_beekem output);
-               abo_address = address;
-               abo_canonical_query_id = Some query_id;
-               abo_runtime_fault = false |};
+      query_id <- application_beekem_next_query_id forwarded_count;
+      if (challenging) {
+        output <@ F.challenge(
+          (oget address).`aba_user,
+          (oget address).`aba_counter
+        );
+      } else {
+        output <@ F.reveal(
+          (oget address).`aba_user,
+          (oget address).`aba_counter
+        );
+      }
+      forwarded_count <- forwarded_count + 1;
+      canonical_accepted <- beekem_secret_output_is_value output;
+      result <-
+        {| abo_forwarded = true;
+           abo_canonical_accepted = canonical_accepted;
+           abo_secret_output = Some output;
+           abo_root_output = Some
+             (authoritative_application_root_result_of_beekem output);
+           abo_address = address;
+           abo_canonical_query_id = Some query_id;
+           abo_runtime_fault = false |};
           record(
             {| aba_kind = kind;
                aba_forwarded = true;
