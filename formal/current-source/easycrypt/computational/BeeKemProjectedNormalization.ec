@@ -1,6 +1,7 @@
 require import AllCore List FSet.
 require import BeeKemTypes BeeKemProtocol BeeKemKiGame.
 require import BeeKemExecutableNormalization BeeKemFixedBitProjection.
+require import BeeKemSafetyBranchProjection.
 require import LivePrfGame.
 
 (* Algebraic normalization of the two application one-events.  The real-root
