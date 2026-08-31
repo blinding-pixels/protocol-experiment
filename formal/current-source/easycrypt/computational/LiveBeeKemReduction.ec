@@ -2,8 +2,8 @@ require import AllCore List FSet Distr DBool.
 require import ProtocolTypes CanonicalEncoding ProtocolPrimitives AuthorizationState UnauthorizedSignatureReduction.
 require import UnauthorizedOriginGame LiveKeyGame LiveAuthenticationReduction.
 require import LiveBeeKemOracle.
-require BeeKemKiInterface.
-clone import BeeKemKiInterface as BKI.
+require LiveBeeKemKiInterface.
+clone import LiveBeeKemKiInterface as BKI.
 
 import PG.
 
