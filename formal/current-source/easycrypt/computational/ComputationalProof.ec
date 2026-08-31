@@ -14,6 +14,7 @@ require import LiveBeeKemAuthoritativeCounterBridge.
 require import LiveBeeKemAuthoritativeAdditionControls.
 require import LiveBeeKemAuthoritativeSafetyControls.
 require import LiveBeeKemAuthoritativeReduction.
+require import BeeKemExecutableNormalization.
 require import LiveBeeKemAuthoritativeHop.
 require import BeeKemNormalizationProofs BeeKemInterfaceProof.
 require import LiveBeeKemOracle LiveBeeKemReduction.
@@ -100,6 +101,7 @@ print LiveBeeKemAuthoritativeAdditionControls.authoritative_application_addition
 print LiveBeeKemAuthoritativeSafetyControls.authoritative_application_immediate_compromise_is_exactly_unsafe.
 print LiveBeeKemAuthoritativeReduction.BBeeLive.
 print LiveBeeKemAuthoritativeReduction.AuthoritativeLiveBeeKemGame.
+print BeeKemExecutableNormalization.beekem_sampled_win_probability_is_fixed_bit_average.
 
 (* BeeKEM normalization repair: unsafe executable traces contribute zero safe
    mass and cannot satisfy the imported all-safe theorem boundary. *)
