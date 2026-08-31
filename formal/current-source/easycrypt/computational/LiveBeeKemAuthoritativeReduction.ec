@@ -28,6 +28,12 @@ op authoritative_live_initial_group : beekem_group =
    a BeeKEM root: every application challenge reaches [O.challenge] through
    [AuthoritativeLiveProtocolOracle].
 
+   The real application schedule mirrors the exact primitive PRF call trace:
+   ordinary live reveals and both history domains are real-only, while the
+   distinguished application challenge evaluates the real KDF and one unused
+   sampler call.  Thus the BeeKEM hybrid and the PRF-real endpoint can later be
+   related by exact program equivalence rather than a transcript premise.
+
    Authentication failure and adapter inconsistency are computed from the
    shared execution and filter the reduction guess.  They are not supplied by
    the adversary.  Deliverable A charges the former separately; the latter is
@@ -36,11 +42,14 @@ module BBeeLive(
   A : AUTHORITATIVE_LIVE_KEY_ADVERSARY,
   S : SIGNATURE_SCHEME,
   H : NODE_HASH,
-  K : MULTI_DOMAIN_KEY_SCHEDULE
+  K : MULTI_DOMAIN_KEY_SCHEDULE,
+  R : LIVE_KEY_SAMPLER
 )(O : BEEKEM_KI_ORACLES) = {
   module SO = PG.LoggedSignatureOracle(S)
   module Auth = OriginTrackedCandidateEnvironment(SO, H)
-  module Live = AuthoritativeLiveProtocolOracle(Auth, O, K)
+  module KReal = RealChallengeKeySchedule(K, R)
+  module Core = AuthoritativeLiveProtocolOracle(Auth, O, KReal)
+  module Live = AuthoritativePrfBackedLiveOracle(Core, KReal)
   module A = A(Live)
 
   var initial_authorization_valid : bool
@@ -52,7 +61,8 @@ module BBeeLive(
   proc attack() : bool = {
     SO.init();
     Auth.init(live_auth_initial_state);
-    Live.init(
+    KReal.init();
+    Core.init(
       authoritative_live_initial_registry,
       live_auth_initial_state,
       live_auth_initial_digest
@@ -64,7 +74,7 @@ module BBeeLive(
     initial_authorization_valid <-
       live_auth_initial_authorization <> None;
     authentication_failure <- Auth.unauthorized_accepted;
-    adapter_fault <- Live.runtime_fault;
+    adapter_fault <- Core.runtime_fault;
     reduction_guess <-
          initial_authorization_valid
       /\ ! authentication_failure
@@ -82,9 +92,10 @@ module AuthoritativeLiveBeeKemGame(
   S : SIGNATURE_SCHEME,
   H : NODE_HASH,
   K : MULTI_DOMAIN_KEY_SCHEDULE,
+  R : LIVE_KEY_SAMPLER,
   I : BEEKEM_PAPER_INSTANCE
 ) =
   BeeKemKiGame(
-    BBeeLive(A, S, H, K),
+    BBeeLive(A, S, H, K, R),
     BeeKemProtocolOfPaperInstance(I)
   ).
