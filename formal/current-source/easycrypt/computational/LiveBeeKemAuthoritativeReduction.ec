@@ -9,7 +9,6 @@ clone import BeeKemKiInterface as BKI.
 require import LiveBeeKemAuthoritativeTypes.
 require import LiveBeeKemAuthoritativeLiveTypes.
 require import LiveBeeKemAuthoritativeLiveOracle.
-require import LivePrfTypes.
 require import LivePrfAuthoritativeAdapter.
 require import LivePrfAuthoritativeReduction.
 require import LivePrfAuthoritativeProof.
@@ -98,130 +97,6 @@ module AuthoritativeLiveBeeKemGame(
     BBeeLive(A, S, H, K, R),
     BeeKemProtocolOfPaperInstance(I)
   ).
-
-(* The application endpoint is a projection of the canonical fixed-bit BeeKEM
-   evidence, not a second hand-written execution.  The reduction guess already
-   contains initial authorization validity, an actual accepted live challenge,
-   absence of Deliverable-A authentication failure, absence of adapter fault,
-   and the application adversary's guess.  The projection adds only the
-   challenger-computed canonical safety event and the explicit protocol-
-   consistency boundary. *)
-op authoritative_beekem_application_result
-    (evidence : beekem_ki_evidence) : mdprf_adversary_result =
-  {| mpar_eligible =
-       evidence.`bke_safe /\
-       ! evidence.`bke_protocol_consistency_failure;
-     mpar_guess = evidence.`bke_adversary_guess |}.
-
-lemma authoritative_beekem_application_result_event_exact
-    (evidence : beekem_ki_evidence) :
-  (authoritative_beekem_application_result evidence).`mpar_eligible /\
-  (authoritative_beekem_application_result evidence).`mpar_guess =
-    evidence.`bke_safe /\
-    ! evidence.`bke_protocol_consistency_failure /\
-    evidence.`bke_adversary_guess.
-proof.
-  by rewrite /authoritative_beekem_application_result.
-qed.
-
-module AuthoritativeBeeKemApplicationBit(
-  A : AUTHORITATIVE_LIVE_KEY_ADVERSARY,
-  S : SIGNATURE_SCHEME,
-  H : NODE_HASH,
-  K : MULTI_DOMAIN_KEY_SCHEDULE,
-  R : LIVE_KEY_SAMPLER,
-  I : BEEKEM_PAPER_INSTANCE
-) = {
-  module G = AuthoritativeLiveBeeKemGame(A, S, H, K, R, I)
-
-  proc main(input_bit : bool) : mdprf_adversary_result = {
-    var evidence : beekem_ki_evidence;
-    evidence <@ G.main_with_fixed_bit(
-      authoritative_live_initial_users,
-      authoritative_live_initial_group,
-      live_auth_retention_kappa,
-      authoritative_live_initial_membership,
-      input_bit
-    );
-    return authoritative_beekem_application_result evidence;
-  }
-}.
-
-module AuthoritativePrfRealProjection(
-  A : AUTHORITATIVE_LIVE_KEY_ADVERSARY,
-  S : SIGNATURE_SCHEME,
-  H : NODE_HASH,
-  K : MULTI_DOMAIN_KEY_SCHEDULE,
-  R : LIVE_KEY_SAMPLER,
-  I : BEEKEM_PAPER_INSTANCE
-) = {
-  module G = AuthoritativePrfApplicationBit(A, S, H, K, R, I)
-
-  proc main() : mdprf_adversary_result = {
-    var result : mdprf_adversary_result;
-    result <@ G.main(
-      live_auth_initial_state,
-      live_auth_initial_facts,
-      live_auth_retention_kappa,
-      true
-    );
-    return result;
-  }
-}.
-
-module AuthoritativeBeeKemRandomProjection(
-  A : AUTHORITATIVE_LIVE_KEY_ADVERSARY,
-  S : SIGNATURE_SCHEME,
-  H : NODE_HASH,
-  K : MULTI_DOMAIN_KEY_SCHEDULE,
-  R : LIVE_KEY_SAMPLER,
-  I : BEEKEM_PAPER_INSTANCE
-) = {
-  module G = AuthoritativeBeeKemApplicationBit(A, S, H, K, R, I)
-
-  proc main() : mdprf_adversary_result = {
-    var result : mdprf_adversary_result;
-    result <@ G.main(false);
-    return result;
-  }
-}.
-
-section AuthoritativeLiveBeeKemEndpointBridge.
-  declare module A <: AUTHORITATIVE_LIVE_KEY_ADVERSARY.
-  declare module S <: SIGNATURE_SCHEME.
-  declare module H <: NODE_HASH.
-  declare module K <: MULTI_DOMAIN_KEY_SCHEDULE.
-  declare module R <: LIVE_KEY_SAMPLER.
-  declare module I <: BEEKEM_PAPER_INSTANCE.
-
-  module RandomRoot =
-    AuthoritativeBeeKemRandomProjection(A, S, H, K, R, I).
-  module PrfReal = AuthoritativePrfRealProjection(A, S, H, K, R, I).
-
-  (* The H1 endpoint is the same execution on both sides: the BeeKEM
-     challenger supplies its random-root branch and the PRF challenger is fixed
-     to its real branch.  Both schedules evaluate K and the unused R call in
-     the same order at each accepted live challenge. *)
-  lemma authoritative_beekem_random_root_exactly_prf_real &m :
-    Pr[
-      RandomRoot.main() @ &m :
-        res.`mpar_eligible /\ res.`mpar_guess
-    ] =
-    Pr[
-      PrfReal.main() @ &m :
-        res.`mpar_eligible /\ res.`mpar_guess
-    ].
-  proof.
-    byequiv
-      (_ : ={glob A, glob S, glob H, glob K, glob R, glob I}
-           ==>
-           (res{1}.`mpar_eligible /\ res{1}.`mpar_guess) =
-           (res{2}.`mpar_eligible /\ res{2}.`mpar_guess)) => //.
-    proc.
-    inline *.
-    sim.
-  qed.
-end section AuthoritativeLiveBeeKemEndpointBridge.
 
 (* Exact specialization of the sole imported BeeKEM theorem to the concrete
    application-derived KI adversary.  The side conditions are the theorem's
