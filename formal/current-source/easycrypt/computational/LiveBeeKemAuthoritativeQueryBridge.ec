@@ -34,16 +34,16 @@ op application_beekem_attempt_kind_matches_query_for
     (kind : application_beekem_attempt_kind)
     (attempt : application_beekem_attempt)
     (query : beekem_query) : bool =
-  with kind = ApplicationBeeKemCreateAttempt actor initial_members =>
+  with kind = ApplicationBeeKemCreateAttempt (actor, initial_members) =>
          query.`bq_kind = BeeQueryCreate
       /\ registry.`aur_user_of actor = Some query.`bq_actor
       /\ query.`bq_target = None
       /\ query.`bq_target_frontier = fset0
-  with kind = ApplicationBeeKemAddAttempt actor target =>
+  with kind = ApplicationBeeKemAddAttempt (actor, target) =>
          query.`bq_kind = BeeQueryAdd
       /\ registry.`aur_user_of actor = Some query.`bq_actor
       /\ registry.`aur_user_of target = query.`bq_target
-  with kind = ApplicationBeeKemRemoveAttempt actor target =>
+  with kind = ApplicationBeeKemRemoveAttempt (actor, target) =>
          query.`bq_kind = BeeQueryRemove
       /\ registry.`aur_user_of actor = Some query.`bq_actor
       /\ registry.`aur_user_of target = query.`bq_target
@@ -52,14 +52,14 @@ op application_beekem_attempt_kind_matches_query_for
       /\ registry.`aur_user_of actor = Some query.`bq_actor
       /\ query.`bq_target = None
       /\ query.`bq_target_frontier = fset0
-  with kind = ApplicationBeeKemDeliverAttempt node recipient =>
+  with kind = ApplicationBeeKemDeliverAttempt (node, recipient) =>
          query.`bq_kind = BeeQueryDeliver
       /\ attempt.`aba_address <> None
       /\ attempt.`aba_node = Some node
       /\ (oget attempt.`aba_address).`aba_node = node
       /\ query.`bq_actor = (oget attempt.`aba_address).`aba_user
       /\ registry.`aur_user_of recipient = query.`bq_target
-  with kind = ApplicationBeeKemRevealAttempt member node =>
+  with kind = ApplicationBeeKemRevealAttempt (member, node) =>
          query.`bq_kind = BeeQueryReveal
       /\ registry.`aur_user_of member <> None
       /\ attempt.`aba_address <> None
@@ -68,7 +68,7 @@ op application_beekem_attempt_kind_matches_query_for
       /\ query.`bq_actor = (oget attempt.`aba_address).`aba_user
       /\ query.`bq_target = None
       /\ query.`bq_target_frontier = fset0
-  with kind = ApplicationBeeKemChallengeAttempt member node =>
+  with kind = ApplicationBeeKemChallengeAttempt (member, node) =>
          query.`bq_kind = BeeQueryChallenge
       /\ registry.`aur_user_of member <> None
       /\ attempt.`aba_address <> None
