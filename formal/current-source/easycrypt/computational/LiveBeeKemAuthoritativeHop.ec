@@ -41,6 +41,15 @@ proof.
   case (middle <= left); case (right <= middle); case (right <= left); smt().
 qed.
 
+lemma mdprf_fixed_bit_normalized_triangle (left middle right : real) :
+  mdprf_fixed_bit_advantage left right / 2%r <=
+    mdprf_fixed_bit_advantage left middle / 2%r +
+    mdprf_fixed_bit_advantage middle right / 2%r.
+proof.
+  have htriangle := mdprf_fixed_bit_triangle left middle right.
+  smt().
+qed.
+
 section AuthoritativeBeeKemProjection.
   declare module A <: AUTHORITATIVE_LIVE_KEY_ADVERSARY.
   declare module S <: SIGNATURE_SCHEME.
@@ -386,5 +395,50 @@ section AuthoritativeBeeKemProjection.
   proof.
     rewrite -(authoritative_prf_endpoint_advantage_exactly_game &m).
     exact (authoritative_live_hybrid_triangle &m).
+  qed.
+
+  lemma authoritative_live_normalized_hybrid_triangle_prf_game &m :
+    mdprf_fixed_bit_advantage
+      (Pr[
+         ProjectedRealRoot.main() @ &m :
+           res.`mpar_eligible /\ res.`mpar_guess
+       ])
+      (Pr[
+         PrfRandomEndpoint.main() @ &m :
+           res.`mpar_eligible /\ res.`mpar_guess
+       ]) / 2%r
+    <=
+    mdprf_fixed_bit_advantage
+      (Pr[
+         ProjectedRealRoot.main() @ &m :
+           res.`mpar_eligible /\ res.`mpar_guess
+       ])
+      (Pr[
+         ProjectedRandomRoot.main() @ &m :
+           res.`mpar_eligible /\ res.`mpar_guess
+       ]) / 2%r
+    +
+    mdprf_fixed_bit_advantage
+      (Pr[
+         Prf.main_with_fixed_bit(
+           live_auth_initial_state,
+           live_auth_initial_facts,
+           live_auth_retention_kappa,
+           true
+         ) @ &m :
+           res.`mpge_eligible /\ res.`mpge_guess
+       ])
+      (Pr[
+         Prf.main_with_fixed_bit(
+           live_auth_initial_state,
+           live_auth_initial_facts,
+           live_auth_retention_kappa,
+           false
+         ) @ &m :
+           res.`mpge_eligible /\ res.`mpge_guess
+       ]) / 2%r.
+  proof.
+    have htriangle := authoritative_live_hybrid_triangle_prf_game &m.
+    smt().
   qed.
 end section AuthoritativeBeeKemProjection.
