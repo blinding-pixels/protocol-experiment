@@ -15,7 +15,7 @@ section ExecutableMultiDomainPrfNormalization.
   type mdprf_execution_input =
     protocol_state * signed_authorization_fact list * int.
 
-  local module FairBitRunner = {
+  module FairBitRunner = {
     var sampled_bit : bool
 
     proc main(input : mdprf_execution_input) : bool = {
