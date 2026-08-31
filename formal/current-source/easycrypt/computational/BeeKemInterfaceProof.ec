@@ -3,6 +3,7 @@ require BeeKemKiInterface.
 clone import BeeKemKiInterface as BKI.
 require import BeeKemSafetyProofs BeeKemSafetyMutations BeeKemProtocolSemanticsProofs BeeKemGameWitnesses BeeKemQueryCounterProofs BeeKemCounterMutationProofs BeeKemMutationGameProofs BeeKemForkGameWitnesses BeeKemForkMutationProofs BeeKemRevealMutationProofs BeeKemRetentionMutationProofs BeeKemPrimitiveWitnesses BeeKemNormalizationProofs BeeKemFixedBitProjection BeeKemProjectedNormalization.
 require import LiveBeeKemAuthoritativePrimitiveBound.
+require import LiveBeeKemAuthoritativeComposition.
 
 (* Public closure for the executable Figure 8 oracle environment and exact
    finite-kappa Figure 3 safety predicate.  The trace theorems below force all
@@ -130,6 +131,8 @@ print beekem_ceil_log2_one.
 print beekem_ceil_log2_two.
 print BKI.beekem_theorem1_imported_normalized.
 print authoritative_projected_beekem_advantage_bound.
+print authoritative_beekem_random_projection_exactly_prf_game_real.
+print authoritative_live_beekem_prf_composed_bound.
 
 (* Checker-reachable non-vacuity controls for the exact KI game. *)
 print beekem_witness_real_branch_reachable.
