@@ -2,6 +2,7 @@ require import BeeKemTypes BeeKemQueryLog BeeKemProtocol BeeKemSafety BeeKemKiGa
 require BeeKemKiInterface.
 clone import BeeKemKiInterface as BKI.
 require import BeeKemSafetyProofs BeeKemSafetyMutations BeeKemProtocolSemanticsProofs BeeKemGameWitnesses BeeKemQueryCounterProofs BeeKemCounterMutationProofs BeeKemMutationGameProofs BeeKemForkGameWitnesses BeeKemForkMutationProofs BeeKemRevealMutationProofs BeeKemRetentionMutationProofs BeeKemPrimitiveWitnesses BeeKemNormalizationProofs BeeKemFixedBitProjection BeeKemProjectedNormalization.
+require import LiveBeeKemAuthoritativePrimitiveBound.
 
 (* Public closure for the executable Figure 8 oracle environment and exact
    finite-kappa Figure 3 safety predicate.  The trace theorems below force all
@@ -88,7 +89,8 @@ print beekem_fixed_true_win_probability_is_projected.
 print beekem_fixed_false_win_probability_is_projected_complement.
 print beekem_projected_average_normalization.
 print beekem_projected_fixed_bit_advantage_exactly_normalized_ki.
-
+print beekem_projected_fixed_bit_advantage_from_sampled_safe.
+print beekem_projected_fixed_bit_advantage_from_sampled_safe_and_consistency.
 
 (* Unsafe traces have zero safe mass, zero exact-game success, and zero
    safe-mass advantage.  They cannot satisfy the imported theorem's all-safe
@@ -127,6 +129,7 @@ print beekem_theorem1_loss.
 print beekem_ceil_log2_one.
 print beekem_ceil_log2_two.
 print BKI.beekem_theorem1_imported_normalized.
+print authoritative_projected_beekem_advantage_bound.
 
 (* Checker-reachable non-vacuity controls for the exact KI game. *)
 print beekem_witness_real_branch_reachable.
