@@ -7,11 +7,19 @@ require import BeeKemPrimitiveContracts BeeKemTheorem1Math BeeKemConstruction.
    are checker-verified outside this axiom.  The imported Appendix-B content is
    exactly the existence of the two reductions and the resulting inequality. *)
 (* The displayed definition immediately above Theorem 1 writes raw game-success
-   probability, while Appendix B bounds absolute differences of neighboring
-   games.  Raw success would make the theorem false already when
-   ceil(log2(1)) = 0.  This boundary therefore uses one centered-bias convention
-   for all three games; multiplying all advantages by two leaves the reduction
-   factors unchanged. *)
+   probability, while Appendix B conditions its endpoint games on b = 1 and
+   b = 0, bounds absolute neighboring-game differences, and argues simulation
+   only for adversaries valid under bee-safe.  Raw success would make the
+   theorem false already when ceil(log2(1)) = 0.  This boundary therefore:
+
+   (1) requires the exact executable trace to satisfy bee-safe with probability
+       one, rather than treating an unsafe exclusion as a distinguisher; and
+   (2) uses the centered convention uniformly with the KI baseline expressed as
+       half of the executable safe mass.
+
+   Under the explicit all-safe premise this KI operator equals the ordinary
+   centered bias, so applying the same factor-two convention to KI, HKR-CKS,
+   and MU-CPA leaves the paper's reduction factors unchanged. *)
 section BeeKemTheorem1ImportedBoundary.
   declare module A <: BEEKEM_KI_ADVERSARY.
   declare module PaperInstance <: BEEKEM_PAPER_INSTANCE.
@@ -52,15 +60,25 @@ section BeeKemTheorem1ImportedBoundary.
     => Pr[
          PaperGame.main_with_evidence(
            users, group, kappa, membership
+         ) @ &m : res.`bke_safe
+       ] = 1%r
+    => Pr[
+         PaperGame.main_with_evidence(
+           users, group, kappa, membership
          ) @ &m :
            res.`bke_challenge_count <= c /\
            res.`bke_member_addition_count <= n
        ] = 1%r
     => exists (BNike <: BEEKEM_HKR_CKS_ADVERSARY),
        exists (BSe <: BEEKEM_MU_CPA_ADVERSARY),
-         beekem_normalized_ki_advantage
+         beekem_safe_mass_normalized_ki_advantage
            (Pr[
               PaperGame.main(users, group, kappa, membership) @ &m : res
+            ])
+           (Pr[
+              PaperGame.main_with_evidence(
+                users, group, kappa, membership
+              ) @ &m : res.`bke_safe
             ])
          <= beekem_theorem1_loss c h *
             (beekem_hkr_cks_advantage

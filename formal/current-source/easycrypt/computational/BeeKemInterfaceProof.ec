@@ -1,7 +1,7 @@
 require import BeeKemTypes BeeKemQueryLog BeeKemProtocol BeeKemSafety BeeKemKiGame BeeKemPrimitiveGames BeeKemPrimitiveContracts BeeKemTheorem1Math BeeKemConstruction.
 require BeeKemKiInterface.
 clone import BeeKemKiInterface as BKI.
-require import BeeKemSafetyProofs BeeKemSafetyMutations BeeKemProtocolSemanticsProofs BeeKemGameWitnesses BeeKemQueryCounterProofs BeeKemCounterMutationProofs BeeKemMutationGameProofs BeeKemForkGameWitnesses BeeKemForkMutationProofs BeeKemRevealMutationProofs BeeKemRetentionMutationProofs BeeKemPrimitiveWitnesses.
+require import BeeKemSafetyProofs BeeKemSafetyMutations BeeKemProtocolSemanticsProofs BeeKemGameWitnesses BeeKemQueryCounterProofs BeeKemCounterMutationProofs BeeKemMutationGameProofs BeeKemForkGameWitnesses BeeKemForkMutationProofs BeeKemRevealMutationProofs BeeKemRetentionMutationProofs BeeKemPrimitiveWitnesses BeeKemNormalizationProofs.
 
 (* Public closure for the executable Figure 8 oracle environment and exact
    finite-kappa Figure 3 safety predicate.  The trace theorems below force all
@@ -80,6 +80,21 @@ print beekem_retention_requires_positive_kappa.
 print beekem_ki_final_win.
 print beekem_ki_evidence.
 print beekem_normalized_ki_advantage.
+print beekem_safe_mass_normalized_ki_advantage.
+print beekem_safe_mass_normalization_zero.
+print beekem_safe_mass_normalization_all_safe.
+
+
+(* Unsafe traces have zero safe mass, zero exact-game success, and zero
+   safe-mass advantage.  They cannot satisfy the imported theorem's all-safe
+   side condition; the old unconditional centering is exposed as one half. *)
+print beekem_unsafe_normalization_fixed_bit_loses.
+print beekem_unsafe_normalization_sampled_game_loses.
+print beekem_unsafe_normalization_win_probability_zero.
+print beekem_unsafe_normalization_safe_probability_zero.
+print beekem_unsafe_trace_old_normalization_is_spurious_half.
+print beekem_unsafe_trace_safe_mass_advantage_zero.
+print beekem_unsafe_trace_rejected_by_all_safe_boundary.
 
 (* Named primitive games used by the imported BeeKEM reduction. *)
 print beekem_nike_registration_for.
@@ -94,8 +109,9 @@ print BeeKemSeCorrectnessGame.
 (* Exact imported BeeKEM Theorem 1 boundary.  The protocol is supplied only
    through one BEEKEM_PAPER_INSTANCE and all four definitional adapters,
    preventing protocol and primitive modules from being varied independently.
-   The theorem otherwise uses the uniform centered-bias
-   interpretation required by Appendix B's hybrid inequalities. *)
+   The theorem additionally requires the exact executable safety event with
+   probability one and uses a safe-mass-centered KI operator, matching Appendix
+   B's restriction to adversaries valid under bee-safe. *)
 print BEEKEM_PAPER_INSTANCE.
 print BeeKemProtocolOfPaperInstance.
 print BeeKemNikeOfPaperInstance.

@@ -294,11 +294,39 @@ module BeeKemKiGame(
   }
 }.
 
-(* The paper calls raw game-success probability its advantage.  Application
-   composition uses the standard centered normalization.  Keeping this as a
-   deterministic operator makes the convention difference explicit without
-   changing the imported paper theorem. *)
+(* The paper prints raw game-success probability as its advantage, while
+   Appendix B compares absolute differences of real/ideal output events.  The
+   one-argument operator is retained for primitive games, which have no safety
+   exclusion and therefore have total eligible mass one. *)
 op beekem_normalized_ki_advantage (success_probability : real) : real =
   if 1%r / 2%r <= success_probability
   then success_probability - 1%r / 2%r
   else 1%r / 2%r - success_probability.
+
+(* The executable KI game clears [win] on an unsafe trace.  Its fair baseline is
+   therefore half of the challenger-computed safe mass, not an unconditional
+   one half.  The imported Appendix-B theorem additionally requires safe mass
+   one, matching the paper proof's restriction to adversaries valid under
+   [bee-safe].  Keeping both quantities explicit prevents an always-unsafe trace
+   from acquiring spurious distinguishing advantage. *)
+op beekem_safe_mass_normalized_ki_advantage
+    (success_probability safe_probability : real) : real =
+  if safe_probability / 2%r <= success_probability
+  then success_probability - safe_probability / 2%r
+  else safe_probability / 2%r - success_probability.
+
+lemma beekem_safe_mass_normalization_zero :
+  beekem_safe_mass_normalized_ki_advantage 0%r 0%r = 0%r.
+proof.
+  by rewrite /beekem_safe_mass_normalized_ki_advantage; smt().
+qed.
+
+lemma beekem_safe_mass_normalization_all_safe
+    (success_probability : real) :
+  beekem_safe_mass_normalized_ki_advantage success_probability 1%r =
+  beekem_normalized_ki_advantage success_probability.
+proof.
+  rewrite /beekem_safe_mass_normalized_ki_advantage
+    /beekem_normalized_ki_advantage.
+  by case (1%r / 2%r <= success_probability); smt().
+qed.
