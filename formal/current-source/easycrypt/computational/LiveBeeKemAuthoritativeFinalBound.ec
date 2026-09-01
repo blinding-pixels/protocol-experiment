@@ -183,14 +183,12 @@ section AuthoritativeLiveFinalBound.
     have Hauthloss :=
       authoritative_live_authentication_failure_bound
         A S Hash K R I &m.
-    have Hauthbridge :=
-      authoritative_live_evidence_authenticated_exactly_real_root
-        A S Hash K R I &m.
-    have Hrawbridge :=
-      authoritative_live_public_raw_exactly_evidence
-        A S Hash K R I &m.
-
-    rewrite Hauthbridge -Hrawbridge in Hauth.
+    rewrite
+      (authoritative_live_evidence_authenticated_exactly_real_root
+         A S Hash K R I &m)
+      -(authoritative_live_public_raw_exactly_evidence
+          A S Hash K R I &m)
+      in Hauth.
     exact
       (authoritative_live_final_bound_arithmetic
          (authoritative_live_normalized_advantage
