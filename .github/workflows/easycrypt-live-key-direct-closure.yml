@@ -19,13 +19,19 @@ concurrency:
 
 jobs:
   direct-closure:
-    name: Direct-check every local proof body
+    name: Direct-check local proof bodies (shard ${{ matrix.shard }})
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 360
     env:
       EASYCRYPT_IMAGE: ghcr.io/easycrypt/ec-test-box@sha256:84980006e8b01fe6497bbd0ecd67deeb5e7361d8ad17e27d24924122d368e0fc
       SOURCE_DIR: formal/current-source/easycrypt/computational
       ENTRY_EC: ComputationalProof.ec
+      SHARD_COUNT: 10
+      SHARD_INDEX: ${{ matrix.shard }}
     steps:
       - name: Check out exact proof source
         uses: actions/checkout@v4
@@ -65,6 +71,19 @@ jobs:
           count="$(wc -l <"$evidence/dependency-order.txt")"
           printf '%s\n' "$count" | tee "$evidence/dependency-count.txt"
           test "$count" -ge 140
+
+          start="$((count * SHARD_INDEX / SHARD_COUNT + 1))"
+          end="$((count * (SHARD_INDEX + 1) / SHARD_COUNT))"
+          sed -n "${start},${end}p" "$evidence/dependency-order.txt" \
+            >"$evidence/shard-order.txt"
+          shard_count="$(wc -l <"$evidence/shard-order.txt")"
+          printf '%s\n' "$SHARD_INDEX" | tee "$evidence/shard-index.txt"
+          printf '%s\n' "$SHARD_COUNT" | tee "$evidence/shard-count.txt"
+          printf '%s\n' "$start" | tee "$evidence/shard-start.txt"
+          printf '%s\n' "$end" | tee "$evidence/shard-end.txt"
+          printf '%s\n' "$shard_count" \
+            | tee "$evidence/shard-target-count.txt"
+          test "$shard_count" -gt 0
 
           for required in \
             PrimitiveGames.eca \
@@ -182,7 +201,7 @@ jobs:
 
                 printf "%s\n" "$target" \
                   >> /evidence/compiled-targets.txt
-              done < /evidence/dependency-order.txt
+              done < /evidence/shard-order.txt
 
               exit "$overall"
             '
@@ -191,7 +210,7 @@ jobs:
           printf '%s\n' "$status" \
             | tee "$evidence/direct-closure-exit-status.txt"
 
-          expected="$(wc -l <"$evidence/dependency-order.txt")"
+          expected="$(wc -l <"$evidence/shard-order.txt")"
           compiled="$(wc -l <"$evidence/compiled-targets.txt")"
           printf '%s\n' "$compiled" \
             | tee "$evidence/compiled-target-count.txt"
@@ -207,7 +226,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: easycrypt-live-key-direct-closure-${{ github.run_id }}-${{ github.run_attempt }}
+          name: easycrypt-live-key-direct-closure-${{ github.run_id }}-${{ github.run_attempt }}-shard-${{ matrix.shard }}
           path: ${{ runner.temp }}/easycrypt-live-key-direct-closure-evidence
           if-no-files-found: error
           retention-days: 14
