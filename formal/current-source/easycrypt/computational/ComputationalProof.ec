@@ -105,6 +105,14 @@ print BeeKemExecutableNormalization.beekem_sampled_win_probability_is_fixed_bit_
    encoding terms, one concrete sampled BeeKEM Theorem 1 reduction, and the
    concrete multi-domain PRF advantage.  The provisional challenge-only wrapper
    is intentionally absent from this entry-point dependency path. *)
+print LiveBeeKemAuthoritativeFinalBound.authoritative_live_final_bound_arithmetic.
+print LiveBeeKemAuthoritativeFinalBound.authoritative_live_operation_signature_loss_load_bearing.
+print LiveBeeKemAuthoritativeFinalBound.authoritative_live_fact_signature_loss_load_bearing.
+print LiveBeeKemAuthoritativeFinalBound.authoritative_live_collision_loss_load_bearing.
+print LiveBeeKemAuthoritativeFinalBound.authoritative_live_authentication_block_load_bearing.
+print LiveBeeKemAuthoritativeFinalBound.authoritative_live_beekem_loss_load_bearing.
+print LiveBeeKemAuthoritativeFinalBound.authoritative_live_prf_loss_load_bearing.
+print LiveBeeKemAuthoritativeFinalBound.authoritative_live_zero_bound_rejected_by_consistent_premises.
 print LiveBeeKemAuthoritativeFinalBound.authoritative_live_key_l0_l4_bound.
 
 (* BeeKEM normalization repair: unsafe executable traces contribute zero safe
