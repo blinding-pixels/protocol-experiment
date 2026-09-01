@@ -8,6 +8,7 @@ require import LiveKeyGame LivePrfGame.
 require import LiveAuthenticationReduction.
 require import LiveBeeKemAuthoritativeLiveTypes.
 require import LiveBeeKemAuthoritativeAuthentication.
+require import LiveBeeKemAuthoritativeAuthenticationBound.
 require import LiveBeeKemAuthoritativeSampledReduction.
 require import LiveBeeKemAuthoritativeSampledHop.
 require import LiveBeeKemAuthoritativeSampledNormalization.
