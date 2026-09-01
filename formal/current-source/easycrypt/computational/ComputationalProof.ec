@@ -17,7 +17,7 @@ require import LiveBeeKemAuthoritativeReduction.
 require import BeeKemExecutableNormalization.
 require import LiveBeeKemAuthoritativeHop.
 require import BeeKemNormalizationProofs BeeKemInterfaceProof.
-require import LiveBeeKemOracle LiveBeeKemReduction.
+require import LiveBeeKemAuthoritativeFinalBound.
 require import LivePrfReduction.
 require import LivePrfTypes LivePrfGame LivePrfApplicationReduction.
 require import LivePrfIdeal LivePrfControls LivePrfIdealControls.
@@ -86,9 +86,6 @@ print LiveAuthenticationReduction.live_success_le_authenticated_plus_origin_fail
 print LiveAuthenticationReduction.live_authentication_failure_exactly_deliverable_a.
 print LiveAuthenticationReduction.live_authentication_failure_bound.
 
-(* Deliverable L provisional BeeKEM seam: challenge-call connectivity only. *)
-print LiveBeeKemReduction.beekem_live_wrapper_invokes_primitive_challenge_once.
-
 (* Authoritative BeeKEM application adapter: real canonical trace non-vacuity. *)
 print LiveBeeKemAuthoritativeTypes.authoritative_adapter_nonvacuity.
 print LiveBeeKemAuthoritativeRootBridge.application_beekem_root_bridge_cases_distinct.
@@ -102,6 +99,13 @@ print LiveBeeKemAuthoritativeSafetyControls.authoritative_application_immediate_
 print LiveBeeKemAuthoritativeReduction.BBeeLive.
 print LiveBeeKemAuthoritativeReduction.AuthoritativeLiveBeeKemGame.
 print BeeKemExecutableNormalization.beekem_sampled_win_probability_is_fixed_bit_average.
+
+(* Final authoritative Deliverable L theorem.  The public L0 game is bounded by
+   the explicit Deliverable A signature, fact-signature, node-collision and
+   encoding terms, one concrete sampled BeeKEM Theorem 1 reduction, and the
+   concrete multi-domain PRF advantage.  The provisional challenge-only wrapper
+   is intentionally absent from this entry-point dependency path. *)
+print LiveBeeKemAuthoritativeFinalBound.authoritative_live_key_l0_l4_bound.
 
 (* BeeKEM normalization repair: unsafe executable traces contribute zero safe
    mass and cannot satisfy the imported all-safe theorem boundary. *)
