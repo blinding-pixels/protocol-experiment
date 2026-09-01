@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   final-bound-mutations:
-    name: Reject removed final-bound losses
+    name: Reject removed final-bound dependencies
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
@@ -51,11 +51,20 @@ jobs:
           source = Path(sys.argv[1])
           mutant_root = Path(sys.argv[2])
           evidence = Path(sys.argv[3])
+          target_name = "LiveBeeKemAuthoritativeFinalBound.ec"
 
-          mutations = {
+          single_mutations = {
+              "drop-operation-signature-loss": (
+                  "           q_operation_signature_factor *\n",
+                  "           0%r *\n",
+              ),
               "drop-fact-signature-loss": (
                   "         + q_fact_signature_factor *\n",
                   "         + 0%r *\n",
+              ),
+              "drop-node-collision-loss": (
+                  "         + Pr[COLL.main(live_auth_initial_state) @ &m : res]\n",
+                  "         + 0%r * Pr[COLL.main(live_auth_initial_state) @ &m : res]\n",
               ),
               "drop-beekem-loss": (
                   "         + 2%r *\n"
@@ -67,50 +76,118 @@ jobs:
                   "         + mdprf_fixed_bit_advantage\n",
                   "         + 0%r * mdprf_fixed_bit_advantage\n",
               ),
+              "remove-authloss-proof-link": (
+                  "    have Hauthloss :=\n"
+                  "      authoritative_live_authentication_failure_bound\n"
+                  "        A S Hash K R I &m.\n",
+                  "    have Hauthloss : 0%r <= 0%r by smt().\n",
+              ),
           }
 
-          for name, (needle, replacement) in mutations.items():
+          def write_mutant(name: str, mutate) -> None:
               destination = mutant_root / name
               shutil.copytree(source, destination)
-              target = destination / "LiveBeeKemAuthoritativeFinalBound.ec"
-              text = target.read_text(encoding="utf-8")
-              count = text.count(needle)
-              if count != 1:
-                  raise SystemExit(
-                      f"{name}: expected exactly one mutation site, found {count}"
-                  )
-              target.write_text(
-                  text.replace(needle, replacement, 1),
-                  encoding="utf-8",
-              )
+              target = destination / target_name
+              original = target.read_text(encoding="utf-8")
+              mutated, description = mutate(original)
+              if mutated == original:
+                  raise SystemExit(f"{name}: mutation made no change")
+              target.write_text(mutated, encoding="utf-8")
               (evidence / f"{name}-edit.txt").write_text(
-                  f"needle:\n{needle}\nreplacement:\n{replacement}\n",
+                  description,
                   encoding="utf-8",
               )
+
+          for name, (needle, replacement) in single_mutations.items():
+              def mutate_single(text, needle=needle, replacement=replacement, name=name):
+                  count = text.count(needle)
+                  if count != 1:
+                      raise SystemExit(
+                          f"{name}: expected exactly one mutation site, found {count}"
+                      )
+                  return (
+                      text.replace(needle, replacement, 1),
+                      f"needle:\n{needle}\nreplacement:\n{replacement}\n",
+                  )
+              write_mutant(name, mutate_single)
+
+          auth_replacements = [
+              (
+                  "           q_operation_signature_factor *\n",
+                  "           0%r *\n",
+              ),
+              (
+                  "         + q_fact_signature_factor *\n",
+                  "         + 0%r *\n",
+              ),
+              (
+                  "         + Pr[COLL.main(live_auth_initial_state) @ &m : res]\n",
+                  "         + 0%r * Pr[COLL.main(live_auth_initial_state) @ &m : res]\n",
+              ),
+              (
+                  "         + encoding_failure_probability\n",
+                  "         + 0%r * encoding_failure_probability\n",
+              ),
+          ]
+
+          def drop_all_auth(text: str):
+              descriptions = []
+              for needle, replacement in auth_replacements:
+                  count = text.count(needle)
+                  if count != 1:
+                      raise SystemExit(
+                          "drop-all-authentication-losses: expected exactly one "
+                          f"site for {needle!r}, found {count}"
+                      )
+                  text = text.replace(needle, replacement, 1)
+                  descriptions.append(
+                      f"needle:\n{needle}\nreplacement:\n{replacement}\n"
+                  )
+              return text, "\n".join(descriptions)
+
+          write_mutant("drop-all-authentication-losses", drop_all_auth)
+
+          def zero_entire_bound(text: str):
+              theorem = text.index("lemma authoritative_live_key_l0_l4_bound")
+              start_marker = "         <=\n           q_operation_signature_factor *"
+              start = text.index(start_marker, theorem)
+              proof = text.index("\n  proof.", start)
+              replacement = "         <= 0%r."
+              return (
+                  text[:start] + replacement + text[proof:],
+                  "replaced the complete final right-hand side with 0%r\n",
+              )
+
+          write_mutant("zero-entire-final-bound", zero_entire_bound)
           PY
 
           find "$mutant_root" -name LiveBeeKemAuthoritativeFinalBound.ec \
             -print -exec sha256sum {} \; \
             | tee "$evidence/mutant-sha256.txt"
 
-      - name: Prove final-bound losses are load-bearing
+      - name: Prove final-bound dependencies are load-bearing
         shell: bash
         run: |
-          set -euo pipefail
+          set -uo pipefail
           mutant_root="$RUNNER_TEMP/easycrypt-final-bound-mutants"
           evidence="$RUNNER_TEMP/easycrypt-final-bound-mutation-evidence"
+          unexpected=0
 
           for mutation in \
+            drop-operation-signature-loss \
             drop-fact-signature-loss \
+            drop-node-collision-loss \
+            drop-all-authentication-losses \
+            remove-authloss-proof-link \
             drop-beekem-loss \
-            drop-prf-loss
+            drop-prf-loss \
+            zero-entire-final-bound
           do
             proof_dir="$mutant_root/$mutation"
             stdout="$evidence/$mutation-stdout.log"
             stderr="$evidence/$mutation-stderr.log"
 
-            set +e
-            docker run --rm \
+            if docker run --rm \
               -v "$proof_dir:/proof" \
               -w /proof \
               "$EASYCRYPT_IMAGE" \
@@ -125,33 +202,41 @@ jobs:
                 fi
                 exit \"\$status\"
               " >"$stdout" 2>"$stderr"
-            status=$?
-            set -e
+            then
+              status=0
+            else
+              status=$?
+            fi
 
             printf '%s\n' "$status" \
               >"$evidence/$mutation-raw-checker-status.txt"
-            cat "$stdout"
-            cat "$stderr" >&2
 
+            assertion=0
             if [ "$status" -eq 0 ]; then
               echo "$mutation unexpectedly compiled" >&2
-              printf '1\n' \
-                >"$evidence/$mutation-assertion-exit-status.txt"
-              exit 1
-            fi
-
-            if ! grep -Fq 'LiveBeeKemAuthoritativeFinalBound' \
+              assertion=1
+            elif ! grep -Fq 'LiveBeeKemAuthoritativeFinalBound' \
                 "$stdout" "$stderr"; then
               echo "$mutation failed outside the final-bound theorem" >&2
-              printf '1\n' \
-                >"$evidence/$mutation-assertion-exit-status.txt"
-              exit 1
+              assertion=1
+            else
+              echo "$mutation rejected at the final-bound theorem as expected"
             fi
 
-            printf '0\n' \
+            printf '%s\n' "$assertion" \
               >"$evidence/$mutation-assertion-exit-status.txt"
-            echo "$mutation rejected at the final-bound theorem as expected"
+            if [ "$assertion" -ne 0 ]; then
+              unexpected=1
+            fi
+
+            echo "--- $mutation diagnostic tail ---"
+            grep -E '\[critical\]|unexpectedly compiled|unknown|parse error|lossless|Cannot|cannot|failed' \
+              "$stdout" "$stderr" | tail -n 20 || true
           done
+
+          printf '%s\n' "$unexpected" \
+            >"$evidence/overall-assertion-exit-status.txt"
+          exit "$unexpected"
 
       - name: Upload mutation evidence
         if: always()
