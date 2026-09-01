@@ -1,0 +1,213 @@
+name: EasyCrypt live-key direct closure
+
+on:
+  push:
+    branches:
+      - formal/easycrypt-live-key-reduction
+    paths:
+      - '.github/workflows/easycrypt-live-key-direct-closure.yml'
+      - 'formal/current-source/easycrypt/computational/**'
+      - 'tools/easycrypt/beekem_dependency_closure.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: easycrypt-live-key-direct-closure-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  direct-closure:
+    name: Direct-check every local proof body
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      EASYCRYPT_IMAGE: ghcr.io/easycrypt/ec-test-box@sha256:84980006e8b01fe6497bbd0ecd67deeb5e7361d8ad17e27d24924122d368e0fc
+      SOURCE_DIR: formal/current-source/easycrypt/computational
+      ENTRY_EC: ComputationalProof.ec
+    steps:
+      - name: Check out exact proof source
+        uses: actions/checkout@v4
+
+      - name: Record source identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/easycrypt-live-key-direct-closure-evidence"
+          mkdir -p "$evidence"
+          git rev-parse HEAD | tee "$evidence/source-commit.txt"
+          git status --short | tee "$evidence/git-status.txt"
+          test ! -s "$evidence/git-status.txt"
+
+      - name: Compute dependency-first local closure
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/easycrypt-live-key-direct-closure-evidence"
+
+          python3 tools/easycrypt/beekem_dependency_closure.py \
+            --root "$SOURCE_DIR" \
+            --entry "$ENTRY_EC" \
+            --dependency-first \
+            --local-prefix Live \
+            --local-prefix Protocol \
+            --local-prefix Canonical \
+            --local-prefix Authorization \
+            --local-prefix Unauthorized \
+            --local-prefix Origin \
+            --local-prefix Primitive \
+            --local-prefix Causal \
+            --local-prefix Witness \
+            >"$evidence/dependency-order.txt" \
+            2>"$evidence/dependency-order-stderr.txt"
+
+          count="$(wc -l <"$evidence/dependency-order.txt")"
+          printf '%s\n' "$count" | tee "$evidence/dependency-count.txt"
+          test "$count" -ge 140
+
+          for required in \
+            PrimitiveGames.eca \
+            BeeKemKiInterface.eca \
+            UnauthorizedOriginFinalBound.ec \
+            LivePrfAuthoritativeReduction.ec \
+            LiveBeeKemAuthoritativeAuthentication.ec \
+            LiveBeeKemAuthoritativeAuthenticationBound.ec \
+            LiveBeeKemAuthoritativeSampledReduction.ec \
+            LiveBeeKemAuthoritativeSampledHop.ec \
+            LiveBeeKemAuthoritativeSampledNormalization.ec \
+            LiveBeeKemAuthoritativeSampledComposition.ec \
+            LiveBeeKemAuthoritativeSampledBound.ec \
+            LiveBeeKemAuthoritativeEntryBridge.ec \
+            BeeKemInterfaceProof.ec \
+            LiveBeeKemAuthoritativeFinalBound.ec \
+            ComputationalProof.ec
+          do
+            grep -Fxq "$required" "$evidence/dependency-order.txt"
+          done
+
+          : >"$evidence/dependency-source-sha256.txt"
+          while IFS= read -r target; do
+            sha256sum "$SOURCE_DIR/$target" \
+              >>"$evidence/dependency-source-sha256.txt"
+          done <"$evidence/dependency-order.txt"
+
+          test "$(tail -n 1 "$evidence/dependency-order.txt")" = "$ENTRY_EC"
+
+      - name: Pull immutable EasyCrypt image
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker pull "$EASYCRYPT_IMAGE"
+          evidence="$RUNNER_TEMP/easycrypt-live-key-direct-closure-evidence"
+          docker image inspect "$EASYCRYPT_IMAGE" \
+            --format '{{json .RepoDigests}}' \
+            | tee "$evidence/image-repodigests.json"
+
+      - name: Record pinned checker versions
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/easycrypt-live-key-direct-closure-evidence"
+          docker run --rm "$EASYCRYPT_IMAGE" bash -lc '
+            set -uo pipefail
+            opam exec -- easycrypt --version
+            opam exec -- why3 --version
+            opam exec -- alt-ergo --version || true
+            z3 --version || true
+            cvc5 --version || true
+          ' >"$evidence/checker-versions.txt" \
+            2>"$evidence/checker-versions-stderr.txt"
+
+      - name: Direct-check every local proof body
+        shell: bash
+        run: |
+          set -euo pipefail
+          source_dir="$GITHUB_WORKSPACE/$SOURCE_DIR"
+          proof_dir="$RUNNER_TEMP/easycrypt-live-key-direct-closure"
+          evidence="$RUNNER_TEMP/easycrypt-live-key-direct-closure-evidence"
+          rm -rf "$proof_dir"
+          mkdir -p "$proof_dir"
+          cp -a "$source_dir"/. "$proof_dir"/
+          find "$proof_dir" -type f -name '*.eco' -delete
+
+          set +e
+          docker run --rm \
+            -v "$proof_dir:/proof" \
+            -v "$evidence:/evidence" \
+            -w /proof \
+            "$EASYCRYPT_IMAGE" \
+            bash -lc '
+              set -uo pipefail
+              : > /evidence/compiled-targets.txt
+              overall=0
+
+              while IFS= read -r target; do
+                [ -n "$target" ] || continue
+                stem="${target%.*}"
+                eco="$stem.eco"
+                stdout="/evidence/$stem-stdout.log"
+                stderr="/evidence/$stem-stderr.log"
+                lastgoals="/evidence/$stem-lastgoals.log"
+
+                rm -f "$eco"
+                echo "DIRECT-CHECK $target"
+                set +e
+                opam exec -- easycrypt compile "$target" \
+                  >"$stdout" 2>"$stderr"
+                status=$?
+                set -e
+                printf "%s\n" "$status" \
+                  >"/evidence/$stem-exit-status.txt"
+
+                if [ "$status" -ne 0 ]; then
+                  printf "%s\n" "$target" \
+                    > /evidence/failed-target.txt
+                  echo "FAILED-DIRECT-CHECK $target status=$status" >&2
+                  tail -n 80 "$stdout" || true
+                  tail -n 80 "$stderr" >&2 || true
+                  opam exec -- easycrypt llm -lastgoals "$target" \
+                    >"$lastgoals" 2>&1 || true
+                  overall="$status"
+                  break
+                fi
+
+                if [ ! -f "$eco" ]; then
+                  printf "%s\n" "$target" \
+                    > /evidence/failed-target.txt
+                  echo "MISSING-ECO-AFTER-DIRECT-CHECK $target" >&2
+                  overall=1
+                  break
+                fi
+
+                printf "%s\n" "$target" \
+                  >> /evidence/compiled-targets.txt
+              done < /evidence/dependency-order.txt
+
+              exit "$overall"
+            '
+          status=$?
+          set -e
+          printf '%s\n' "$status" \
+            | tee "$evidence/direct-closure-exit-status.txt"
+
+          expected="$(wc -l <"$evidence/dependency-order.txt")"
+          compiled="$(wc -l <"$evidence/compiled-targets.txt")"
+          printf '%s\n' "$compiled" \
+            | tee "$evidence/compiled-target-count.txt"
+
+          if [ "$status" -eq 0 ]; then
+            test "$compiled" -eq "$expected"
+            test ! -e "$evidence/failed-target.txt"
+          fi
+
+          exit "$status"
+
+      - name: Upload direct-closure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: easycrypt-live-key-direct-closure-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/easycrypt-live-key-direct-closure-evidence
+          if-no-files-found: error
+          retention-days: 14
