@@ -100,9 +100,9 @@ lemma fact_contents_match_store_cons
     (signed_fact : signed_authorization_fact)
     (rest : signed_authorization_fact list) :
   fact_contents_match_store_list contents (signed_fact :: rest) =
-       (contents signed_fact.`saf_fact.`af_id = Some signed_fact.`saf_fact)
-    /\ fact_contents_match_store_list contents rest.
-proof. by rewrite /fact_contents_match_store_list. qed.
+    ((contents signed_fact.`saf_fact.`af_id = Some signed_fact.`saf_fact)
+     /\ fact_contents_match_store_list contents rest).
+proof. by []. qed.
 
 op all_predecessors_exist_list
     (nodes : node_id fset)
