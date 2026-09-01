@@ -1,0 +1,163 @@
+name: EasyCrypt live-key final-bound mutations
+
+on:
+  push:
+    branches:
+      - formal/easycrypt-live-key-reduction
+    paths:
+      - '.github/workflows/easycrypt-live-key-final-mutations.yml'
+      - 'formal/current-source/easycrypt/computational/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: easycrypt-live-key-final-mutations-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  final-bound-mutations:
+    name: Reject removed final-bound losses
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      EASYCRYPT_IMAGE: ghcr.io/easycrypt/ec-test-box@sha256:84980006e8b01fe6497bbd0ecd67deeb5e7361d8ad17e27d24924122d368e0fc
+      CHECK_EC: ComputationalProof.ec
+    steps:
+      - name: Check out exact proof source
+        uses: actions/checkout@v4
+
+      - name: Pull immutable EasyCrypt image
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker pull "$EASYCRYPT_IMAGE"
+
+      - name: Build final-bound mutants
+        shell: bash
+        run: |
+          set -euo pipefail
+          source_dir="$GITHUB_WORKSPACE/formal/current-source/easycrypt/computational"
+          mutant_root="$RUNNER_TEMP/easycrypt-final-bound-mutants"
+          evidence="$RUNNER_TEMP/easycrypt-final-bound-mutation-evidence"
+          mkdir -p "$mutant_root" "$evidence"
+
+          python3 - "$source_dir" "$mutant_root" "$evidence" <<'PY'
+          from pathlib import Path
+          import shutil
+          import sys
+
+          source = Path(sys.argv[1])
+          mutant_root = Path(sys.argv[2])
+          evidence = Path(sys.argv[3])
+
+          mutations = {
+              "drop-fact-signature-loss": (
+                  "         + q_fact_signature_factor *\n",
+                  "         + 0%r *\n",
+              ),
+              "drop-beekem-loss": (
+                  "         + 2%r *\n"
+                  "             (beekem_theorem1_loss",
+                  "         + 0%r *\n"
+                  "             (beekem_theorem1_loss",
+              ),
+              "drop-prf-loss": (
+                  "         + mdprf_fixed_bit_advantage\n",
+                  "         + 0%r * mdprf_fixed_bit_advantage\n",
+              ),
+          }
+
+          for name, (needle, replacement) in mutations.items():
+              destination = mutant_root / name
+              shutil.copytree(source, destination)
+              target = destination / "LiveBeeKemAuthoritativeFinalBound.ec"
+              text = target.read_text(encoding="utf-8")
+              count = text.count(needle)
+              if count != 1:
+                  raise SystemExit(
+                      f"{name}: expected exactly one mutation site, found {count}"
+                  )
+              target.write_text(
+                  text.replace(needle, replacement, 1),
+                  encoding="utf-8",
+              )
+              (evidence / f"{name}-edit.txt").write_text(
+                  f"needle:\n{needle}\nreplacement:\n{replacement}\n",
+                  encoding="utf-8",
+              )
+          PY
+
+          find "$mutant_root" -name LiveBeeKemAuthoritativeFinalBound.ec \
+            -print -exec sha256sum {} \; \
+            | tee "$evidence/mutant-sha256.txt"
+
+      - name: Prove final-bound losses are load-bearing
+        shell: bash
+        run: |
+          set -euo pipefail
+          mutant_root="$RUNNER_TEMP/easycrypt-final-bound-mutants"
+          evidence="$RUNNER_TEMP/easycrypt-final-bound-mutation-evidence"
+
+          for mutation in \
+            drop-fact-signature-loss \
+            drop-beekem-loss \
+            drop-prf-loss
+          do
+            proof_dir="$mutant_root/$mutation"
+            stdout="$evidence/$mutation-stdout.log"
+            stderr="$evidence/$mutation-stderr.log"
+
+            set +e
+            docker run --rm \
+              -v "$proof_dir:/proof" \
+              -w /proof \
+              "$EASYCRYPT_IMAGE" \
+              bash -lc "
+                set -uo pipefail
+                echo CHECKING-MUTANT $mutation
+                opam exec -- easycrypt compile -no-eco $CHECK_EC
+                status=\$?
+                if [ \"\$status\" -ne 0 ]; then
+                  echo '--- EasyCrypt last goal before expected failure ---'
+                  opam exec -- easycrypt llm -lastgoals $CHECK_EC || true
+                fi
+                exit \"\$status\"
+              " >"$stdout" 2>"$stderr"
+            status=$?
+            set -e
+
+            printf '%s\n' "$status" \
+              >"$evidence/$mutation-raw-checker-status.txt"
+            cat "$stdout"
+            cat "$stderr" >&2
+
+            if [ "$status" -eq 0 ]; then
+              echo "$mutation unexpectedly compiled" >&2
+              printf '1\n' \
+                >"$evidence/$mutation-assertion-exit-status.txt"
+              exit 1
+            fi
+
+            if ! grep -Fq 'LiveBeeKemAuthoritativeFinalBound' \
+                "$stdout" "$stderr"; then
+              echo "$mutation failed outside the final-bound theorem" >&2
+              printf '1\n' \
+                >"$evidence/$mutation-assertion-exit-status.txt"
+              exit 1
+            fi
+
+            printf '0\n' \
+              >"$evidence/$mutation-assertion-exit-status.txt"
+            echo "$mutation rejected at the final-bound theorem as expected"
+          done
+
+      - name: Upload mutation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: easycrypt-final-bound-mutations-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/easycrypt-final-bound-mutation-evidence
+          if-no-files-found: error
+          retention-days: 14
