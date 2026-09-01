@@ -269,6 +269,40 @@ module AuthoritativeLiveRealGame(
 
   module E = AuthoritativeLiveApplicationExecution(A, K, R, I, Forward)
 
+  (* Shared fixed-root runners used by the L2 bridge.  They invoke the same
+     production validator and execution kernel as L0; only the challenger-owned
+     BeeKEM root bit is exposed as an explicit runner argument. *)
+  proc main_with_root_and_application_bit(
+    beekem_bit : bool,
+    application_bit : bool
+  ) : authoritative_live_application_evidence = {
+    var core : authoritative_live_application_core_evidence;
+    var evidence : authoritative_live_application_evidence;
+
+    SO.init();
+    O.init(live_auth_initial_state);
+    core <@ E.run(beekem_bit, application_bit);
+    evidence <- authoritative_live_application_evidence_of
+      core O.unauthorized_accepted;
+    return evidence;
+  }
+
+  proc main_with_root_evidence(
+    beekem_bit : bool
+  ) : authoritative_live_application_evidence = {
+    var application_bit : bool;
+    var core : authoritative_live_application_core_evidence;
+    var evidence : authoritative_live_application_evidence;
+
+    SO.init();
+    O.init(live_auth_initial_state);
+    application_bit <$ dbool;
+    core <@ E.run(beekem_bit, application_bit);
+    evidence <- authoritative_live_application_evidence_of
+      core O.unauthorized_accepted;
+    return evidence;
+  }
+
   proc main_with_fixed_bit(
     application_bit : bool
   ) : authoritative_live_application_evidence = {
