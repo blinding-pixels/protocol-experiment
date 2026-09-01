@@ -12,6 +12,7 @@ require import LiveBeeKemAuthoritativeSampledHop.
 require import LiveBeeKemAuthoritativeSampledNormalization.
 require import LiveBeeKemAuthoritativeSampledComposition.
 require import LiveBeeKemAuthoritativeSampledBound.
+require import LiveBeeKemAuthoritativeEntryBridge.
 
 (* Public closure for the executable Figure 8 oracle environment and exact
    finite-kappa Figure 3 safety predicate.  The trace theorems below force all
@@ -164,6 +165,9 @@ print authoritative_live_authentication_failure_bound.
 print authoritative_live_normalized_advantage.
 print authoritative_live_raw_authenticated_difference_zero.
 print authoritative_live_advantage_le_authenticated_plus_authloss.
+print authoritative_live_evidence_authenticated_exactly_real_root.
+print authoritative_live_public_raw_exactly_evidence.
+print authoritative_live_public_authenticated_exactly_evidence.
 
 (* Checker-reachable non-vacuity controls for the exact KI game. *)
 print beekem_witness_real_branch_reachable.
