@@ -55,6 +55,33 @@ op base_edit_decoded_accepts
   /\ (! defense_enabled mode DefenseOperationBodyPolicy \/
        operation_body_valid_for_envelope envelope).
 
+(* Exact acceptance condition after the six checks that precede authorization
+   normalization.  This is only a proof invariant for the real validator; it
+   does not replace or bypass any executable check. *)
+op validator_pre_authorization_accepts
+    (mode : validator_mode)
+    (envelope : operation_envelope)
+    (view : public_view)
+    (state : protocol_state) : bool =
+     (! defense_enabled mode DefenseDomainVersion \/
+       (envelope.`oe_protocol_domain = expected_protocol_domain /\
+        envelope.`oe_protocol_version = expected_protocol_version))
+  /\ (! defense_enabled mode DefenseDocumentBinding \/
+       envelope.`oe_document_id = state.`ps_document_id)
+  /\ (! defense_enabled mode DefenseFreshness \/
+       (envelope.`oe_operation_id \notin state.`ps_seen_operation_ids /\
+        envelope.`oe_nonce \notin state.`ps_seen_nonces))
+  /\ all_predecessors_exist state envelope.`oe_direct_predecessors
+  /\ (! defense_enabled mode DefensePredecessorCompleteness \/
+       (exact_predecessor_closure state envelope.`oe_direct_predecessors <>
+          None /\
+        fact_ids_of_signed_facts view.`pv_facts =
+          oget (exact_predecessor_closure
+            state envelope.`oe_direct_predecessors)))
+  /\ (! defense_enabled mode DefenseExactCausalContext \/
+       (view.`pv_observed_fact_ids = fact_ids_of_signed_facts view.`pv_facts
+        /\ fact_contents_match_state state view.`pv_facts)).
+
 section BaseEditCharacterization.
   lemma base_edit_validate_decoded_characterization
       (input_mode : validator_mode)
@@ -73,12 +100,35 @@ section BaseEditCharacterization.
   proof.
     proc.
     inline TestSignature.verify.
-    ecall (normalize_witness_base_signed_facts).
-    auto=> />.
-    rewrite /base_edit_decoded_accepts
-      witness_base_view_facts witness_base_state_creator
-      /defense_enabled /validation_success /validation_error.
-    smt().
+    seq 21 :
+      (mode = input_mode /\
+       signed_operation = input_operation /\
+       envelope = input_envelope /\
+       view = witness_base_view_exact /\
+       state = witness_base_state_exact /\
+       input_envelope.`oe_operation_kind = OpEdit /\
+       result.`vr_accepted =
+         validator_pre_authorization_accepts
+           input_mode input_envelope
+           witness_base_view_exact witness_base_state_exact).
+    + auto=> />.
+      rewrite /validator_pre_authorization_accepts
+        /validation_success /validation_error.
+      smt().
+    + if.
+      - call (normalize_witness_base_signed_facts).
+        auto=> />.
+        rewrite /base_edit_decoded_accepts
+          /validator_pre_authorization_accepts
+          witness_base_view_facts witness_base_state_creator
+          /defense_enabled /validation_success /validation_error.
+        smt().
+      - auto=> />.
+        rewrite /base_edit_decoded_accepts
+          /validator_pre_authorization_accepts
+          witness_base_view_facts witness_base_state_creator
+          /defense_enabled /validation_success /validation_error.
+        smt().
   qed.
 
   lemma base_edit_validate_characterization
@@ -216,11 +266,36 @@ section BaseFactsCharacterization.
   proof.
     proc.
     inline TestSignature.verify.
-    ecall (normalize_witness_base_signed_facts).
-    auto=> />.
-    rewrite /base_facts_edit_decoded_accepts /base_facts_common_accepts
-      /defense_enabled /validation_success /validation_error.
-    smt().
+    seq 21 :
+      (mode = input_mode /\
+       signed_operation = input_operation /\
+       envelope = input_envelope /\
+       view = input_view /\
+       state = input_state /\
+       input_view.`pv_facts = witness_base_signed_facts /\
+       input_state.`ps_creator = witness_alice /\
+       input_envelope.`oe_operation_kind = OpEdit /\
+       result.`vr_accepted =
+         validator_pre_authorization_accepts
+           input_mode input_envelope input_view input_state).
+    + auto=> />.
+      rewrite /validator_pre_authorization_accepts
+        /validation_success /validation_error.
+      smt().
+    + if.
+      - call (normalize_witness_base_signed_facts).
+        auto=> />.
+        rewrite /base_facts_edit_decoded_accepts
+          /base_facts_common_accepts
+          /validator_pre_authorization_accepts
+          /defense_enabled /validation_success /validation_error.
+        smt().
+      - auto=> />.
+        rewrite /base_facts_edit_decoded_accepts
+          /base_facts_common_accepts
+          /validator_pre_authorization_accepts
+          /defense_enabled /validation_success /validation_error.
+        smt().
   qed.
 
   lemma base_facts_edit_validate_characterization
@@ -275,11 +350,36 @@ section BaseFactsCharacterization.
   proof.
     proc.
     inline TestSignature.verify.
-    ecall (normalize_witness_base_signed_facts).
-    auto=> />.
-    rewrite /base_facts_history_decoded_accepts /base_facts_common_accepts
-      /defense_enabled /validation_success /validation_error.
-    smt().
+    seq 21 :
+      (mode = input_mode /\
+       signed_operation = input_operation /\
+       envelope = input_envelope /\
+       view = input_view /\
+       state = input_state /\
+       input_view.`pv_facts = witness_base_signed_facts /\
+       input_state.`ps_creator = witness_alice /\
+       input_envelope.`oe_operation_kind = OpHistoryGrant /\
+       result.`vr_accepted =
+         validator_pre_authorization_accepts
+           input_mode input_envelope input_view input_state).
+    + auto=> />.
+      rewrite /validator_pre_authorization_accepts
+        /validation_success /validation_error.
+      smt().
+    + if.
+      - call (normalize_witness_base_signed_facts).
+        auto=> />.
+        rewrite /base_facts_history_decoded_accepts
+          /base_facts_common_accepts
+          /validator_pre_authorization_accepts
+          /defense_enabled /validation_success /validation_error.
+        smt().
+      - auto=> />.
+        rewrite /base_facts_history_decoded_accepts
+          /base_facts_common_accepts
+          /validator_pre_authorization_accepts
+          /defense_enabled /validation_success /validation_error.
+        smt().
   qed.
 
   lemma base_facts_history_validate_characterization
