@@ -18,6 +18,22 @@ require import LiveBeeKemAuthoritativeEntryBridge.
 
 import PG.
 
+(* Keep the final composition independent of every game-specific side
+   condition.  This arithmetic lemma can see only the three reduction
+   inequalities that are meant to justify the public bound.  In particular,
+   contradictory safety, counter, or consistency premises cannot make a
+   missing authentication or cryptographic term disappear through explosion. *)
+lemma authoritative_live_final_bound_arithmetic
+    (raw authenticated failure operation_signature fact_signature
+     collision encoding beekem prf : real) :
+  raw <= authenticated + failure =>
+  failure <=
+    operation_signature + fact_signature + collision + encoding =>
+  authenticated <= beekem + prf =>
+  raw <=
+    operation_signature + fact_signature + collision + encoding + beekem + prf.
+proof. smt(). qed.
+
 (* Public L0 theorem with every authentication and key-indistinguishability
    loss exposed as its concrete primitive experiment.  The only non-kernel
    assumption is the single imported BeeKEM Theorem 1 boundary already listed
@@ -175,6 +191,9 @@ section AuthoritativeLiveFinalBound.
         A S Hash K R I &m.
 
     rewrite Hauthbridge -Hrawbridge in Hauth.
-    smt().
+    apply authoritative_live_final_bound_arithmetic.
+    + exact Hauth.
+    + exact Hauthloss.
+    + exact Hcrypto.
   qed.
 end section AuthoritativeLiveFinalBound.
