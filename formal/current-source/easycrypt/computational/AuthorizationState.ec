@@ -290,17 +290,19 @@ op authorization_digest_of
   ExactAuthorizationDigest state.
 
 lemma authorization_digest_of_injective
-    (left right : authorization_state) :
-  authorization_digest_of left = authorization_digest_of right =>
-  left = right.
+    (left_state right_state : authorization_state) :
+  authorization_digest_of left_state =
+    authorization_digest_of right_state =>
+  left_state = right_state.
 proof.
   by rewrite /authorization_digest_of.
 qed.
 
 lemma authorization_digest_of_context_injective
-    (left right : authorization_state) :
-  authorization_digest_of left = authorization_digest_of right =>
-  left.`as_fact_ids = right.`as_fact_ids.
+    (left_state right_state : authorization_state) :
+  authorization_digest_of left_state =
+    authorization_digest_of right_state =>
+  left_state.`as_fact_ids = right_state.`as_fact_ids.
 proof.
   by move=> /authorization_digest_of_injective ->.
 qed.
