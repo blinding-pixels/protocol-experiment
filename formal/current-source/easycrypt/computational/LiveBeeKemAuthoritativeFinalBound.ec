@@ -191,9 +191,60 @@ section AuthoritativeLiveFinalBound.
         A S Hash K R I &m.
 
     rewrite Hauthbridge -Hrawbridge in Hauth.
-    apply authoritative_live_final_bound_arithmetic.
-    + exact Hauth.
-    + exact Hauthloss.
-    + exact Hcrypto.
+    exact
+      (authoritative_live_final_bound_arithmetic
+         (authoritative_live_normalized_advantage
+            (Pr[L0.main() @ &m : res]))
+         (authoritative_live_normalized_advantage
+            (Pr[
+               L0.main_with_root_evidence(true) @ &m :
+                 res.`alae_authenticated_win
+             ]))
+         (Pr[
+            L0.main_with_evidence() @ &m :
+              res.`alae_authentication_failure
+          ])
+         (q_operation_signature_factor *
+            Pr[EUFOP.main(live_auth_initial_state) @ &m : res])
+         (q_fact_signature_factor *
+            Pr[EUFFACT.main(live_auth_initial_state) @ &m : res])
+         (Pr[COLL.main(live_auth_initial_state) @ &m : res])
+         encoding_failure_probability
+         (2%r *
+            (beekem_theorem1_loss
+               challenge_bound logarithmic_height *
+               (beekem_hkr_cks_advantage
+                  (Pr[
+                     BeeKemHkrCksGame(
+                       BNike,
+                       BeeKemNikeOfPaperInstance(I),
+                       BeeKemNikeSamplerOfPaperInstance(I)
+                     ).main() @ &m : res
+                   ]) +
+                beekem_mu_cpa_advantage
+                  (Pr[
+                     BeeKemMuCpaGame(
+                       BSe,
+                       BeeKemSeOfPaperInstance(I)
+                     ).main() @ &m : res
+                   ]))))
+         (mdprf_fixed_bit_advantage
+            (Pr[
+               Prf.main_with_fixed_bit(
+                 live_auth_initial_state,
+                 live_auth_initial_facts,
+                 live_auth_retention_kappa,
+                 true
+               ) @ &m : res.`mpge_eligible /\ res.`mpge_guess
+             ])
+            (Pr[
+               Prf.main_with_fixed_bit(
+                 live_auth_initial_state,
+                 live_auth_initial_facts,
+                 live_auth_retention_kappa,
+                 false
+               ) @ &m : res.`mpge_eligible /\ res.`mpge_guess
+             ]) / 2%r)
+         Hauth Hauthloss Hcrypto).
   qed.
 end section AuthoritativeLiveFinalBound.
