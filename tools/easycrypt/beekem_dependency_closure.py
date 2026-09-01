@@ -4,7 +4,7 @@
 Only local ``.ec``/``.eca`` theories under ``--root`` are emitted. System
 libraries are intentionally ignored. A dependency whose name starts with a
 configured local prefix but has no local source file is an error, so deleting a
-required BeeKEM source cannot silently shrink the recorded closure.
+required local source cannot silently shrink the recorded closure.
 """
 
 from __future__ import annotations
@@ -105,17 +105,39 @@ def required_theories(path: Path) -> list[str]:
     return names
 
 
-def closure(
-    root: Path,
-    entry: Path,
-    local_prefixes: tuple[str, ...],
-) -> list[Path]:
+def validate_entry(root: Path, entry: Path) -> dict[str, Path]:
     sources = local_sources(root)
     if entry.parent != root:
         raise ValueError("entry must be a direct child of --root")
     if not entry.is_file():
         raise ValueError(f"entry does not exist: {entry}")
+    return sources
 
+
+def resolve_dependency(
+    current: Path,
+    name: str,
+    sources: dict[str, Path],
+    local_prefixes: tuple[str, ...],
+) -> Path | None:
+    dependency = sources.get(name)
+    if dependency is not None:
+        return dependency
+    if any(name.startswith(prefix) for prefix in local_prefixes):
+        raise ValueError(
+            f"{current.name}: unresolved required local theory {name}"
+        )
+    return None
+
+
+def closure(
+    root: Path,
+    entry: Path,
+    local_prefixes: tuple[str, ...],
+) -> list[Path]:
+    """Return the local closure in stable filename order."""
+
+    sources = validate_entry(root, entry)
     seen: set[Path] = set()
     pending: deque[Path] = deque([entry])
     while pending:
@@ -124,17 +146,53 @@ def closure(
             continue
         seen.add(current)
         for name in required_theories(current):
-            dependency = sources.get(name)
-            if dependency is not None:
-                if dependency not in seen:
-                    pending.append(dependency)
-                continue
-            if any(name.startswith(prefix) for prefix in local_prefixes):
-                raise ValueError(
-                    f"{current.name}: unresolved required local theory {name}"
-                )
+            dependency = resolve_dependency(
+                current, name, sources, local_prefixes
+            )
+            if dependency is not None and dependency not in seen:
+                pending.append(dependency)
 
     return sorted(seen, key=lambda path: path.name)
+
+
+def dependency_first_closure(
+    root: Path,
+    entry: Path,
+    local_prefixes: tuple[str, ...],
+) -> list[Path]:
+    """Return each dependency before the theory that requires it."""
+
+    sources = validate_entry(root, entry)
+    states: dict[Path, int] = {}
+    stack: list[Path] = []
+    ordered: list[Path] = []
+
+    def visit(current: Path) -> None:
+        state = states.get(current, 0)
+        if state == 2:
+            return
+        if state == 1:
+            cycle_start = stack.index(current)
+            cycle = stack[cycle_start:] + [current]
+            raise ValueError(
+                "local dependency cycle: "
+                + " -> ".join(path.name for path in cycle)
+            )
+
+        states[current] = 1
+        stack.append(current)
+        for name in required_theories(current):
+            dependency = resolve_dependency(
+                current, name, sources, local_prefixes
+            )
+            if dependency is not None:
+                visit(dependency)
+        stack.pop()
+        states[current] = 2
+        ordered.append(current)
+
+    visit(entry)
+    return ordered
 
 
 def main() -> int:
@@ -156,12 +214,22 @@ def main() -> int:
         action="store_true",
         help="emit paths relative to the current working directory",
     )
+    parser.add_argument(
+        "--dependency-first",
+        action="store_true",
+        help="emit a deterministic topological order suitable for direct checks",
+    )
     args = parser.parse_args()
 
     root = args.root.resolve()
     entry = (root / args.entry).resolve()
     try:
-        result = closure(root, entry, tuple(args.local_prefix))
+        if args.dependency_first:
+            result = dependency_first_closure(
+                root, entry, tuple(args.local_prefix)
+            )
+        else:
+            result = closure(root, entry, tuple(args.local_prefix))
     except (OSError, UnicodeError, ValueError) as error:
         print(f"dependency-closure error: {error}", file=sys.stderr)
         return 1
