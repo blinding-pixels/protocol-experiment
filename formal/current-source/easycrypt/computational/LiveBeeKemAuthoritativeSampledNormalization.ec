@@ -1,6 +1,7 @@
 require import AllCore List FSet Distr DBool.
 require import ProtocolTypes ProtocolPrimitives.
 require import LiveKeyGame LivePrfGame.
+require import LivePrfAuthoritativeReduction.
 require import BeeKemConstruction.
 require import LiveBeeKemAuthoritativeLiveTypes.
 require import LiveBeeKemAuthoritativeAuthentication.
