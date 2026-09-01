@@ -73,8 +73,7 @@ section BaseEditCharacterization.
   proof.
     proc.
     inline TestSignature.verify.
-    wp.
-    call (normalize_witness_base_signed_facts).
+    ecall (normalize_witness_base_signed_facts).
     auto=> />.
     rewrite /base_edit_decoded_accepts
       witness_base_view_facts witness_base_state_creator
@@ -217,8 +216,7 @@ section BaseFactsCharacterization.
   proof.
     proc.
     inline TestSignature.verify.
-    wp.
-    call (normalize_witness_base_signed_facts).
+    ecall (normalize_witness_base_signed_facts).
     auto=> />.
     rewrite /base_facts_edit_decoded_accepts /base_facts_common_accepts
       /defense_enabled /validation_success /validation_error.
@@ -277,8 +275,7 @@ section BaseFactsCharacterization.
   proof.
     proc.
     inline TestSignature.verify.
-    wp.
-    call (normalize_witness_base_signed_facts).
+    ecall (normalize_witness_base_signed_facts).
     auto=> />.
     rewrite /base_facts_history_decoded_accepts /base_facts_common_accepts
       /defense_enabled /validation_success /validation_error.
