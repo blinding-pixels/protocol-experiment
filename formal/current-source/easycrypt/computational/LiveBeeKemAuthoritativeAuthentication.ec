@@ -291,15 +291,12 @@ module AuthoritativeLiveRealGame(
     beekem_bit : bool
   ) : authoritative_live_application_evidence = {
     var application_bit : bool;
-    var core : authoritative_live_application_core_evidence;
     var evidence : authoritative_live_application_evidence;
 
-    SO.init();
-    O.init(live_auth_initial_state);
     application_bit <$ dbool;
-    core <@ E.run(beekem_bit, application_bit);
-    evidence <- authoritative_live_application_evidence_of
-      core O.unauthorized_accepted;
+    evidence <@ main_with_root_and_application_bit(
+      beekem_bit, application_bit
+    );
     return evidence;
   }
 
