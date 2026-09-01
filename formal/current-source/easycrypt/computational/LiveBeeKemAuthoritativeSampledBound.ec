@@ -15,6 +15,18 @@ require import LiveBeeKemAuthoritativeSampledHop.
 require import LiveBeeKemAuthoritativeSampledNormalization.
 require import LiveBeeKemAuthoritativeSampledComposition.
 
+(* Isolate the only arithmetic performed after the exact BeeKEM and PRF
+   program equalities.  No safety, counter, correctness, or consistency premise
+   is in scope here, so the composition cannot close by contradiction. *)
+lemma authoritative_sampled_authenticated_bound_arithmetic
+    (live root random beekem beekem_bound prf : real) :
+  live <= 2%r * root + random =>
+  root = beekem =>
+  beekem <= beekem_bound =>
+  random = prf =>
+  live <= 2%r * beekem_bound + prf.
+proof. smt(). qed.
+
 (* The complete authenticated L0--L4 computational hop for one concrete
    application-derived BeeKEM adversary.  The outer BeeKEM bit changes only the
    group root; the inner fair application bit and every live/history oracle
@@ -205,7 +217,10 @@ section AuthoritativeSampledAuthenticatedBound.
              res.`alae_authenticated_win
          ]).
 
-    rewrite Hroot Hprf in Htriangle.
-    smt().
+    apply authoritative_sampled_authenticated_bound_arithmetic.
+    + exact Htriangle.
+    + exact Hroot.
+    + exact Hprimitive.
+    + exact Hprf.
   qed.
 end section AuthoritativeSampledAuthenticatedBound.
