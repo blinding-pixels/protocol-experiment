@@ -116,7 +116,7 @@ section BaseEditCharacterization.
         /validation_success /validation_error.
       smt().
     + if.
-      - call (normalize_witness_base_signed_facts).
+      - wp; call (normalize_witness_base_signed_facts).
         auto=> />.
         rewrite /base_edit_decoded_accepts
           /validator_pre_authorization_accepts
@@ -283,7 +283,7 @@ section BaseFactsCharacterization.
         /validation_success /validation_error.
       smt().
     + if.
-      - call (normalize_witness_base_signed_facts).
+      - wp; call (normalize_witness_base_signed_facts).
         auto=> />.
         rewrite /base_facts_edit_decoded_accepts
           /base_facts_common_accepts
@@ -367,7 +367,7 @@ section BaseFactsCharacterization.
         /validation_success /validation_error.
       smt().
     + if.
-      - call (normalize_witness_base_signed_facts).
+      - wp; call (normalize_witness_base_signed_facts).
         auto=> />.
         rewrite /base_facts_history_decoded_accepts
           /base_facts_common_accepts
