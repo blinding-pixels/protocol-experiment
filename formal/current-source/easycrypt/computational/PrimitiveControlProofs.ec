@@ -45,5 +45,5 @@ proof.
   auto.
   rewrite /PG.signature_forgery_valid /control_forgery
     /control_signature /control_verification_key /control_message /=.
-  by rewrite mem_rcons.
+  by [].
 qed.
