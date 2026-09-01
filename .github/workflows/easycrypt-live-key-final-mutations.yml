@@ -23,7 +23,8 @@ jobs:
     timeout-minutes: 90
     env:
       EASYCRYPT_IMAGE: ghcr.io/easycrypt/ec-test-box@sha256:84980006e8b01fe6497bbd0ecd67deeb5e7361d8ad17e27d24924122d368e0fc
-      CHECK_EC: ComputationalProof.ec
+      MUTATED_EC: LiveBeeKemAuthoritativeFinalBound.ec
+      PUBLIC_EC: ComputationalProof.ec
     steps:
       - name: Check out exact proof source
         uses: actions/checkout@v4
@@ -161,9 +162,43 @@ jobs:
           write_mutant("zero-entire-final-bound", zero_entire_bound)
           PY
 
-          find "$mutant_root" -name LiveBeeKemAuthoritativeFinalBound.ec \
+          git rev-parse HEAD | tee "$evidence/source-commit.txt"
+          sha256sum "$source_dir/$MUTATED_EC" \
+            | tee "$evidence/unmutated-target-sha256.txt"
+          find "$mutant_root" -name "$MUTATED_EC" \
             -print -exec sha256sum {} \; \
             | tee "$evidence/mutant-sha256.txt"
+
+      - name: Prove unmutated final theorem checks directly
+        shell: bash
+        run: |
+          set -euo pipefail
+          source_dir="$GITHUB_WORKSPACE/formal/current-source/easycrypt/computational"
+          evidence="$RUNNER_TEMP/easycrypt-final-bound-mutation-evidence"
+
+          docker run --rm \
+            -v "$source_dir:/proof" \
+            -w /proof \
+            "$EASYCRYPT_IMAGE" \
+            bash -lc "
+              set -euo pipefail
+              echo CHECKING-POSITIVE-CONTROL $MUTATED_EC
+              opam exec -- easycrypt compile -no-eco $MUTATED_EC
+            " >"$evidence/unmutated-direct-stdout.log" \
+              2>"$evidence/unmutated-direct-stderr.log"
+          printf '0\n' >"$evidence/unmutated-direct-exit-status.txt"
+
+          docker run --rm \
+            -v "$source_dir:/proof" \
+            -w /proof \
+            "$EASYCRYPT_IMAGE" \
+            bash -lc "
+              set -euo pipefail
+              echo CHECKING-PUBLIC-ENTRY $PUBLIC_EC
+              opam exec -- easycrypt compile -no-eco $PUBLIC_EC
+            " >"$evidence/unmutated-public-stdout.log" \
+              2>"$evidence/unmutated-public-stderr.log"
+          printf '0\n' >"$evidence/unmutated-public-exit-status.txt"
 
       - name: Prove final-bound dependencies are load-bearing
         shell: bash
@@ -193,12 +228,12 @@ jobs:
               "$EASYCRYPT_IMAGE" \
               bash -lc "
                 set -uo pipefail
-                echo CHECKING-MUTANT $mutation
-                opam exec -- easycrypt compile -no-eco $CHECK_EC
+                echo CHECKING-MUTATED-PROOF-BODY $mutation $MUTATED_EC
+                opam exec -- easycrypt compile -no-eco $MUTATED_EC
                 status=\$?
                 if [ \"\$status\" -ne 0 ]; then
                   echo '--- EasyCrypt last goal before expected failure ---'
-                  opam exec -- easycrypt llm -lastgoals $CHECK_EC || true
+                  opam exec -- easycrypt llm -lastgoals $MUTATED_EC || true
                 fi
                 exit \"\$status\"
               " >"$stdout" 2>"$stderr"
@@ -213,14 +248,14 @@ jobs:
 
             assertion=0
             if [ "$status" -eq 0 ]; then
-              echo "$mutation unexpectedly compiled" >&2
+              echo "$mutation unexpectedly compiled directly" >&2
               assertion=1
             elif ! grep -Fq 'LiveBeeKemAuthoritativeFinalBound' \
                 "$stdout" "$stderr"; then
-              echo "$mutation failed outside the final-bound theorem" >&2
+              echo "$mutation failed outside the mutated final-bound theory" >&2
               assertion=1
             else
-              echo "$mutation rejected at the final-bound theorem as expected"
+              echo "$mutation rejected in the mutated final-bound theory as expected"
             fi
 
             printf '%s\n' "$assertion" \
@@ -230,7 +265,7 @@ jobs:
             fi
 
             echo "--- $mutation diagnostic tail ---"
-            grep -E '\[critical\]|unexpectedly compiled|unknown|parse error|lossless|Cannot|cannot|failed' \
+            grep -E '\[critical\]|unexpectedly compiled|unknown|parse error|lossless|Cannot|cannot|failed|given proof-term' \
               "$stdout" "$stderr" | tail -n 20 || true
           done
 
