@@ -34,6 +34,65 @@ lemma authoritative_live_final_bound_arithmetic
     operation_signature + fact_signature + collision + encoding + beekem + prf.
 proof. smt(). qed.
 
+(* Arithmetic countermodels for weakened final compositions.  These do not
+   claim that a concrete primitive instantiation realizes the displayed values.
+   Every displayed advantage/probability value is zero or one half, within the
+   natural range of the corresponding final-bound quantity.  They prove that
+   the three reduction inequalities above do not imply any of
+   the weakened conclusions: each retained loss category is necessary at the
+   generic composition boundary.  The model-level encoding-failure term is
+   intentionally excluded: it is definitionally zero by
+   [encoding_failure_probability_zero]. *)
+op authoritative_live_final_composition_premises
+    (raw authenticated failure operation_signature fact_signature
+     collision encoding beekem prf : real) : bool =
+     raw <= authenticated + failure
+  /\ failure <=
+       operation_signature + fact_signature + collision + encoding
+  /\ authenticated <= beekem + prf.
+
+lemma authoritative_live_operation_signature_loss_load_bearing :
+  authoritative_live_final_composition_premises
+    (1%r / 2%r) 0%r (1%r / 2%r) (1%r / 2%r) 0%r 0%r 0%r 0%r 0%r
+  /\ ! ((1%r / 2%r) <= 0%r + 0%r + 0%r + 0%r + 0%r).
+proof. rewrite /authoritative_live_final_composition_premises; smt(). qed.
+
+lemma authoritative_live_fact_signature_loss_load_bearing :
+  authoritative_live_final_composition_premises
+    (1%r / 2%r) 0%r (1%r / 2%r) 0%r (1%r / 2%r) 0%r 0%r 0%r 0%r
+  /\ ! ((1%r / 2%r) <= 0%r + 0%r + 0%r + 0%r + 0%r).
+proof. rewrite /authoritative_live_final_composition_premises; smt(). qed.
+
+lemma authoritative_live_collision_loss_load_bearing :
+  authoritative_live_final_composition_premises
+    (1%r / 2%r) 0%r (1%r / 2%r) 0%r 0%r (1%r / 2%r) 0%r 0%r 0%r
+  /\ ! ((1%r / 2%r) <= 0%r + 0%r + 0%r + 0%r + 0%r).
+proof. rewrite /authoritative_live_final_composition_premises; smt(). qed.
+
+lemma authoritative_live_authentication_block_load_bearing :
+  authoritative_live_final_composition_premises
+    (1%r / 2%r) 0%r (1%r / 2%r) (1%r / 2%r) 0%r 0%r 0%r 0%r 0%r
+  /\ ! ((1%r / 2%r) <= 0%r + 0%r).
+proof. rewrite /authoritative_live_final_composition_premises; smt(). qed.
+
+lemma authoritative_live_beekem_loss_load_bearing :
+  authoritative_live_final_composition_premises
+    (1%r / 2%r) (1%r / 2%r) 0%r 0%r 0%r 0%r 0%r (1%r / 2%r) 0%r
+  /\ ! ((1%r / 2%r) <= 0%r + 0%r + 0%r + 0%r + 0%r).
+proof. rewrite /authoritative_live_final_composition_premises; smt(). qed.
+
+lemma authoritative_live_prf_loss_load_bearing :
+  authoritative_live_final_composition_premises
+    (1%r / 2%r) (1%r / 2%r) 0%r 0%r 0%r 0%r 0%r 0%r (1%r / 2%r)
+  /\ ! ((1%r / 2%r) <= 0%r + 0%r + 0%r + 0%r + 0%r).
+proof. rewrite /authoritative_live_final_composition_premises; smt(). qed.
+
+lemma authoritative_live_zero_bound_rejected_by_consistent_premises :
+  authoritative_live_final_composition_premises
+    (1%r / 2%r) (1%r / 2%r) 0%r 0%r 0%r 0%r 0%r (1%r / 2%r) 0%r
+  /\ ! ((1%r / 2%r) <= 0%r).
+proof. rewrite /authoritative_live_final_composition_premises; smt(). qed.
+
 (* Public L0 theorem with every authentication and key-indistinguishability
    loss exposed as its concrete primitive experiment.  The only non-kernel
    assumption is the single imported BeeKEM Theorem 1 boundary already listed
