@@ -6,6 +6,7 @@ require import BeeKemConsistencyBranchProjection.
 require import BeeKemProjectedNormalization.
 require import LiveKeyGame LivePrfGame.
 require import LiveAuthenticationReduction.
+require import LivePrfAuthoritativeReduction.
 require import LiveBeeKemAuthoritativeLiveTypes.
 require import LiveBeeKemAuthoritativeAuthentication.
 require import LiveBeeKemAuthoritativeAuthenticationBound.
