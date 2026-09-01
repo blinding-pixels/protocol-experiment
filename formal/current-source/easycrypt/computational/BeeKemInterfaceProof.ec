@@ -7,6 +7,7 @@ require import LiveBeeKemAuthoritativeComposition.
 require import LivePrfExactIdeal.
 require import LiveBeeKemAuthoritativeAuthentication.
 require import LiveBeeKemAuthoritativeAuthenticationBound.
+require import LiveBeeKemAuthoritativeSampledReduction.
 
 (* Public closure for the executable Figure 8 oracle environment and exact
    finite-kappa Figure 3 safety predicate.  The trace theorems below force all
@@ -136,6 +137,9 @@ print BKI.beekem_theorem1_imported_normalized.
 print authoritative_projected_beekem_advantage_bound.
 print authoritative_beekem_random_projection_exactly_prf_game_real.
 print authoritative_live_beekem_prf_composed_bound.
+print BBeeLiveSampledApplication.
+print AuthoritativeSampledLiveBeeKemGame.
+print authoritative_sampled_live_beekem_theorem1.
 
 (* Exact executable PRF-random to bit-free ideal boundary. *)
 print authoritative_prf_random_fixed_bit_exactly_ideal.
