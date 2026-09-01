@@ -1,0 +1,273 @@
+name: EasyCrypt live-key vacuity diagnostics
+
+on:
+  push:
+    branches:
+      - formal/easycrypt-live-key-reduction
+    paths:
+      - '.github/workflows/easycrypt-live-key-vacuity-diagnostics.yml'
+      - 'formal/current-source/easycrypt/computational/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: easycrypt-live-key-vacuity-diagnostics-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  diagnose-final-bound:
+    name: Characterize final-bound vacuity
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      EASYCRYPT_IMAGE: ghcr.io/easycrypt/ec-test-box@sha256:84980006e8b01fe6497bbd0ecd67deeb5e7361d8ad17e27d24924122d368e0fc
+    steps:
+      - name: Check out exact proof source
+        uses: actions/checkout@v4
+
+      - name: Pull immutable EasyCrypt image
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker pull "$EASYCRYPT_IMAGE"
+
+      - name: Build isolated diagnostic theories
+        shell: bash
+        run: |
+          set -euo pipefail
+          source_dir="$GITHUB_WORKSPACE/formal/current-source/easycrypt/computational"
+          diagnostic_dir="$RUNNER_TEMP/easycrypt-live-key-vacuity"
+          evidence="$RUNNER_TEMP/easycrypt-live-key-vacuity-evidence"
+          mkdir -p "$diagnostic_dir" "$evidence"
+          cp -R "$source_dir"/. "$diagnostic_dir"/
+
+          cat >"$diagnostic_dir/ExactTacticSanity.ec" <<'EOF'
+          require import AllCore.
+
+          lemma exact_tactic_must_not_strengthen
+              (x y : real) :
+            x <= y => x <= 0%r.
+          proof.
+            move=> Hxy.
+            exact Hxy.
+          qed.
+          EOF
+
+          cat >"$diagnostic_dir/ArithmeticApplicationSanity.ec" <<'EOF'
+          require import AllCore.
+          require import LiveBeeKemAuthoritativeFinalBound.
+
+          lemma concrete_arithmetic_application_must_not_strengthen
+              (raw authenticated failure operation_signature fact_signature
+               collision encoding beekem prf : real) :
+            raw <= authenticated + failure =>
+            failure <=
+              operation_signature + fact_signature + collision + encoding =>
+            authenticated <= beekem + prf =>
+            raw <= 0%r.
+          proof.
+            move=> Hauth Hauthloss Hcrypto.
+            exact
+              (authoritative_live_final_bound_arithmetic
+                 raw authenticated failure
+                 operation_signature fact_signature collision encoding
+                 beekem prf Hauth Hauthloss Hcrypto).
+          qed.
+          EOF
+
+          python3 - "$diagnostic_dir/LiveBeeKemAuthoritativeFinalBound.ec" \
+            "$diagnostic_dir" "$evidence" <<'PY'
+          from pathlib import Path
+          import shutil
+          import sys
+
+          source_file = Path(sys.argv[1])
+          root = Path(sys.argv[2])
+          evidence = Path(sys.argv[3])
+          original = source_file.read_text(encoding="utf-8")
+
+          theorem_marker = "  lemma authoritative_live_key_l0_l4_bound"
+          theorem = original.index(theorem_marker)
+          proof = original.index("  proof.\n", theorem)
+          qed = original.index("  qed.\n", proof) + len("  qed.\n")
+          statement = original[theorem:proof]
+          conclusion = statement.index(
+              "    => exists (BNike <: BEEKEM_HKR_CKS_ADVERSARY),"
+          )
+          prefix = original[:theorem] + statement[:conclusion]
+          suffix = original[qed:]
+
+          introductions = (
+              "  proof.\n"
+              "    move=> Hkappa Hchallenge Hheight Hnike Hse Hsafe Hcounters.\n"
+              "    move=> Hconsistent_true Hconsistent_false.\n"
+          )
+
+          cases = {
+              "PremisesOnlyContradiction":
+                  introductions +
+                  "    smt().\n"
+                  "  qed.\n",
+              "AuthenticationOnlyContradiction":
+                  introductions +
+                  "    have Hauth :=\n"
+                  "      authoritative_live_advantage_le_authenticated_plus_authloss\n"
+                  "        A S Hash K R I &m.\n"
+                  "    have Hauthbridge :=\n"
+                  "      authoritative_live_evidence_authenticated_exactly_real_root\n"
+                  "        A S Hash K R I &m.\n"
+                  "    have Hrawbridge :=\n"
+                  "      authoritative_live_public_raw_exactly_evidence\n"
+                  "        A S Hash K R I &m.\n"
+                  "    rewrite Hauthbridge -Hrawbridge in Hauth.\n"
+                  "    smt().\n"
+                  "  qed.\n",
+              "AuthenticationLossOnlyContradiction":
+                  introductions +
+                  "    have Hauthloss :=\n"
+                  "      authoritative_live_authentication_failure_bound\n"
+                  "        A S Hash K R I &m.\n"
+                  "    smt().\n"
+                  "  qed.\n",
+              "CryptoOnlyContradiction":
+                  introductions +
+                  "    have Hcrypto :=\n"
+                  "      authoritative_sampled_authenticated_beekem_prf_bound\n"
+                  "        A S Hash K R I &m\n"
+                  "        challenge_bound member_bound logarithmic_height\n"
+                  "        Hkappa Hchallenge Hheight Hnike Hse Hsafe Hcounters\n"
+                  "        Hconsistent_true Hconsistent_false.\n"
+                  "    elim Hcrypto => BNike BSe Hcrypto.\n"
+                  "    smt().\n"
+                  "  qed.\n",
+              "AllDerivedFactsContradiction":
+                  introductions +
+                  "    have Hcrypto :=\n"
+                  "      authoritative_sampled_authenticated_beekem_prf_bound\n"
+                  "        A S Hash K R I &m\n"
+                  "        challenge_bound member_bound logarithmic_height\n"
+                  "        Hkappa Hchallenge Hheight Hnike Hse Hsafe Hcounters\n"
+                  "        Hconsistent_true Hconsistent_false.\n"
+                  "    elim Hcrypto => BNike BSe Hcrypto.\n"
+                  "    have Hauth :=\n"
+                  "      authoritative_live_advantage_le_authenticated_plus_authloss\n"
+                  "        A S Hash K R I &m.\n"
+                  "    have Hauthloss :=\n"
+                  "      authoritative_live_authentication_failure_bound\n"
+                  "        A S Hash K R I &m.\n"
+                  "    have Hauthbridge :=\n"
+                  "      authoritative_live_evidence_authenticated_exactly_real_root\n"
+                  "        A S Hash K R I &m.\n"
+                  "    have Hrawbridge :=\n"
+                  "      authoritative_live_public_raw_exactly_evidence\n"
+                  "        A S Hash K R I &m.\n"
+                  "    rewrite Hauthbridge -Hrawbridge in Hauth.\n"
+                  "    smt().\n"
+                  "  qed.\n",
+          }
+
+          for name, proof_text in cases.items():
+              case_dir = root / name
+              case_dir.mkdir()
+              for path in root.iterdir():
+                  if path.is_file() and path.suffix in {".ec", ".eca"}:
+                      shutil.copy2(path, case_dir / path.name)
+              target = case_dir / "LiveBeeKemAuthoritativeFinalBound.ec"
+              target.write_text(
+                  prefix + "    => false.\n" + proof_text + suffix,
+                  encoding="utf-8",
+              )
+              (evidence / f"{name}-sha256.txt").write_text(
+                  "generated theory sha256 recorded by shell\n",
+                  encoding="utf-8",
+              )
+          PY
+
+          find "$diagnostic_dir" -name '*.ec' -o -name '*.eca' \
+            | LC_ALL=C sort \
+            | xargs sha256sum \
+            >"$evidence/diagnostic-source-sha256.txt"
+          git rev-parse HEAD >"$evidence/source-commit.txt"
+
+      - name: Run pinned-checker diagnostic matrix
+        shell: bash
+        run: |
+          set -uo pipefail
+          diagnostic_dir="$RUNNER_TEMP/easycrypt-live-key-vacuity"
+          evidence="$RUNNER_TEMP/easycrypt-live-key-vacuity-evidence"
+
+          run_case() {
+            name="$1"
+            proof_dir="$2"
+            target="$3"
+            stdout="$evidence/$name-stdout.log"
+            stderr="$evidence/$name-stderr.log"
+
+            set +e
+            docker run --rm \
+              -v "$proof_dir:/proof" \
+              -w /proof \
+              "$EASYCRYPT_IMAGE" \
+              bash -lc "
+                set -uo pipefail
+                echo CHECKING-DIAGNOSTIC $name $target
+                opam exec -- easycrypt compile -no-eco $target
+                status=\$?
+                if [ \"\$status\" -ne 0 ]; then
+                  echo '--- EasyCrypt last goal ---'
+                  opam exec -- easycrypt llm -lastgoals $target || true
+                fi
+                exit \"\$status\"
+              " >"$stdout" 2>"$stderr"
+            status=$?
+            set -e
+
+            printf '%s\n' "$status" >"$evidence/$name-status.txt"
+            echo "$name status=$status"
+            grep -E '\[critical\]|Cannot|cannot|failed|goal|subgoal|no such object' \
+              "$stdout" "$stderr" | tail -n 30 || true
+          }
+
+          run_case exact-tactic-sanity \
+            "$diagnostic_dir" ExactTacticSanity.ec
+          run_case arithmetic-application-sanity \
+            "$diagnostic_dir" ArithmeticApplicationSanity.ec
+
+          for name in \
+            PremisesOnlyContradiction \
+            AuthenticationOnlyContradiction \
+            AuthenticationLossOnlyContradiction \
+            CryptoOnlyContradiction \
+            AllDerivedFactsContradiction
+          do
+            run_case "$name" "$diagnostic_dir/$name" \
+              LiveBeeKemAuthoritativeFinalBound.ec
+          done
+
+          python3 - "$evidence" <<'PY'
+          from pathlib import Path
+          import json
+          import sys
+
+          evidence = Path(sys.argv[1])
+          statuses = {
+              path.name.removesuffix("-status.txt"): int(path.read_text().strip())
+              for path in evidence.glob("*-status.txt")
+          }
+          (evidence / "status-matrix.json").write_text(
+              json.dumps(statuses, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          print(json.dumps(statuses, indent=2, sort_keys=True))
+          PY
+
+      - name: Upload diagnostic evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: easycrypt-live-key-vacuity-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/easycrypt-live-key-vacuity-evidence
+          if-no-files-found: error
+          retention-days: 14
