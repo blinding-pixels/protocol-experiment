@@ -11,6 +11,7 @@ require import LiveBeeKemAuthoritativeSampledReduction.
 require import LiveBeeKemAuthoritativeSampledHop.
 require import LiveBeeKemAuthoritativeSampledNormalization.
 require import LiveBeeKemAuthoritativeSampledComposition.
+require import LiveBeeKemAuthoritativeSampledBound.
 
 (* Public closure for the executable Figure 8 oracle environment and exact
    finite-kappa Figure 3 safety predicate.  The trace theorems below force all
@@ -149,6 +150,7 @@ print authoritative_standard_hidden_bit_normalization.
 print authoritative_sampled_root_win_probability_is_fixed_bit_average.
 print authoritative_live_centered_triangle.
 print authoritative_sampled_root_hop_exactly_beekem.
+print authoritative_sampled_authenticated_beekem_prf_bound.
 
 (* Exact executable PRF-random to bit-free ideal boundary. *)
 print authoritative_prf_random_fixed_bit_exactly_ideal.
