@@ -217,10 +217,70 @@ section AuthoritativeSampledAuthenticatedBound.
              res.`alae_authenticated_win
          ]).
 
-    apply authoritative_sampled_authenticated_bound_arithmetic.
-    + exact Htriangle.
-    + exact Hroot.
-    + exact Hprimitive.
-    + exact Hprf.
+    exact
+      (authoritative_sampled_authenticated_bound_arithmetic
+         (authoritative_live_normalized_advantage
+            (Pr[
+               L0.main_with_root_evidence(true) @ &m :
+                 res.`alae_authenticated_win
+             ]))
+         (mdprf_fixed_bit_advantage
+            (Pr[
+               L0.main_with_root_evidence(true) @ &m :
+                 res.`alae_authenticated_win
+             ])
+            (Pr[
+               L0.main_with_root_evidence(false) @ &m :
+                 res.`alae_authenticated_win
+             ]) / 2%r)
+         (authoritative_live_normalized_advantage
+            (Pr[
+               L0.main_with_root_evidence(false) @ &m :
+                 res.`alae_authenticated_win
+             ]))
+         (beekem_normalized_ki_advantage
+            (Pr[
+               Bee.main(
+                 authoritative_live_initial_users,
+                 authoritative_live_initial_group,
+                 live_auth_retention_kappa,
+                 authoritative_live_initial_membership
+               ) @ &m : res
+             ]))
+         (beekem_theorem1_loss
+            challenge_bound logarithmic_height *
+            (beekem_hkr_cks_advantage
+               (Pr[
+                  BeeKemHkrCksGame(
+                    BNike,
+                    BeeKemNikeOfPaperInstance(I),
+                    BeeKemNikeSamplerOfPaperInstance(I)
+                  ).main() @ &m : res
+                ]) +
+             beekem_mu_cpa_advantage
+               (Pr[
+                  BeeKemMuCpaGame(
+                    BSe,
+                    BeeKemSeOfPaperInstance(I)
+                  ).main() @ &m : res
+                ])))
+         (mdprf_fixed_bit_advantage
+            (Pr[
+               Prf.main_with_fixed_bit(
+                 live_auth_initial_state,
+                 live_auth_initial_facts,
+                 live_auth_retention_kappa,
+                 true
+               ) @ &m : res.`mpge_eligible /\ res.`mpge_guess
+             ])
+            (Pr[
+               Prf.main_with_fixed_bit(
+                 live_auth_initial_state,
+                 live_auth_initial_facts,
+                 live_auth_retention_kappa,
+                 false
+               ) @ &m : res.`mpge_eligible /\ res.`mpge_guess
+             ]) / 2%r)
+         Htriangle Hroot Hprimitive Hprf).
   qed.
 end section AuthoritativeSampledAuthenticatedBound.
