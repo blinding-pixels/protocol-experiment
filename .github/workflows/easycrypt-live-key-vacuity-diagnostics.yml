@@ -105,6 +105,15 @@ jobs:
               "    move=> Hconsistent_true Hconsistent_false.\n"
           )
 
+          rewrite_auth = (
+              "    rewrite\n"
+              "      (authoritative_live_evidence_authenticated_exactly_real_root\n"
+              "         A S Hash K R I &m)\n"
+              "      -(authoritative_live_public_raw_exactly_evidence\n"
+              "          A S Hash K R I &m)\n"
+              "      in Hauth.\n"
+          )
+
           cases = {
               "PremisesOnlyContradiction":
                   introductions +
@@ -114,14 +123,8 @@ jobs:
                   introductions +
                   "    have Hauth :=\n"
                   "      authoritative_live_advantage_le_authenticated_plus_authloss\n"
-                  "        A S Hash K R I &m.\n"
-                  "    have Hauthbridge :=\n"
-                  "      authoritative_live_evidence_authenticated_exactly_real_root\n"
-                  "        A S Hash K R I &m.\n"
-                  "    have Hrawbridge :=\n"
-                  "      authoritative_live_public_raw_exactly_evidence\n"
-                  "        A S Hash K R I &m.\n"
-                  "    rewrite Hauthbridge -Hrawbridge in Hauth.\n"
+                  "        A S Hash K R I &m.\n" +
+                  rewrite_auth +
                   "    smt().\n"
                   "  qed.\n",
               "AuthenticationLossOnlyContradiction":
@@ -156,14 +159,8 @@ jobs:
                   "        A S Hash K R I &m.\n"
                   "    have Hauthloss :=\n"
                   "      authoritative_live_authentication_failure_bound\n"
-                  "        A S Hash K R I &m.\n"
-                  "    have Hauthbridge :=\n"
-                  "      authoritative_live_evidence_authenticated_exactly_real_root\n"
-                  "        A S Hash K R I &m.\n"
-                  "    have Hrawbridge :=\n"
-                  "      authoritative_live_public_raw_exactly_evidence\n"
-                  "        A S Hash K R I &m.\n"
-                  "    rewrite Hauthbridge -Hrawbridge in Hauth.\n"
+                  "        A S Hash K R I &m.\n" +
+                  rewrite_auth +
                   "    smt().\n"
                   "  qed.\n",
           }
@@ -226,7 +223,7 @@ jobs:
 
             printf '%s\n' "$status" >"$evidence/$name-status.txt"
             echo "$name status=$status"
-            grep -E '\[critical\]|Cannot|cannot|failed|goal|subgoal|no such object' \
+            grep -E '\[critical\]|Cannot|cannot|failed|goal|subgoal|no such object|unknown|parse error' \
               "$stdout" "$stderr" | tail -n 30 || true
           }
 
@@ -256,11 +253,82 @@ jobs:
               path.name.removesuffix("-status.txt"): int(path.read_text().strip())
               for path in evidence.glob("*-status.txt")
           }
+
+          exact_cases = {
+              "exact-tactic-sanity",
+              "arithmetic-application-sanity",
+          }
+          contradiction_cases = {
+              "PremisesOnlyContradiction",
+              "AuthenticationOnlyContradiction",
+              "AuthenticationLossOnlyContradiction",
+              "CryptoOnlyContradiction",
+              "AllDerivedFactsContradiction",
+          }
+          expected = exact_cases | contradiction_cases
+          failures = []
+
+          if set(statuses) != expected:
+              failures.append(
+                  "status set mismatch: "
+                  f"expected {sorted(expected)!r}, got {sorted(statuses)!r}"
+              )
+
+          forbidden = (
+              "unknown lemma",
+              "unknown operator",
+              "unknown module",
+              "unknown tactic",
+              "no such object",
+              "parse error",
+          )
+
+          for name in sorted(expected):
+              status = statuses.get(name, 0)
+              stdout_path = evidence / f"{name}-stdout.log"
+              stderr_path = evidence / f"{name}-stderr.log"
+              log = ""
+              if stdout_path.exists():
+                  log += stdout_path.read_text(encoding="utf-8", errors="replace")
+              if stderr_path.exists():
+                  log += stderr_path.read_text(encoding="utf-8", errors="replace")
+              lower = log.lower()
+
+              if status == 0:
+                  failures.append(f"{name}: contradiction unexpectedly compiled")
+                  continue
+
+              for marker in forbidden:
+                  if marker in lower:
+                      failures.append(
+                          f"{name}: malformed diagnostic failure contains {marker!r}"
+                      )
+
+              if name in exact_cases:
+                  if (
+                      "the given proof-term proves:" not in log
+                      or "it does not apply to the goal" not in log
+                  ):
+                      failures.append(
+                          f"{name}: did not fail by strict proof-term mismatch"
+                      )
+              elif "cannot prove goal (strict)" not in log:
+                  failures.append(
+                      f"{name}: did not reach the intended contradiction goal"
+                  )
+
+          matrix = {
+              "statuses": statuses,
+              "assertion_failures": failures,
+          }
           (evidence / "status-matrix.json").write_text(
-              json.dumps(statuses, indent=2, sort_keys=True) + "\n",
+              json.dumps(matrix, indent=2, sort_keys=True) + "\n",
               encoding="utf-8",
           )
-          print(json.dumps(statuses, indent=2, sort_keys=True))
+          print(json.dumps(matrix, indent=2, sort_keys=True))
+
+          if failures:
+              raise SystemExit("\n".join(failures))
           PY
 
       - name: Upload diagnostic evidence
