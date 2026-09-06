@@ -70,7 +70,8 @@ jobs:
 
           count="$(wc -l <"$evidence/dependency-order.txt")"
           printf '%s\n' "$count" | tee "$evidence/dependency-count.txt"
-          test "$count" -ge 140
+          test "$count" -eq 150
+          test "$(LC_ALL=C sort -u "$evidence/dependency-order.txt" | wc -l)" -eq "$count"
 
           start="$((count * SHARD_INDEX / SHARD_COUNT + 1))"
           end="$((count * (SHARD_INDEX + 1) / SHARD_COUNT))"
@@ -128,13 +129,10 @@ jobs:
         run: |
           set -euo pipefail
           evidence="$RUNNER_TEMP/easycrypt-live-key-direct-closure-evidence"
-          docker run --rm "$EASYCRYPT_IMAGE" bash -lc '
-            set -uo pipefail
-            opam exec -- easycrypt --version
+          docker run --rm "$EASYCRYPT_IMAGE" bash -c '
+            set -euo pipefail
             opam exec -- why3 --version
-            opam exec -- alt-ergo --version || true
-            z3 --version || true
-            cvc5 --version || true
+            exec opam exec -- easycrypt config
           ' >"$evidence/checker-versions.txt" \
             2>"$evidence/checker-versions-stderr.txt"
 
@@ -150,15 +148,20 @@ jobs:
           cp -a "$source_dir"/. "$proof_dir"/
           find "$proof_dir" -type f -name '*.eco' -delete
 
+          # The pinned image's .bash_logout invokes clear_console. With
+          # errexit it changes an explicit successful exit into status 1.
+          # A non-login shell preserves both success and real checker failure;
+          # opam exec still selects the image's exact installed toolchain.
           set +e
           docker run --rm \
             -v "$proof_dir:/proof" \
             -v "$evidence:/evidence" \
             -w /proof \
             "$EASYCRYPT_IMAGE" \
-            bash -lc '
+            bash -c '
               set -uo pipefail
               : > /evidence/compiled-targets.txt
+              : > /evidence/compiled-eco-sha256.txt
               overall=0
 
               while IFS= read -r target; do
@@ -185,13 +188,14 @@ jobs:
                   echo "FAILED-DIRECT-CHECK $target status=$status" >&2
                   tail -n 80 "$stdout" || true
                   tail -n 80 "$stderr" >&2 || true
-                  opam exec -- easycrypt llm -lastgoals "$target" \
+                  timeout --kill-after=10s 120s \
+                    opam exec -- easycrypt llm -lastgoals "$target" \
                     >"$lastgoals" 2>&1 || true
                   overall="$status"
                   break
                 fi
 
-                if [ ! -f "$eco" ]; then
+                if [ ! -s "$eco" ]; then
                   printf "%s\n" "$target" \
                     > /evidence/failed-target.txt
                   echo "MISSING-ECO-AFTER-DIRECT-CHECK $target" >&2
@@ -199,6 +203,7 @@ jobs:
                   break
                 fi
 
+                sha256sum "$eco" >> /evidence/compiled-eco-sha256.txt
                 printf "%s\n" "$target" \
                   >> /evidence/compiled-targets.txt
               done < /evidence/shard-order.txt
@@ -217,6 +222,8 @@ jobs:
 
           if [ "$status" -eq 0 ]; then
             test "$compiled" -eq "$expected"
+            cmp "$evidence/shard-order.txt" "$evidence/compiled-targets.txt"
+            test "$(wc -l <"$evidence/compiled-eco-sha256.txt")" -eq "$expected"
             test ! -e "$evidence/failed-target.txt"
           fi
 
