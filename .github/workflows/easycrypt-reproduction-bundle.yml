@@ -1,0 +1,122 @@
+name: EasyCrypt reproduction bundle
+
+on:
+  push:
+    branches:
+      - formal/easycrypt-live-key-reduction
+    paths:
+      - '.github/workflows/easycrypt-reproduction-bundle.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      EASYCRYPT_IMAGE: ghcr.io/easycrypt/ec-test-box@sha256:84980006e8b01fe6497bbd0ecd67deeb5e7361d8ad17e27d24924122d368e0fc
+    steps:
+      - name: Check out exact source and history without persisting credentials
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Package source history for offline reproduction
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/easycrypt-reproduction-source"
+          mkdir -p "$out"
+          git rev-parse HEAD > "$out/source-commit.txt"
+          git status --short > "$out/git-status.txt"
+          test ! -s "$out/git-status.txt"
+          git bundle create "$out/repository.bundle" --all
+          git bundle verify "$out/repository.bundle"
+          git log --oneline origin/main..HEAD > "$out/branch-commits.txt"
+          git diff --stat origin/main...HEAD > "$out/branch-diff-stat.txt"
+          sha256sum "$out/repository.bundle" > "$out/repository-sha256.txt"
+
+      - name: Upload exact source bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: easycrypt-reproduction-source-${{ github.run_id }}
+          path: ${{ runner.temp }}/easycrypt-reproduction-source
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Inspect pinned runtime and reproduce login-shell exit status
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/easycrypt-reproduction-runtime"
+          mkdir -p "$out"
+          docker pull "$EASYCRYPT_IMAGE"
+          docker image inspect "$EASYCRYPT_IMAGE" > "$out/image-inspect.json"
+          printf '%s\n' "$EASYCRYPT_IMAGE" > "$out/image-reference.txt"
+          docker run --rm "$EASYCRYPT_IMAGE" bash -lc '
+            printf "HOME=%s\nPATH=%s\n" "$HOME" "$PATH"
+            id
+            opam var prefix
+            opam list --installed
+            if test -f "$HOME/.bash_logout"; then cat "$HOME/.bash_logout"; fi
+            exec opam exec -- easycrypt config
+          ' > "$out/runtime-inventory.txt" 2>&1
+          set +e
+          docker run --rm "$EASYCRYPT_IMAGE" bash -lc 'set -e; exit 0' \
+            > "$out/login-shell-stdout.txt" 2> "$out/login-shell-stderr.txt"
+          login_status=$?
+          docker run --rm "$EASYCRYPT_IMAGE" bash -lc 'set -e; exec true' \
+            > "$out/exec-shell-stdout.txt" 2> "$out/exec-shell-stderr.txt"
+          exec_status=$?
+          set -e
+          printf '%s\n' "$login_status" > "$out/login-shell-exit-status.txt"
+          printf '%s\n' "$exec_status" > "$out/exec-shell-exit-status.txt"
+          test "$exec_status" -eq 0
+
+      - name: Direct-check unchanged ProtocolTypes with the pinned checker
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/easycrypt-reproduction-runtime"
+          proof="$RUNNER_TEMP/easycrypt-reproduction-proof"
+          mkdir -p "$proof"
+          cp -a formal/current-source/easycrypt/computational/. "$proof/"
+          find "$proof" -name '*.eco' -delete
+          sha256sum "$proof/ProtocolTypes.ec" > "$out/smoke-source-sha256.txt"
+          set +e
+          docker run --rm -v "$proof:/proof" -w /proof "$EASYCRYPT_IMAGE" \
+            bash -lc 'exec opam exec -- easycrypt compile ProtocolTypes.ec' \
+            > "$out/smoke-stdout.log" 2> "$out/smoke-stderr.log"
+          status=$?
+          set -e
+          printf '%s\n' "$status" > "$out/smoke-exit-status.txt"
+          test "$status" -eq 0
+          test -s "$proof/ProtocolTypes.eco"
+          sha256sum "$proof/ProtocolTypes.eco" > "$out/smoke-eco-sha256.txt"
+
+      # This is a diagnostic transport artifact, NOT a security-proof result.
+      # Export an unstarted container: no runner files or credentials enter it.
+      # No checker, library, solver, or configuration file is changed.
+      - name: Export unmodified pinned-image root filesystem
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/easycrypt-reproduction-runtime"
+          cid="$(docker create --entrypoint /bin/true "$EASYCRYPT_IMAGE")"
+          trap 'docker rm "$cid" >/dev/null' EXIT
+          docker export "$cid" | gzip -1 > "$out/pinned-rootfs.tar.gz"
+          sha256sum "$out/pinned-rootfs.tar.gz" > "$out/rootfs-sha256.txt"
+          ls -lh "$out/pinned-rootfs.tar.gz"
+
+      - name: Upload pinned runtime and diagnostic evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: easycrypt-reproduction-runtime-${{ github.run_id }}
+          path: ${{ runner.temp }}/easycrypt-reproduction-runtime
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 1
