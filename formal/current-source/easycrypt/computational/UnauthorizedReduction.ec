@@ -191,7 +191,7 @@ proof.
   + rewrite witness_honest_author
       witness_honest_required_capability_field.
     exact witness_bob_old_edit_active_state_7.
-  + rewrite witness_honest_required_capability_field.
-    exact witness_honest_required_capability.
+  + by rewrite witness_honest_required_capability_field
+      witness_honest_required_capability.
   + exact witness_honest_operation_body_valid.
 qed.
