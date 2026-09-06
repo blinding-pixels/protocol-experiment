@@ -110,6 +110,13 @@ jobs:
           docker export "$cid" | gzip -1 > "$out/pinned-rootfs.tar.gz"
           sha256sum "$out/pinned-rootfs.tar.gz" > "$out/rootfs-sha256.txt"
           ls -lh "$out/pinned-rootfs.tar.gz"
+          parts="$RUNNER_TEMP/easycrypt-runtime-parts"
+          mkdir -p "$parts"
+          split --bytes=384M --numeric-suffixes=0 --suffix-length=3 \
+            "$out/pinned-rootfs.tar.gz" "$parts/rootfs.part-"
+          test "$(find "$parts" -type f | wc -l)" -eq 4
+          sha256sum "$parts"/rootfs.part-* > "$out/rootfs-part-sha256.txt"
+          rm "$out/pinned-rootfs.tar.gz"
 
       - name: Upload pinned runtime and diagnostic evidence
         if: always()
@@ -117,6 +124,42 @@ jobs:
         with:
           name: easycrypt-reproduction-runtime-${{ github.run_id }}
           path: ${{ runner.temp }}/easycrypt-reproduction-runtime
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 1
+
+      - name: Upload exact runtime piece 0
+        uses: actions/upload-artifact@v4
+        with:
+          name: easycrypt-runtime-part-000-${{ github.run_id }}
+          path: ${{ runner.temp }}/easycrypt-runtime-parts/rootfs.part-000
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 1
+
+      - name: Upload exact runtime piece 1
+        uses: actions/upload-artifact@v4
+        with:
+          name: easycrypt-runtime-part-001-${{ github.run_id }}
+          path: ${{ runner.temp }}/easycrypt-runtime-parts/rootfs.part-001
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 1
+
+      - name: Upload exact runtime piece 2
+        uses: actions/upload-artifact@v4
+        with:
+          name: easycrypt-runtime-part-002-${{ github.run_id }}
+          path: ${{ runner.temp }}/easycrypt-runtime-parts/rootfs.part-002
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 1
+
+      - name: Upload exact runtime piece 3
+        uses: actions/upload-artifact@v4
+        with:
+          name: easycrypt-runtime-part-003-${{ github.run_id }}
+          path: ${{ runner.temp }}/easycrypt-runtime-parts/rootfs.part-003
           if-no-files-found: error
           compression-level: 0
           retention-days: 1
