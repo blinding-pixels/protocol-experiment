@@ -121,7 +121,10 @@ proof.
     /live_trace_admissible /bee_safe_kappa
     /every_challenge_safe /query_challenge_member
     /every_compromise_safe_for_challenge /query_compromise_member /=.
-  by rewrite !inE; smt().
+  rewrite !inE !elems_fset0 !elems_fset1
+    /all_nodes_known_list /all_predecessors_delivered_list
+    /query_is_challenge /query_challenge_member /query_compromise_member /=.
+  by rewrite !inE.
 qed.
 
 module RevealThenChallengeTrace = {
@@ -176,5 +179,8 @@ proof.
     /all_nodes_known /all_nodes_known_list
     /all_predecessors_delivered /all_predecessors_delivered_list
     /causal_relation_extend /predecessor_reaches_list /=.
-  by rewrite !inE; smt().
+  rewrite !inE !elems_fset0 !elems_fset1
+    /all_nodes_known_list /all_predecessors_delivered_list
+    /query_is_challenge /query_challenge_member /query_compromise_member /=.
+  by rewrite !inE.
 qed.

@@ -65,5 +65,8 @@ proof.
     /all_predecessors_delivered /all_predecessors_delivered_list
     /causal_relation_extend /predecessor_reaches_list
     /challenge_query_count /query_is_challenge /=.
-  by rewrite !inE; smt().
+  rewrite !inE !elems_fset0 !elems_fset1
+    /all_nodes_known_list /all_predecessors_delivered_list
+    /query_is_challenge /query_challenge_member /query_compromise_member /=.
+  by rewrite !inE.
 qed.
