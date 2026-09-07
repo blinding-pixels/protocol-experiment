@@ -278,3 +278,34 @@ module BPRFLive(
          mpar_guess = adversary_guess |};
   }
 }.
+
+(* Eligibility is not guaranteed merely by choosing a challenge bit.  These
+   necessary conditions are read from the actual application reduction, with
+   no restriction on the adversary or primitive modules. *)
+section ApplicationPrfEligibilityCharacterization.
+  declare module A <: LIVE_KEY_ADVERSARY.
+  declare module S <: SIGNATURE_SCHEME.
+  declare module H <: NODE_HASH.
+  declare module B <: BEEKEM_LIVE_RUNTIME.
+  declare module O <: MULTI_DOMAIN_PRF_ORACLE.
+
+  module BA = BPRFLive(A, S, H, B, O).
+
+  lemma application_prf_eligible_requires_valid_input
+      (state0 : protocol_state)
+      (facts0 : signed_authorization_fact list)
+      (kappa0 : int) :
+    hoare [BA.attack :
+         initial_state = state0
+      /\ initial_facts = facts0
+      /\ retention_kappa = kappa0
+      ==>
+      res.`mpar_eligible =>
+        live_initial_authorization state0 facts0 <> None /\ 1 <= kappa0].
+  proof.
+    proc.
+    wp.
+    do 6! (call (_ : true ==> true); first by conseq (_ : _ ==> true)).
+    auto=> />.
+  qed.
+end section ApplicationPrfEligibilityCharacterization.

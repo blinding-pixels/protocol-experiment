@@ -27,20 +27,4 @@ lemma ideal_control_reaches_all_domains :
     /\ mdprf_history_query_count IdealPrfControl.O.queries = 1
     /\ mdprf_history_capability_query_count
          IdealPrfControl.O.queries = 1].
-proof.
-  proc.
-  inline *.
-  auto.
-  rewrite /prf_control_key_guesses_real /prf_control_secret
-    /prf_control_live_label /prf_control_reveal_label
-    /prf_control_history_label
-    /test_live_material /test_history_material
-    /mdprf_live_query_count /mdprf_live_challenge_count
-    /mdprf_history_query_count
-    /mdprf_history_capability_query_count
-    /mdprf_query_is_live_query /mdprf_query_is_live_challenge
-    /mdprf_query_is_history /mdprf_query_is_history_capability
-    /mdprf_kind_is_live_query /mdprf_kind_is_live_challenge
-    /mdprf_kind_is_history /mdprf_kind_is_history_capability /=.
-  by smt().
-qed.
+proof. by proc; inline *; auto. qed.

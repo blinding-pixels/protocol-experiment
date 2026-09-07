@@ -63,17 +63,7 @@ lemma prf_random_world_keeps_reveal_real :
          PrfRevealChallengeControl.O.queries = 1
     /\ mdprf_live_challenge_count
          PrfRevealChallengeControl.O.queries = 1].
-proof.
-  proc.
-  inline *.
-  auto.
-  rewrite /prf_control_key_guesses_real /prf_control_secret
-    /prf_control_live_label /prf_control_reveal_label /test_live_material
-    /mdprf_live_query_count /mdprf_live_challenge_count
-    /mdprf_query_is_live_query /mdprf_query_is_live_challenge
-    /mdprf_kind_is_live_query /mdprf_kind_is_live_challenge /=.
-  by smt().
-qed.
+proof. by proc; inline *; auto. qed.
 
 (* This adversary exercises every application-relevant primitive path.  It
    makes one permitted live reveal, one permitted history query, one permitted
@@ -131,23 +121,7 @@ lemma prf_control_fixed_real :
     /\ res.`mpge_live_challenge_count = 1
     /\ res.`mpge_history_query_count = 1
     /\ res.`mpge_history_capability_query_count = 1].
-proof.
-  proc.
-  inline *.
-  auto.
-  rewrite /prf_control_key_guesses_real /prf_control_secret
-    /prf_control_live_label /prf_control_reveal_label
-    /prf_control_history_label
-    /test_live_material /test_history_material
-    /mdprf_live_query_count /mdprf_live_challenge_count
-    /mdprf_history_query_count
-    /mdprf_history_capability_query_count
-    /mdprf_query_is_live_query /mdprf_query_is_live_challenge
-    /mdprf_query_is_history /mdprf_query_is_history_capability
-    /mdprf_kind_is_live_query /mdprf_kind_is_live_challenge
-    /mdprf_kind_is_history /mdprf_kind_is_history_capability /=.
-  by smt().
-qed.
+proof. by proc; inline *; auto. qed.
 
 lemma prf_control_fixed_random :
   hoare [PrfControlGame.main_with_fixed_bit :
@@ -159,23 +133,7 @@ lemma prf_control_fixed_random :
     /\ res.`mpge_live_challenge_count = 1
     /\ res.`mpge_history_query_count = 1
     /\ res.`mpge_history_capability_query_count = 1].
-proof.
-  proc.
-  inline *.
-  auto.
-  rewrite /prf_control_key_guesses_real /prf_control_secret
-    /prf_control_live_label /prf_control_reveal_label
-    /prf_control_history_label
-    /test_live_material /test_history_material
-    /mdprf_live_query_count /mdprf_live_challenge_count
-    /mdprf_history_query_count
-    /mdprf_history_capability_query_count
-    /mdprf_query_is_live_query /mdprf_query_is_live_challenge
-    /mdprf_query_is_history /mdprf_query_is_history_capability
-    /mdprf_kind_is_live_query /mdprf_kind_is_live_challenge
-    /mdprf_kind_is_history /mdprf_kind_is_history_capability /=.
-  by smt().
-qed.
+proof. by proc; inline *; auto. qed.
 
 lemma insecure_test_kdf_prf_game_probability_one
     &m
@@ -188,16 +146,11 @@ lemma insecure_test_kdf_prf_game_probability_one
     ) @ &m : res
   ] = 1%r.
 proof.
-  byphoare => //.
-  proc.
-  inline PrfControlGame.main_with_evidence.
-  seq 1 : true 1%r 1%r 0%r 0%r.
-  + rnd.
-  + case (hidden_bit).
-    + call prf_control_fixed_real.
-      auto.
-    + call prf_control_fixed_random.
-      auto.
+  byphoare => //; proc; inline *; auto.
+  rewrite DBool.dbool_ll /prf_control_key_guesses_real
+    /prf_control_secret /prf_control_live_label /prf_control_reveal_label
+    /test_live_material /=.
+  by smt().
 qed.
 
 lemma insecure_test_kdf_prf_normalized_advantage_half
