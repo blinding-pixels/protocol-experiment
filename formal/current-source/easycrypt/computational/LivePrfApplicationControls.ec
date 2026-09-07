@@ -4,72 +4,16 @@ require import AuthorizationState AuthorizationAncestry UnauthorizedOriginGame.
 require import LiveKeyGame LiveKeyWitnesses.
 require import LivePrfTypes LivePrfGame LivePrfApplicationReduction LivePrfControls.
 
-(* Concrete application adversary used only as an end-to-end connectivity
-   control.  It reveals a live key at node 1, then asks both history domains and
-   challenges the distinct node 2.  The application exclusion therefore holds
-   without exposing the challenge input through the reveal path. *)
-module ApplicationPrfTraceAdversary(
-  O : LIVE_PROTOCOL_ORACLE
-) = {
-  var reveal_was_real : bool
-  var challenge_was_real : bool
-  var history_reached : bool
+(* The executable controls have one definition in LivePrfControls.  These
+   aliases preserve the public module paths by definitional identity. *)
+module ApplicationPrfTraceAdversary =
+  LivePrfControls.ApplicationPrfTraceAdversary.
+module ApplicationPrfTraceGame = LivePrfControls.ApplicationPrfTraceGame.
 
-  proc attack() : unit = {
-    var created : node_id option;
-    var updated : node_id option;
-    var revealed : live_application_key option;
-    var history : history_domain_output option;
-    var capability : history_capability_output option;
-    var challenged : live_application_key option;
-
-    reveal_was_real <- false;
-    challenge_was_real <- false;
-    history_reached <- false;
-
-    created <@ O.create_group(live_witness_creator, fset0);
-    updated <@ O.send_beekem_update(live_witness_creator);
-    revealed <@ O.reveal_live_key(live_witness_creator, NodeId 1);
-    history <@ O.reveal_history_output(
-      live_witness_creator, NodeId 2, SegmentId 908
-    );
-    capability <@ O.reveal_history_capability(
-      live_witness_creator, NodeId 2, SegmentId 908, fset0
-    );
-    challenged <@ O.challenge_live(live_witness_creator, NodeId 2);
-
-    if (revealed <> None) {
-      reveal_was_real <-
-        prf_control_key_guesses_real (oget revealed);
-    }
-    if (challenged <> None) {
-      challenge_was_real <-
-        prf_control_key_guesses_real (oget challenged);
-    }
-    history_reached <- history <> None /\ capability <> None;
-  }
-
-  (* In the primitive random world this public bit is false exactly when the
-     application reveal stayed real, the distinguished challenge was sampled,
-     and both history procedures returned outputs. *)
-  proc guess() : bool = {
-    return
-         ! reveal_was_real
-      \/ challenge_was_real
-      \/ ! history_reached;
-  }
-}.
-
-module ApplicationPrfTraceGame = MultiDomainPrfGame(
-  BPRFLive(
-    ApplicationPrfTraceAdversary,
-    TestSignature,
-    TestNodeHash,
-    TestBeeKemLiveRuntime
-  ),
-  TestMultiDomainKeySchedule,
-  TestLiveKeySampler
-).
+(* Known-invalid unrestricted claims retained below.  LivePrfControls proves
+   probability-one counterexamples at retention zero, as well as an initialized
+   positive witness.  Do not count this file as accepted until the unrestricted
+   statements themselves have been resolved; importing them is not verification. *)
 
 (* End-to-end non-vacuity control for the exact application/PRF hop.  The
    application trace is eligible, its public diagnostic bit confirms the real
@@ -121,86 +65,10 @@ proof.
   by rewrite !inE; smt().
 qed.
 
-(* This control forces the challenge wrapper through its rejected branch and
-   then continues using the same key-schedule adapter.  A reveal of node 2
-   makes the immediately following challenge of node 2 invalid.  The trace then
-   reveals node 3 and challenges node 4.  In the random world, both reveals must
-   remain real and only the final accepted challenge may be sampled. *)
-module ApplicationRejectedChallengeAdversary(
-  O : LIVE_PROTOCOL_ORACLE
-) = {
-  var first_reveal_real : bool
-  var rejected_challenge_was_none : bool
-  var second_reveal_real : bool
-  var final_challenge_real : bool
-
-  proc attack() : unit = {
-    var created : node_id option;
-    var update_two : node_id option;
-    var update_three : node_id option;
-    var update_four : node_id option;
-    var first_reveal : live_application_key option;
-    var rejected_challenge : live_application_key option;
-    var second_reveal : live_application_key option;
-    var final_challenge : live_application_key option;
-
-    first_reveal_real <- false;
-    rejected_challenge_was_none <- false;
-    second_reveal_real <- false;
-    final_challenge_real <- false;
-
-    created <@ O.create_group(live_witness_creator, fset0);
-    update_two <@ O.send_beekem_update(live_witness_creator);
-    first_reveal <@ O.reveal_live_key(
-      live_witness_creator, NodeId 2
-    );
-    rejected_challenge <@ O.challenge_live(
-      live_witness_creator, NodeId 2
-    );
-    update_three <@ O.send_beekem_update(live_witness_creator);
-    second_reveal <@ O.reveal_live_key(
-      live_witness_creator, NodeId 3
-    );
-    update_four <@ O.send_beekem_update(live_witness_creator);
-    final_challenge <@ O.challenge_live(
-      live_witness_creator, NodeId 4
-    );
-
-    if (first_reveal <> None) {
-      first_reveal_real <-
-        prf_control_key_guesses_real (oget first_reveal);
-    }
-    rejected_challenge_was_none <- rejected_challenge = None;
-    if (second_reveal <> None) {
-      second_reveal_real <-
-        prf_control_key_guesses_real (oget second_reveal);
-    }
-    if (final_challenge <> None) {
-      final_challenge_real <-
-        prf_control_key_guesses_real (oget final_challenge);
-    }
-  }
-
-  (* False records the complete expected random-world routing outcome. *)
-  proc guess() : bool = {
-    return
-         ! first_reveal_real
-      \/ ! rejected_challenge_was_none
-      \/ ! second_reveal_real
-      \/ final_challenge_real;
-  }
-}.
-
-module ApplicationRejectedChallengeGame = MultiDomainPrfGame(
-  BPRFLive(
-    ApplicationRejectedChallengeAdversary,
-    TestSignature,
-    TestNodeHash,
-    TestBeeKemLiveRuntime
-  ),
-  TestMultiDomainKeySchedule,
-  TestLiveKeySampler
-).
+module ApplicationRejectedChallengeAdversary =
+  LivePrfControls.ApplicationRejectedChallengeAdversary.
+module ApplicationRejectedChallengeGame =
+  LivePrfControls.ApplicationRejectedChallengeGame.
 
 (* The failed application challenge consumes no primitive challenge, and the
    challenger-owned switch is closed before the later reveal.  Otherwise the
