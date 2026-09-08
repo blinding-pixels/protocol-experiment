@@ -116,18 +116,36 @@ section BaseEditCharacterization.
         /validation_success /validation_error.
       smt().
     + if.
-      - wp; call (normalize_witness_base_signed_facts).
+      - seq 4 :
+          (mode = input_mode /\
+           signed_operation = input_operation /\
+           envelope = input_envelope /\
+           view = witness_base_view_exact /\
+           state = witness_base_state_exact /\
+           input_envelope.`oe_operation_kind = OpEdit /\
+           validator_pre_authorization_accepts
+             input_mode input_envelope
+             witness_base_view_exact witness_base_state_exact /\
+           result.`vr_accepted /\
+           authorization = witness_authorization_state_7).
+        * wp; call (normalize_witness_base_signed_facts).
+          auto=> />.
+          rewrite witness_base_view_facts witness_base_state_creator
+            /validation_error /=.
+          smt().
+        * do 9! (rcondf 8; first by
+            conseq (_ : _ ==> envelope.`oe_operation_kind = OpEdit);
+            [smt() | auto=> />]).
+          do 7! (wp -1; rewrite /validation_error /=).
+          skip=> />.
+          rewrite /base_edit_decoded_accepts
+            /validator_pre_authorization_accepts
+            /validation_success /validation_error /=.
+          smt().
+      - do 16! (rcondf 1; first by auto=> />).
         auto=> />.
         rewrite /base_edit_decoded_accepts
-          /validator_pre_authorization_accepts
-          witness_base_view_facts witness_base_state_creator
-          /defense_enabled /validation_success /validation_error.
-        smt().
-      - auto=> />.
-        rewrite /base_edit_decoded_accepts
-          /validator_pre_authorization_accepts
-          witness_base_view_facts witness_base_state_creator
-          /defense_enabled /validation_success /validation_error.
+          /validator_pre_authorization_accepts.
         smt().
   qed.
 
