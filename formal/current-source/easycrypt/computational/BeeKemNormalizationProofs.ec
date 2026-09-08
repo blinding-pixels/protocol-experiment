@@ -23,41 +23,78 @@ lemma beekem_unsafe_normalization_fixed_bit_loses :
     /\ ! res.`bke_safe
     /\ ! res.`bke_win].
 proof.
-  proc.
-  inline *.
+  proc; case (hidden_bit).
+  + inline *.
   rcondt ^while; first by auto.
   rcondf ^while; first by auto.
-  rcondf ^while; first by auto.
+  rcondf ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondt ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondf ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondf ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondf ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondt ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondf ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondf ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondt ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondf ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondf ^while; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondt ^while; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondf ^while; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondt ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondt ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondf ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondt ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondf ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondf ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondt ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondf ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondf ^while; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondt ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondf ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondf ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondt ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondt ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondt ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondt ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  auto=> />.
+  cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  by rewrite !inE.
+  + inline *.
   rcondt ^while; first by auto.
   rcondf ^while; first by auto.
-  rcondf ^while; first by auto.
-  auto.
-  rewrite /beekem_witness_membership /beekem_witness_initial_member_state
-    /beekem_member_retention_valid /beekem_witness_personal_secret
-    /beekem_witness_after_create /beekem_witness_after_update
-    /beekem_witness_control /beekem_witness_create_operation
-    /beekem_witness_update_operation /beekem_witness_operation
-    /beekem_control_operation_id /beekem_control_operation
-    /beekem_counter_value /beekem_empty_protocol_state
-    /beekem_secret_output_is_undefined /beekem_secret_output_is_value
-    /beekem_secret_output_value /beekem_operation_precedes_or_equals
-    /beekem_operation_precedes /bee_safe_kappa /beekem_all_challenges_safe
-    /beekem_challenge_safe_against /beekem_challenge_compromise_pair_safe
-    /beekem_kappa_fsu_clause /beekem_pcs_clause /beekem_kappa_cfs_clause
-    /beekem_update_chain_between /beekem_update_chain_ending_at
-    /beekem_successful_update_for /beekem_q2op_precedes
-    /beekem_q2op_precedes_or_equals /beekem_q2op_concurrent
-    /beekem_q2op_set /beekem_ids_precede_frontier
-    /beekem_ids_precede_or_equal_frontier /beekem_id_precedes_some
-    /beekem_id_precedes_or_equals_some /beekem_ids_pairwise_concurrent
-    /beekem_id_concurrent_with_all /beekem_operation_ids_concurrent
-    /beekem_operation_id_precedes /beekem_operation_id_precedes_or_equals
-    /beekem_operation_id_known /beekem_query_successful
-    /beekem_query_is_send_update /beekem_query_is_challenge
-    /beekem_query_is_compromise /beekem_ki_final_win.
-  rewrite (elems_fset1 beekem_witness_create_id)
-    (elems_fset1 beekem_witness_update_id).
-  smt(in_fset0 in_fset1 size_rcons size_ge0).
+  rcondf ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondt ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondf ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondf ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondf ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondt ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondf ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondf ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondt ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondf ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondf ^while; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondt ^while; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondf ^while; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondt ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondt ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondf ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondt ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondf ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondf ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondt ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondf ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondf ^while; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondt ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondf ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondf ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondt ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondt ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondf ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondt ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  rcondt ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  auto=> />.
+  cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+  by rewrite !inE.
 qed.
 
 lemma beekem_unsafe_normalization_sampled_game_loses :
@@ -106,7 +143,8 @@ proof.
     /\ group = beekem_witness_group
     /\ kappa = 1
     /\ membership = beekem_witness_membership
-    ==> ! res) => //=.
+    ==> res) => //=.
+  hoare.
   exact beekem_unsafe_normalization_main_never_wins.
 qed.
 
@@ -126,7 +164,8 @@ proof.
     /\ group = beekem_witness_group
     /\ kappa = 1
     /\ membership = beekem_witness_membership
-    ==> ! res.`bke_safe) => //=.
+    ==> res.`bke_safe) => //=.
+  hoare.
   conseq beekem_unsafe_normalization_sampled_game_loses => //.
 qed.
 
