@@ -72,15 +72,15 @@ op causal_records_exact_predecessor_closure
     (elems predecessors).
 
 lemma closure_union_list_pointwise
-    (left right : closure_map)
+    (lhs_value rhs_value : closure_map)
     (predecessors : node_id list) :
-  (forall node, left node = right node) =>
-  closure_union_list left predecessors =
-    closure_union_list right predecessors.
+  (forall node, lhs_value node = rhs_value node) =>
+  closure_union_list lhs_value predecessors =
+    closure_union_list rhs_value predecessors.
 proof.
   elim: predecessors => [| predecessor rest ih] //=.
   move=> pointwise.
-  rewrite (pointwise predecessor) (ih pointwise).
+  by rewrite (pointwise predecessor) (ih pointwise).
 qed.
 
 lemma represented_exact_predecessor_closure
@@ -120,9 +120,5 @@ proof.
   + move=> candidate.
     rewrite /protocol_state_after_acceptance /closure_map_insert
       /causal_record_lookup /=.
-    case (candidate = node)=> [->|different].
-    + by rewrite eq_refl.
-    + have node_different : node <> candidate by smt().
-      rewrite different node_different.
-      exact (closures candidate).
+    by smt().
 qed.

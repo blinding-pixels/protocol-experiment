@@ -26,7 +26,6 @@ lemma first_unoriginated_fact_forgery_none_iff_all_originated
 proof.
   elim: facts => [| signed_fact rest ih] //=.
   case: (fact_signature_originated signed_fact sign_queries) => //=.
-  by rewrite ih.
 qed.
 
 lemma first_unoriginated_fact_forgery_has_source
@@ -44,10 +43,10 @@ proof.
   + move=> selected.
     have [source [in_rest [not_originated source_selected]]] := ih selected.
     exists source.
-    by rewrite in_cons source_selected; smt().
+    by smt().
   + move=> _.
     exists signed_fact.
-    by rewrite in_cons originated.
+    by smt().
 qed.
 
 lemma first_unoriginated_fact_forgery_is_valid
