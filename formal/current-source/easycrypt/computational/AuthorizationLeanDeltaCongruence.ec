@@ -12,8 +12,9 @@ lemma authorization_representation_iff_projection_equiv
   authorization_state_represents_lean state model <=>
   lean_authorization_equiv (project_authorization_state state) model.
 proof.
-  by rewrite /authorization_state_represents_lean /lean_authorization_equiv
-    /project_authorization_state.
+  rewrite /authorization_state_represents_lean /lean_authorization_equiv
+    /project_authorization_state /=.
+  smt().
 qed.
 
 lemma lean_authorization_equiv_reflexive
@@ -22,21 +23,21 @@ lemma lean_authorization_equiv_reflexive
 proof. by rewrite /lean_authorization_equiv. qed.
 
 lemma lean_authorization_equiv_transitive
-    (left middle right : lean_observed_remove_authorization) :
-  lean_authorization_equiv left middle =>
-  lean_authorization_equiv middle right =>
-  lean_authorization_equiv left right.
+    (lhs middle rhs : lean_observed_remove_authorization) :
+  lean_authorization_equiv lhs middle =>
+  lean_authorization_equiv middle rhs =>
+  lean_authorization_equiv lhs rhs.
 proof.
   rewrite /lean_authorization_equiv.
   smt().
 qed.
 
 lemma lean_authorization_join_respects_equiv
-    (left right addition : lean_observed_remove_authorization) :
-  lean_authorization_equiv left right =>
+    (lhs rhs addition : lean_observed_remove_authorization) :
+  lean_authorization_equiv lhs rhs =>
   lean_authorization_equiv
-    (lean_authorization_join left addition)
-    (lean_authorization_join right addition).
+    (lean_authorization_join lhs addition)
+    (lean_authorization_join rhs addition).
 proof.
   rewrite /lean_authorization_equiv /lean_authorization_join.
   smt().
@@ -44,18 +45,18 @@ qed.
 
 lemma lean_apply_signed_authorization_facts_from_respects_equiv
     (facts : signed_authorization_fact list) :
-  forall left right,
-    lean_authorization_equiv left right =>
+  forall lhs rhs,
+    lean_authorization_equiv lhs rhs =>
     lean_authorization_equiv
-      (lean_apply_signed_authorization_facts_from left facts)
-      (lean_apply_signed_authorization_facts_from right facts).
+      (lean_apply_signed_authorization_facts_from lhs facts)
+      (lean_apply_signed_authorization_facts_from rhs facts).
 proof.
-  elim: facts => [| signed_fact rest ih] left right equivalent.
-  + by rewrite /lean_apply_signed_authorization_facts_from.
-  + rewrite /lean_apply_signed_authorization_facts_from.
+  elim: facts => [| signed_fact rest ih] lhs rhs equivalent.
+  + by rewrite /lean_apply_signed_authorization_facts_from /=.
+  + rewrite /lean_apply_signed_authorization_facts_from /=.
     apply ih.
     exact (lean_authorization_join_respects_equiv
-      left right
+      lhs rhs
       (lean_authorization_delta_of_fact signed_fact.`saf_fact)
       equivalent).
 qed.

@@ -18,109 +18,40 @@ lemma authorization_policy_replay_from_matches_independent_lean_apply
         (project_authorization_state current) facts).
 proof.
   elim: facts => [| signed_fact rest ih]
-    current snapshots creator final_state replay.
-  + rewrite /authorization_policy_replay_from in replay.
+    current snapshots creator final_state.
+  + rewrite /authorization_policy_replay_from /=.
+    move=> replay.
     have final_eq : final_state = current by smt().
-    rewrite final_eq /lean_apply_signed_authorization_facts_from.
+    rewrite final_eq /lean_apply_signed_authorization_facts_from /=.
     exact (project_authorization_state_represents current).
-  + rewrite /authorization_policy_replay_from in replay.
-    case: (authorization_snapshot_lookup
-      signed_fact.`saf_fact.`af_context snapshots = None) => context_missing.
-    + by rewrite context_missing in replay.
-    have context_some := authorization_state_option_some_oget
-      (authorization_snapshot_lookup
-        signed_fact.`saf_fact.`af_context snapshots)
-      context_missing.
-    rewrite context_some /= in replay.
-    case: (apply_authorization_fact
-      current
-      (oget (authorization_snapshot_lookup
-        signed_fact.`saf_fact.`af_context snapshots))
-      creator
-      signed_fact.`saf_fact = None) => next_missing.
-    + by rewrite next_missing in replay.
-    have next_some := authorization_state_option_some_oget
-      (apply_authorization_fact
-        current
-        (oget (authorization_snapshot_lookup
-          signed_fact.`saf_fact.`af_context snapshots))
-        creator
-        signed_fact.`saf_fact)
-      next_missing.
-    rewrite next_some /= in replay.
-    have tail_representation :=
-      ih
-        (oget (apply_authorization_fact
-          current
-          (oget (authorization_snapshot_lookup
-            signed_fact.`saf_fact.`af_context snapshots))
-          creator
-          signed_fact.`saf_fact))
-        (rcons snapshots
-          {| snapshot_context =
-               (oget (apply_authorization_fact
-                 current
-                 (oget (authorization_snapshot_lookup
-                   signed_fact.`saf_fact.`af_context snapshots))
-                 creator
-                 signed_fact.`saf_fact)).`as_fact_ids;
-             snapshot_state =
-               oget (apply_authorization_fact
-                 current
-                 (oget (authorization_snapshot_lookup
-                   signed_fact.`saf_fact.`af_context snapshots))
-                 creator
-                 signed_fact.`saf_fact) |})
-        creator final_state replay.
+  + rewrite /authorization_policy_replay_from /=.
+    case _: (authorization_snapshot_lookup
+      signed_fact.`saf_fact.`af_context snapshots) => [|context_state] Hcontext //=.
+    case _: (apply_authorization_fact
+      current context_state creator signed_fact.`saf_fact) => [|next_state] Hnext //=.
+    move=> Htail.
     have step_representation :=
       successful_fact_application_represents_lean_delta
-        current
-        (oget (authorization_snapshot_lookup
-          signed_fact.`saf_fact.`af_context snapshots))
-        (oget (apply_authorization_fact
-          current
-          (oget (authorization_snapshot_lookup
-            signed_fact.`saf_fact.`af_context snapshots))
-          creator
-          signed_fact.`saf_fact))
-        creator signed_fact.`saf_fact next_some.
-    rewrite authorization_representation_iff_projection_equiv
-      in step_representation.
-    rewrite authorization_representation_iff_projection_equiv
-      in tail_representation.
-    have tail_models_equiv :=
-      lean_apply_signed_authorization_facts_from_respects_equiv
-        rest
-        (project_authorization_state
-          (oget (apply_authorization_fact
-            current
-            (oget (authorization_snapshot_lookup
-              signed_fact.`saf_fact.`af_context snapshots))
-            creator
-            signed_fact.`saf_fact)))
-        (lean_authorization_join
-          (project_authorization_state current)
-          (lean_authorization_delta_of_fact signed_fact.`saf_fact))
-        step_representation.
-    rewrite /lean_apply_signed_authorization_facts_from.
-    rewrite authorization_representation_iff_projection_equiv.
+        current context_state next_state creator signed_fact.`saf_fact Hnext.
+    have tail_representation := ih next_state
+      (rcons snapshots {| snapshot_context = next_state.`as_fact_ids;
+                          snapshot_state = next_state |})
+      creator final_state Htail.
+    move: step_representation tail_representation.
+    rewrite !authorization_representation_iff_projection_equiv.
+    move=> Hstep Hresult.
+    have Hmodels := lean_apply_signed_authorization_facts_from_respects_equiv
+      rest (project_authorization_state next_state)
+      (lean_authorization_join (project_authorization_state current)
+        (lean_authorization_delta_of_fact signed_fact.`saf_fact)) Hstep.
     exact (lean_authorization_equiv_transitive
       (project_authorization_state final_state)
       (lean_apply_signed_authorization_facts_from
-        (project_authorization_state
-          (oget (apply_authorization_fact
-            current
-            (oget (authorization_snapshot_lookup
-              signed_fact.`saf_fact.`af_context snapshots))
-            creator
-            signed_fact.`saf_fact)))
-        rest)
+        (project_authorization_state next_state) rest)
       (lean_apply_signed_authorization_facts_from
-        (lean_authorization_join
-          (project_authorization_state current)
-          (lean_authorization_delta_of_fact signed_fact.`saf_fact))
-        rest)
-      tail_representation tail_models_equiv).
+        (lean_authorization_join (project_authorization_state current)
+          (lean_authorization_delta_of_fact signed_fact.`saf_fact)) rest)
+      Hresult Hmodels).
 qed.
 
 lemma authorization_policy_replay_matches_independent_lean_apply

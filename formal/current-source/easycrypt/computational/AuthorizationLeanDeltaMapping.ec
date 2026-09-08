@@ -138,6 +138,9 @@ lemma successful_fact_application_represents_lean_delta
       (lean_authorization_delta_of_fact fact)).
 proof.
   move=> applied.
+  rewrite /authorization_state_represents_lean /lean_authorization_join
+    /project_authorization_state /lean_authorization_delta_of_fact
+    /lean_authorization_delta_of_fact_kind.
   rewrite /apply_authorization_fact in applied.
   case: (! authorization_fact_shape_valid fact \/
          fact.`af_id \in current.`as_fact_ids \/
