@@ -65,7 +65,7 @@ section A3PolicyAncestry.
           current snapshots creator remaining =
         authorization_policy_replay input_creator input_facts).
     + wp.
-      call (_ : true ==> true).
+      call (_ : true ==> true); first by conseq (_ : _ ==> true).
       auto=> /> &hr.
       rewrite /authorization_policy_replay_from.
       smt().
@@ -106,9 +106,11 @@ proof.
          fact.`af_id \in current.`as_fact_ids \/
          ! authorization_issuer_allowed current context_state creator fact)
     applied=> //= applied.
-  rewrite /apply_authorization_fact_kind kind in applied.
-  by case: (! all_member_tags_known current
-       (elems fact.`af_observed_member_tags)) applied=> //= /#.
+  rewrite kind in applied.
+  move: applied; cbv apply_authorization_fact_kind; move=> applied.
+  case (all_member_tags_known current
+       (elems fact.`af_observed_member_tags)) => [// | hknown].
+  smt().
 qed.
 
 lemma successful_capability_revoke_observes_known_tags
@@ -127,9 +129,11 @@ proof.
          fact.`af_id \in current.`as_fact_ids \/
          ! authorization_issuer_allowed current context_state creator fact)
     applied=> //= applied.
-  rewrite /apply_authorization_fact_kind kind in applied.
-  by case: (! all_capability_tags_known current
-       (elems fact.`af_observed_capability_tags)) applied=> //= /#.
+  rewrite kind in applied.
+  move: applied; cbv apply_authorization_fact_kind; move=> applied.
+  case (all_capability_tags_known current
+       (elems fact.`af_observed_capability_tags)) => [// | hknown].
+  smt().
 qed.
 
 lemma successful_membership_grant_does_not_revive_retired_principal
@@ -147,8 +151,8 @@ proof.
          fact.`af_id \in current.`as_fact_ids \/
          ! authorization_issuer_allowed current context_state creator fact)
     applied=> //= applied.
-  rewrite /apply_authorization_fact_kind kind in applied.
-  by case: (member_tag_known current (oget fact.`af_member_tag) \/
-       oget fact.`af_target \in current.`as_retired_principals)
-    applied=> //= /#.
+  rewrite kind in applied.
+  move: applied; cbv apply_authorization_fact_kind; move=> applied.
+  case (oget fact.`af_target \in current.`as_retired_principals) => [hretired | //].
+  smt().
 qed.
