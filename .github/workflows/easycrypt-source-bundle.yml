@@ -1,0 +1,47 @@
+name: EasyCrypt source transport
+
+on:
+  push:
+    branches:
+      - formal/easycrypt-live-key-reduction
+    paths:
+      - '.github/workflows/easycrypt-source-bundle.yml'
+      - 'formal/current-source/easycrypt/**'
+      - 'formal/documents/**'
+      - 'tools/easycrypt/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out exact source without persisting credentials
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      # Transport evidence only: this job does not run or certify any proof.
+      # It does not replace any of the four required acceptance workflows.
+      - name: Bundle exact source and reachable history
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/easycrypt-source-transport"
+          mkdir -p "$out"
+          git rev-parse HEAD > "$out/source-commit.txt"
+          git status --short > "$out/git-status.txt"
+          test ! -s "$out/git-status.txt"
+          git bundle create "$out/repository.bundle" HEAD
+          git bundle verify "$out/repository.bundle"
+          (cd "$out" && sha256sum repository.bundle > SHA256SUMS)
+      - name: Upload source transport artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: easycrypt-source-${{ github.sha }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/easycrypt-source-transport
+          if-no-files-found: error
+          retention-days: 7
