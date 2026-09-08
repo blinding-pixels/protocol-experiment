@@ -76,7 +76,7 @@ section BeeKemConsistencyBranchProjection.
           users, group, kappa, membership, hidden_bit
         ) @ &m : res.`bke_protocol_consistency_failure
       ] = 0%r.
-    + smt(mu_bounded ge0_mu).
+    + smt(Distr.mu_bounded Distr.ge0_mu).
 
     have Hsafe_failure_le :
       Pr[
@@ -101,7 +101,7 @@ section BeeKemConsistencyBranchProjection.
           res.`bke_safe /\
           res.`bke_protocol_consistency_failure
       ] = 0%r.
-    + smt(ge0_mu).
+    + smt(Distr.ge0_mu).
 
     have Hsafe_partition :
       Pr[

@@ -152,7 +152,7 @@ section BeeKemProjectedNormalization.
     elim Hfixed => Htrue Hfalse.
     exact
       (beekem_projected_fixed_bit_advantage_exactly_normalized_ki
-         A P &m users group kappa membership Hreal Hfalse).
+         &m users group kappa membership Hreal Hfalse).
   qed.
 
   (* The remaining real-branch conjunction is likewise derived rather than
@@ -206,6 +206,6 @@ section BeeKemProjectedNormalization.
         A P &m users group kappa membership true Htrue Hconsistent.
     exact
       (beekem_projected_fixed_bit_advantage_from_sampled_safe
-         A P &m users group kappa membership Hreal Hsampled).
+         &m users group kappa membership Hreal Hsampled).
   qed.
 end section BeeKemProjectedNormalization.
