@@ -74,6 +74,48 @@ module MultiDomainPrfIdealOracle(
   }
 }.
 
+(* The closed session contains the exact initialization and attack procedures.
+   There are no module-state exclusions on this interface.  Treating all of its
+   state together permits self-composition even when the constituent modules
+   share state. *)
+module type IDEAL_PRF_SESSION = {
+  proc init() : unit
+  proc attack(initial_state : protocol_state,
+              initial_facts : signed_authorization_fact list,
+              retention_kappa : int) : mdprf_adversary_result
+}.
+
+module IdealPrfBitMarker(D : IDEAL_PRF_SESSION) = {
+  proc main(initial_state : protocol_state,
+            initial_facts : signed_authorization_fact list,
+            retention_kappa : int,
+            challenge_bit : bool) : mdprf_adversary_result = {
+    var result : mdprf_adversary_result;
+    D.init();
+    result <@ D.attack(initial_state, initial_facts, retention_kappa);
+    return result;
+  }
+}.
+
+section IdealPrfBitMarkerIndependence.
+  declare module D <: IDEAL_PRF_SESSION.
+  lemma ideal_prf_marker_unused &m
+      (state : protocol_state) (facts : signed_authorization_fact list)
+      (kappa : int) :
+    Pr[IdealPrfBitMarker(D).main(state, facts, kappa, true) @ &m :
+      res.`mpar_eligible /\ res.`mpar_guess] =
+    Pr[IdealPrfBitMarker(D).main(state, facts, kappa, false) @ &m :
+      res.`mpar_eligible /\ res.`mpar_guess].
+  proof.
+    byequiv (_ : ={initial_state, initial_facts, retention_kappa, glob D}
+                   ==> ={res}) => //.
+    proc.
+    call (_ : true).
+    call (_ : true).
+    by auto.
+  qed.
+end section IdealPrfBitMarkerIndependence.
+
 (* Fixed-bit projection of the ideal oracle.  The marker is retained only so
    this procedure has the same two experiments needed by the fixed-bit
    advantage definition; it is intentionally not passed to the oracle or the
@@ -86,18 +128,11 @@ module MultiDomainPrfIdealProjection(
   module O = MultiDomainPrfIdealOracle(K, R)
   module A = A(O)
 
-  proc main(
-    initial_state : protocol_state,
-    initial_facts : signed_authorization_fact list,
-    retention_kappa : int,
-    challenge_bit : bool
-  ) : mdprf_adversary_result = {
-    var result : mdprf_adversary_result;
-
-    O.init();
-    result <@ A.attack(initial_state, initial_facts, retention_kappa);
-    return result;
+  module Session = {
+    proc init = O.init
+    proc attack = A.attack
   }
+  proc main = IdealPrfBitMarker(Session).main
 }.
 
 section MultiDomainPrfIdealIndependence.
@@ -106,6 +141,16 @@ section MultiDomainPrfIdealIndependence.
   declare module R <: LIVE_KEY_SAMPLER.
 
   module G = MultiDomainPrfIdealProjection(A, K, R).
+
+  (* Checked definitional bridge: all observations of the public endpoint use
+     the session whose two procedures alias the original oracle and adversary. *)
+  lemma ideal_public_projection_exactly_session
+      &m (state : protocol_state) (facts : signed_authorization_fact list)
+      (kappa : int) (bit : bool) (event : mdprf_adversary_result -> bool) :
+    Pr[G.main(state, facts, kappa, bit) @ &m : event res] =
+    Pr[IdealPrfBitMarker(G.Session).main(state, facts, kappa, bit) @ &m :
+      event res].
+  proof. by done. qed.
 
   lemma ideal_fixed_bit_one_event_equal
       &m
@@ -121,12 +166,8 @@ section MultiDomainPrfIdealIndependence.
       res.`mpar_eligible /\ res.`mpar_guess
     ].
   proof.
-    byequiv
-      (_ : ={initial_state, initial_facts, retention_kappa,
-             glob A, glob K, glob R} ==> res{1} = res{2}) => //.
-    proc.
-    inline *.
-    sim.
+    exact (ideal_prf_marker_unused G.Session
+      &m initial_state initial_facts retention_kappa).
   qed.
 
   lemma ideal_fixed_bit_advantage_zero
@@ -185,13 +226,8 @@ section ApplicationIdealIndependence.
       ) @ &m : res.`mpar_eligible /\ res.`mpar_guess
     ].
   proof.
-    byequiv
-      (_ : ={initial_state, initial_facts, retention_kappa,
-             glob A, glob S, glob H, glob B, glob K, glob R} ==>
-           res{1} = res{2}) => //.
-    proc.
-    inline *.
-    sim.
+    exact (ideal_fixed_bit_one_event_equal (BPRFLive(A, S, H, B)) K R
+      &m initial_state initial_facts retention_kappa).
   qed.
 
   lemma application_ideal_live_key_advantage_zero
