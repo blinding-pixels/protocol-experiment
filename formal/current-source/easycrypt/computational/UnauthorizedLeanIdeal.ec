@@ -105,6 +105,7 @@ proof.
       authorization model member representation)
     (represented_capability_active_is_exact
       authorization model member required representation).
+  by done.
 qed.
 
 lemma ideal_decoded_authorized_implies_lean_ideal
@@ -151,7 +152,7 @@ proof.
     smt().
   rewrite /lean_ideal_decoded_authorized.
   rewrite /ideal_decoded_authorized in ideal.
-  smt(witness_exists).
+  smt().
 qed.
 
 lemma ideal_authorized_candidate_implies_lean_ideal
@@ -161,14 +162,10 @@ lemma ideal_authorized_candidate_implies_lean_ideal
   ideal_authorized_candidate operation view state =>
   lean_ideal_authorized_candidate operation view state.
 proof.
-  move=> ideal.
-  rewrite /ideal_authorized_candidate in ideal.
-  rewrite /lean_ideal_authorized_candidate.
-  have decoded_ideal :=
-    ideal_decoded_authorized_implies_lean_ideal
-      operation
-      (oget (decode_operation operation.`so_raw))
-      view state
-      ideal.`3.
-  smt().
+  rewrite /ideal_authorized_candidate /lean_ideal_authorized_candidate.
+  move=> [Hdecode [Hcanonical Hdecoded]].
+  split; first exact Hdecode.
+  split; first exact Hcanonical.
+  exact (ideal_decoded_authorized_implies_lean_ideal operation
+    (oget (decode_operation operation.`so_raw)) view state Hdecoded).
 qed.

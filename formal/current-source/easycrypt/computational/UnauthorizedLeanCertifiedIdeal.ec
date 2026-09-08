@@ -112,14 +112,12 @@ lemma ideal_authorized_candidate_implies_lean_certified
   ideal_authorized_candidate operation view state =>
   lean_certified_ideal_authorized_candidate operation view state.
 proof.
-  move=> ideal.
-  rewrite /ideal_authorized_candidate in ideal.
-  have certified := ideal_decoded_authorized_implies_lean_certified
-    operation
-    (oget (decode_operation operation.`so_raw))
-    view state ideal.`3.
-  rewrite /lean_certified_ideal_authorized_candidate.
-  smt().
+  rewrite /ideal_authorized_candidate /lean_certified_ideal_authorized_candidate.
+  move=> [Hdecode [Hcanonical Hdecoded]].
+  split; first exact Hdecode.
+  split; first exact Hcanonical.
+  exact (ideal_decoded_authorized_implies_lean_certified operation
+    (oget (decode_operation operation.`so_raw)) view state Hdecoded).
 qed.
 
 lemma lean_certified_ideal_authorized_candidate_implies_ideal
@@ -129,15 +127,12 @@ lemma lean_certified_ideal_authorized_candidate_implies_ideal
   lean_certified_ideal_authorized_candidate operation view state =>
   ideal_authorized_candidate operation view state.
 proof.
-  move=> certified.
-  rewrite /lean_certified_ideal_authorized_candidate in certified.
-  have ideal_decoded :=
-    lean_certified_ideal_decoded_authorized_implies_ideal
-      operation
-      (oget (decode_operation operation.`so_raw))
-      view state certified.`3.
-  rewrite /ideal_authorized_candidate.
-  smt().
+  rewrite /lean_certified_ideal_authorized_candidate /ideal_authorized_candidate.
+  move=> [Hdecode [Hcanonical Hdecoded]].
+  split; first exact Hdecode.
+  split; first exact Hcanonical.
+  exact (lean_certified_ideal_decoded_authorized_implies_ideal operation
+    (oget (decode_operation operation.`so_raw)) view state Hdecoded).
 qed.
 
 lemma lean_certified_ideal_authorized_candidate_iff
@@ -173,7 +168,7 @@ section LeanCertifiedValidatorSoundness.
         lean_certified_ideal_decoded_authorized
           input_operation input_envelope input_view input_state].
   proof.
-    conseq (validate_decoded_acceptance_implies_ideal_authorization
+    conseq (validate_decoded_acceptance_implies_ideal_authorization S
       input_operation input_envelope input_view input_state) => //.
     by rewrite lean_certified_ideal_decoded_authorized_iff.
   qed.
@@ -192,7 +187,7 @@ section LeanCertifiedValidatorSoundness.
         lean_certified_ideal_authorized_candidate
           input_operation input_view input_state].
   proof.
-    conseq (validate_acceptance_implies_ideal_authorization
+    conseq (validate_acceptance_implies_ideal_authorization S
       input_operation input_view input_state) => //.
     by rewrite lean_certified_ideal_authorized_candidate_iff.
   qed.
@@ -218,10 +213,16 @@ section LeanCertifiedCandidateSubmitSoundness.
           input_operation input_view input_state].
   proof.
     proc.
-    wp.
-    call (_ : true ==> true).
-    call (validate_acceptance_implies_lean_certified_authorization
-      input_operation input_view input_state).
-    auto=> />.
+    seq 10 : (result.`vr_accepted =>
+      lean_certified_ideal_authorized_candidate
+        input_operation input_view input_state).
+    + call (validate_acceptance_implies_lean_certified_authorization S
+        input_operation input_view input_state).
+      by auto.
+    + if.
+      - wp.
+        call (_ : true ==> true); first by conseq (_ : _ ==> true).
+        by auto.
+      - by auto.
   qed.
 end section LeanCertifiedCandidateSubmitSoundness.
