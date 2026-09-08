@@ -95,7 +95,7 @@ lemma application_beekem_users_of_empty_set
   application_beekem_users_of_set registry fset0 = Some fset0.
 proof.
   rewrite /application_beekem_users_of_set /application_beekem_users_of_list.
-  rewrite elems_fset0 /LiveBeeKemAuthoritativeTypes.oflist.
+  rewrite elems_fset0 /=.
   done.
 qed.
 

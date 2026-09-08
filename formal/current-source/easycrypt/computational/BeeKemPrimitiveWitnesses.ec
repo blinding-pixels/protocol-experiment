@@ -59,13 +59,7 @@ lemma beekem_insecure_nike_real_branch_wins :
     /\ res.`bhc_real_test_count = 1
     /\ res.`bhc_random_test_count = 0
     /\ res.`bhc_win].
-proof.
-  proc.
-  inline *.
-  auto.
-  rewrite /beekem_nike_registration_for.
-  smt().
-qed.
+proof. by proc; inline *; auto. qed.
 
 lemma beekem_insecure_nike_random_branch_wins :
   hoare [BeeKemInsecureNikeGame.main_with_fixed_bit :
@@ -77,28 +71,14 @@ lemma beekem_insecure_nike_random_branch_wins :
     /\ res.`bhc_real_test_count = 0
     /\ res.`bhc_random_test_count = 1
     /\ res.`bhc_win].
-proof.
-  proc.
-  inline *.
-  auto.
-  rewrite /beekem_nike_registration_for
-    /beekem_insecure_nike_real_key /beekem_insecure_nike_random_key.
-  smt().
-qed.
+proof. by proc; inline *; auto. qed.
 
 lemma beekem_insecure_nike_game_probability_one &m :
   Pr[BeeKemInsecureNikeGame.main() @ &m : res] = 1%r.
 proof.
   byphoare => //.
-  proc.
-  inline BeeKemInsecureNikeGame.main_with_evidence.
-  seq 1 : true 1%r.
-  + rnd.
-  call (: true ==> res.`bhc_win).
-  + case (hidden_bit).
-    + conseq beekem_insecure_nike_real_branch_wins => //.
-    + conseq beekem_insecure_nike_random_branch_wins => //.
-  auto.
+  proc; inline *; auto.
+  by rewrite DBool.dbool_ll.
 qed.
 
 lemma beekem_insecure_nike_is_symmetric &m :
@@ -170,13 +150,7 @@ lemma beekem_insecure_se_left_branch_wins :
     /\ res.`bmc_left_challenge_count = 1
     /\ res.`bmc_right_challenge_count = 0
     /\ res.`bmc_win].
-proof.
-  proc.
-  inline *.
-  auto.
-  rewrite /beekem_se_registration_for.
-  smt().
-qed.
+proof. by proc; inline *; auto. qed.
 
 lemma beekem_insecure_se_right_branch_wins :
   hoare [BeeKemInsecureSeGame.main_with_fixed_bit :
@@ -188,29 +162,17 @@ lemma beekem_insecure_se_right_branch_wins :
     /\ res.`bmc_left_challenge_count = 0
     /\ res.`bmc_right_challenge_count = 1
     /\ res.`bmc_win].
-proof.
-  proc.
-  inline *.
-  auto.
-  rewrite /beekem_se_registration_for
-    /beekem_insecure_ciphertext_of
-    /beekem_insecure_se_left /beekem_insecure_se_right.
-  smt().
-qed.
+proof. by proc; inline *; auto. qed.
 
 lemma beekem_insecure_se_game_probability_one &m :
   Pr[BeeKemInsecureSeGame.main() @ &m : res] = 1%r.
 proof.
   byphoare => //.
-  proc.
-  inline BeeKemInsecureSeGame.main_with_evidence.
-  seq 1 : true 1%r.
-  + rnd.
-  call (: true ==> res.`bmc_win).
-  + case (hidden_bit).
-    + conseq beekem_insecure_se_left_branch_wins => //.
-    + conseq beekem_insecure_se_right_branch_wins => //.
-  auto.
+  proc; inline *; auto.
+  rewrite DBool.dbool_ll /beekem_se_registration_for
+    /beekem_insecure_ciphertext_of /beekem_insecure_se_left
+    /beekem_insecure_se_right /=.
+  by smt().
 qed.
 
 lemma beekem_insecure_se_is_correct
@@ -220,10 +182,8 @@ lemma beekem_insecure_se_is_correct
   ] = 1%r.
 proof.
   byphoare => //.
-  proc.
-  inline *.
-  auto.
-  case message => value.
-  rewrite /beekem_insecure_ciphertext_of /beekem_insecure_plaintext_of.
-  auto.
+  proc; inline *; auto.
+  move=> &hr _.
+  case (message{!hr}) => value.
+  by rewrite /beekem_insecure_ciphertext_of /beekem_insecure_plaintext_of.
 qed.

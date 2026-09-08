@@ -109,11 +109,11 @@ lemma application_group_document_round_trip
 proof. by case group. qed.
 
 lemma application_group_of_document_injective
-    (left right : document_id) :
-  application_group_of_document left =
-  application_group_of_document right =>
-  left = right.
-proof. by case left; case right. qed.
+    (lhs_value rhs_value : document_id) :
+  application_group_of_document lhs_value =
+  application_group_of_document rhs_value =>
+  lhs_value = rhs_value.
+proof. by case lhs_value; case rhs_value. qed.
 
 type application_beekem_address = {
   aba_node : node_id;
@@ -218,11 +218,11 @@ op authoritative_application_root_represents
   root = authoritative_application_root_of_beekem secret.
 
 lemma authoritative_application_root_of_beekem_injective
-    (left right : beekem_group_secret) :
-  authoritative_application_root_of_beekem left =
-  authoritative_application_root_of_beekem right =>
-  left = right.
-proof. by case left; case right. qed.
+    (lhs_value rhs_value : beekem_group_secret) :
+  authoritative_application_root_of_beekem lhs_value =
+  authoritative_application_root_of_beekem rhs_value =>
+  lhs_value = rhs_value.
+proof. by case lhs_value; case rhs_value. qed.
 
 lemma authoritative_root_result_preserves_no_output :
   authoritative_application_root_result_of_beekem BeeSecretNoOutput =
@@ -343,6 +343,7 @@ lemma authoritative_adapter_nonvacuity :
     /\ res.`aawe_win].
 proof.
   proc.
+  wp.
   call beekem_witness_real_branch_reachable.
   auto.
   rewrite /authoritative_adapter_witness_registry
