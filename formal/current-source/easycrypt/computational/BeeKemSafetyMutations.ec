@@ -149,155 +149,45 @@ lemma mutation_drop_fsu_chain_admits_short_exposure :
   bee_safe_kappa_mutated BeeMutationDropFsuUpdateChain
     2 fsu_operations fsu_short_log.
 proof.
-  rewrite /bee_safe_kappa_mutated /beekem_mutated_all_challenges_safe
-    /beekem_mutated_challenge_safe_against /beekem_mutated_pair_safe
-    /beekem_mutated_fsu_clause /beekem_mutated_pcs_clause
-    /beekem_mutated_cfs_clause /fsu_short_log
-    /beekem_kappa_fsu_clause /beekem_pcs_clause /beekem_kappa_cfs_clause
-    /beekem_update_chain_between /beekem_update_chain_ending_at
-    /beekem_successful_update_for /beekem_q2op_precedes
-    /beekem_q2op_precedes_or_equals /beekem_q2op_concurrent
-    /beekem_q2op_set /beekem_query_successful
-    /beekem_query_is_send_update /beekem_query_is_challenge
-    /beekem_query_is_compromise
-    /fsu_challenge_query /fsu_update1_query /beekem_trace_query.
-  rewrite (elems_fset1 fsu_challenge_id) (elems_fset1 fsu_update1_id).
-  rewrite /beekem_ids_precede_frontier /beekem_ids_precede_or_equal_frontier
-    /beekem_id_precedes_some /beekem_id_precedes_or_equals_some
-    /beekem_ids_pairwise_concurrent /beekem_id_concurrent_with_all
-    /beekem_operation_ids_concurrent
-    /beekem_operation_id_precedes /beekem_operation_id_precedes_or_equals
-    /beekem_operation_id_known /fsu_operations
-    /fsu_challenge_operation /fsu_update1_operation
-    /fsu_update2_operation /fsu_update3_operation /beekem_trace_operation.
-  smt(in_fset0 in_fset1 in_fsetU).
+  by cbv delta; rewrite ?elems_fset1 ?elems_fset0; cbv delta;
+    rewrite ?inE; cbv delta.
 qed.
 
 lemma mutation_drop_pcs_update_admits_unhealed_exposure :
   bee_safe_kappa_mutated BeeMutationDropPcsHealingUpdate
     1 pcs_operations pcs_rejected_log.
 proof.
-  rewrite /bee_safe_kappa_mutated /beekem_mutated_all_challenges_safe
-    /beekem_mutated_challenge_safe_against /beekem_mutated_pair_safe
-    /beekem_mutated_fsu_clause /beekem_mutated_pcs_clause
-    /beekem_mutated_cfs_clause /pcs_rejected_log
-    /beekem_kappa_fsu_clause /beekem_pcs_clause /beekem_kappa_cfs_clause
-    /beekem_update_chain_between /beekem_update_chain_ending_at
-    /beekem_successful_update_for /beekem_q2op_precedes
-    /beekem_q2op_precedes_or_equals /beekem_q2op_concurrent
-    /beekem_q2op_set /beekem_query_successful
-    /beekem_query_is_send_update /beekem_query_is_challenge
-    /beekem_query_is_compromise
-    /pcs_compromise_query /pcs_challenge_query /beekem_trace_query.
-  rewrite (elems_fset1 pcs_compromise_id) (elems_fset1 pcs_challenge_id).
-  rewrite /beekem_ids_precede_frontier /beekem_ids_precede_or_equal_frontier
-    /beekem_id_precedes_some /beekem_id_precedes_or_equals_some
-    /beekem_ids_pairwise_concurrent /beekem_id_concurrent_with_all
-    /beekem_operation_ids_concurrent
-    /beekem_operation_id_precedes /beekem_operation_id_precedes_or_equals
-    /beekem_operation_id_known /pcs_operations
-    /pcs_compromise_operation /pcs_update_operation /pcs_challenge_operation
-    /beekem_trace_operation.
-  smt(in_fset0 in_fset1 in_fsetU).
+  by cbv delta; rewrite ?elems_fset1 ?elems_fset0; cbv delta;
+    rewrite ?inE; cbv delta.
 qed.
 
 lemma mutation_drop_cfs_chain_admits_unupdated_fork :
   bee_safe_kappa_mutated BeeMutationDropCfsUpdateChain
     1 cfs_operations cfs_rejected_log.
 proof.
-  rewrite /bee_safe_kappa_mutated /beekem_mutated_all_challenges_safe
-    /beekem_mutated_challenge_safe_against /beekem_mutated_pair_safe
-    /beekem_mutated_fsu_clause /beekem_mutated_pcs_clause
-    /beekem_mutated_cfs_clause /cfs_rejected_log
-    /beekem_kappa_fsu_clause /beekem_pcs_clause /beekem_kappa_cfs_clause
-    /beekem_update_chain_between /beekem_update_chain_ending_at
-    /beekem_successful_update_for /beekem_q2op_precedes
-    /beekem_q2op_precedes_or_equals /beekem_q2op_concurrent
-    /beekem_q2op_set /beekem_query_successful
-    /beekem_query_is_send_update /beekem_query_is_challenge
-    /beekem_query_is_compromise
-    /cfs_challenge_query /cfs_plain_compromise_query /beekem_trace_query.
-  rewrite (elems_fset1 cfs_challenge_id) (elems_fset1 cfs_plain_fork_id).
-  rewrite /beekem_ids_precede_frontier /beekem_ids_precede_or_equal_frontier
-    /beekem_id_precedes_some /beekem_id_precedes_or_equals_some
-    /beekem_ids_pairwise_concurrent /beekem_id_concurrent_with_all
-    /beekem_operation_ids_concurrent
-    /beekem_operation_id_precedes /beekem_operation_id_precedes_or_equals
-    /beekem_operation_id_known /cfs_operations
-    /cfs_base_operation /cfs_challenge_operation
-    /cfs_update1_operation /cfs_update2_operation /cfs_plain_fork_operation
-    /beekem_trace_operation.
-  smt(in_fset0 in_fset1 in_fsetU).
+  by cbv delta; rewrite ?elems_fset1 ?elems_fset0; cbv delta;
+    rewrite ?inE; cbv delta.
 qed.
 
 lemma mutation_ignore_compromise_log_admits_unsafe_trace :
   bee_safe_kappa_mutated BeeMutationIgnoreCompromiseLog
     1 pcs_operations pcs_rejected_log.
 proof.
-  rewrite /bee_safe_kappa_mutated /beekem_mutated_all_challenges_safe
-    /beekem_mutated_challenge_safe_against /beekem_mutated_pair_safe
-    /beekem_mutated_fsu_clause /beekem_mutated_pcs_clause
-    /beekem_mutated_cfs_clause /pcs_rejected_log
-    /beekem_query_successful /beekem_query_is_challenge
-    /beekem_query_is_compromise /pcs_compromise_query
-    /pcs_challenge_query /beekem_trace_query.
-  trivial.
+  by cbv delta; rewrite ?elems_fset1 ?elems_fset0; cbv delta;
+    rewrite ?inE; cbv delta.
 qed.
 
 lemma exact_causal_trace_is_rejected :
   ! bee_safe_kappa 1 causal_mutation_operations causal_mutation_log.
 proof.
-  rewrite /bee_safe_kappa /causal_mutation_log /beekem_all_challenges_safe
-    /beekem_challenge_safe_against /beekem_challenge_compromise_pair_safe
-    /beekem_kappa_fsu_clause /beekem_pcs_clause /beekem_kappa_cfs_clause
-    /beekem_update_chain_between /beekem_update_chain_ending_at
-    /beekem_successful_update_for /beekem_q2op_precedes
-    /beekem_q2op_precedes_or_equals /beekem_q2op_concurrent
-    /beekem_q2op_set /beekem_query_successful
-    /beekem_query_is_send_update /beekem_query_is_challenge
-    /beekem_query_is_compromise
-    /causal_mutation_update_query /causal_mutation_compromise_query
-    /causal_mutation_challenge_query /beekem_trace_query.
-  rewrite (elems_fset1 causal_mutation_update_id)
-    (elems_fset1 causal_mutation_challenge_id).
-  rewrite /beekem_ids_precede_frontier /beekem_ids_precede_or_equal_frontier
-    /beekem_id_precedes_some /beekem_id_precedes_or_equals_some
-    /beekem_ids_pairwise_concurrent /beekem_id_concurrent_with_all
-    /beekem_operation_ids_concurrent
-    /beekem_operation_id_precedes /beekem_operation_id_precedes_or_equals
-    /beekem_operation_id_known /causal_mutation_operations
-    /causal_mutation_update_operation /causal_mutation_challenge_operation
-    /beekem_trace_operation.
-  smt(in_fset0 in_fset1).
+  by cbv delta; rewrite ?elems_fset1 ?elems_fset0; cbv delta;
+    rewrite ?inE; cbv delta.
 qed.
 
 lemma mutation_ignore_ancestry_admits_causal_nonfork :
   bee_safe_kappa_mutated BeeMutationIgnoreCausalAncestry
     1 causal_mutation_operations causal_mutation_log.
 proof.
-  rewrite /bee_safe_kappa_mutated /beekem_mutated_all_challenges_safe
-    /beekem_mutated_challenge_safe_against /beekem_mutated_pair_safe
-    /beekem_mutated_fsu_clause /beekem_mutated_pcs_clause
-    /beekem_mutated_cfs_clause /beekem_q2op_frontiers_differ
-    /causal_mutation_log
-    /beekem_kappa_fsu_clause /beekem_pcs_clause /beekem_kappa_cfs_clause
-    /beekem_update_chain_between /beekem_update_chain_ending_at
-    /beekem_successful_update_for /beekem_q2op_precedes
-    /beekem_q2op_precedes_or_equals /beekem_q2op_concurrent
-    /beekem_q2op_set /beekem_query_successful
-    /beekem_query_is_send_update /beekem_query_is_challenge
-    /beekem_query_is_compromise
-    /causal_mutation_update_query /causal_mutation_compromise_query
-    /causal_mutation_challenge_query /beekem_trace_query.
-  rewrite (elems_fset1 causal_mutation_update_id)
-    (elems_fset1 causal_mutation_challenge_id).
-  rewrite /beekem_ids_precede_frontier /beekem_ids_precede_or_equal_frontier
-    /beekem_id_precedes_some /beekem_id_precedes_or_equals_some
-    /beekem_ids_pairwise_concurrent /beekem_id_concurrent_with_all
-    /beekem_operation_ids_concurrent
-    /beekem_operation_id_precedes /beekem_operation_id_precedes_or_equals
-    /beekem_operation_id_known /causal_mutation_operations
-    /causal_mutation_update_operation /causal_mutation_challenge_operation
-    /beekem_trace_operation.
-  smt(in_fset0 in_fset1).
+  by cbv delta; rewrite ?elems_fset1 ?elems_fset0; cbv delta;
+    rewrite ?inE; cbv delta; smt(in_fset0 in_fset1).
 qed.
