@@ -115,24 +115,7 @@ lemma root_omission_fixed_real :
     /\ res.`mpge_live_challenge_count = 1
     /\ res.`mpge_history_query_count = 0
     /\ res.`mpge_history_capability_query_count = 0].
-proof.
-  proc.
-  inline *.
-  auto.
-  rewrite /root_mutation_outputs_equal /root_mutation_live_material
-    /root_omitting_live_material /root_mutation_document_value
-    /root_mutation_node_value /root_mutation_digest_value
-    /root_mutation_reveal_secret /root_mutation_challenge_secret
-    /root_mutation_label
-    /mdprf_live_query_count /mdprf_live_challenge_count
-    /mdprf_history_query_count
-    /mdprf_history_capability_query_count
-    /mdprf_query_is_live_query /mdprf_query_is_live_challenge
-    /mdprf_query_is_history /mdprf_query_is_history_capability
-    /mdprf_kind_is_live_query /mdprf_kind_is_live_challenge
-    /mdprf_kind_is_history /mdprf_kind_is_history_capability /=.
-  by smt().
-qed.
+proof. by proc; inline *; auto. qed.
 
 lemma root_omission_fixed_random :
   hoare [RootBindingMutationGame.main_with_fixed_bit :
@@ -145,24 +128,7 @@ lemma root_omission_fixed_random :
     /\ res.`mpge_live_challenge_count = 1
     /\ res.`mpge_history_query_count = 0
     /\ res.`mpge_history_capability_query_count = 0].
-proof.
-  proc.
-  inline *.
-  auto.
-  rewrite /root_mutation_outputs_equal /root_mutation_live_material
-    /root_omitting_live_material /root_mutation_document_value
-    /root_mutation_node_value /root_mutation_digest_value
-    /root_mutation_reveal_secret /root_mutation_challenge_secret
-    /root_mutation_label
-    /mdprf_live_query_count /mdprf_live_challenge_count
-    /mdprf_history_query_count
-    /mdprf_history_capability_query_count
-    /mdprf_query_is_live_query /mdprf_query_is_live_challenge
-    /mdprf_query_is_history /mdprf_query_is_history_capability
-    /mdprf_kind_is_live_query /mdprf_kind_is_live_challenge
-    /mdprf_kind_is_history /mdprf_kind_is_history_capability /=.
-  by smt().
-qed.
+proof. by proc; inline *; auto. qed.
 
 lemma root_omission_game_probability_one
     &m
@@ -176,15 +142,12 @@ lemma root_omission_game_probability_one
   ] = 1%r.
 proof.
   byphoare => //.
-  proc.
-  inline RootBindingMutationGame.main_with_evidence.
-  seq 1 : true 1%r 1%r 0%r 0%r.
-  + rnd.
-  + case (hidden_bit).
-    + call root_omission_fixed_real.
-      auto.
-    + call root_omission_fixed_random.
-      auto.
+  proc; inline *; auto.
+  rewrite DBool.dbool_ll
+    /root_mutation_reveal_secret /root_mutation_challenge_secret /root_mutation_label
+    /root_mutation_document_value /root_mutation_node_value /root_mutation_digest_value
+    /root_omitting_live_material /root_mutation_live_material /root_mutation_outputs_equal /=.
+  by smt().
 qed.
 
 lemma root_omission_normalized_advantage_half

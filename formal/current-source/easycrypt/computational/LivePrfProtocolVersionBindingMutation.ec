@@ -129,24 +129,7 @@ lemma protocol_version_omission_fixed_real :
     /\ res.`mpge_live_challenge_count = 1
     /\ res.`mpge_history_query_count = 0
     /\ res.`mpge_history_capability_query_count = 0].
-proof.
-  proc.
-  inline *.
-  auto.
-  rewrite /version_mutation_outputs_equal /version_mutation_live_material
-    /version_omitting_live_material /version_mutation_document_value
-    /version_mutation_node_value /version_mutation_digest_value
-    /version_mutation_secret /version_mutation_reveal_label
-    /version_mutation_challenge_label /expected_protocol_version
-    /mdprf_live_query_count /mdprf_live_challenge_count
-    /mdprf_history_query_count
-    /mdprf_history_capability_query_count
-    /mdprf_query_is_live_query /mdprf_query_is_live_challenge
-    /mdprf_query_is_history /mdprf_query_is_history_capability
-    /mdprf_kind_is_live_query /mdprf_kind_is_live_challenge
-    /mdprf_kind_is_history /mdprf_kind_is_history_capability /=.
-  by smt().
-qed.
+proof. by proc; inline *; auto. qed.
 
 lemma protocol_version_omission_fixed_random :
   hoare [ProtocolVersionMutationGame.main_with_fixed_bit :
@@ -159,24 +142,7 @@ lemma protocol_version_omission_fixed_random :
     /\ res.`mpge_live_challenge_count = 1
     /\ res.`mpge_history_query_count = 0
     /\ res.`mpge_history_capability_query_count = 0].
-proof.
-  proc.
-  inline *.
-  auto.
-  rewrite /version_mutation_outputs_equal /version_mutation_live_material
-    /version_omitting_live_material /version_mutation_document_value
-    /version_mutation_node_value /version_mutation_digest_value
-    /version_mutation_secret /version_mutation_reveal_label
-    /version_mutation_challenge_label /expected_protocol_version
-    /mdprf_live_query_count /mdprf_live_challenge_count
-    /mdprf_history_query_count
-    /mdprf_history_capability_query_count
-    /mdprf_query_is_live_query /mdprf_query_is_live_challenge
-    /mdprf_query_is_history /mdprf_query_is_history_capability
-    /mdprf_kind_is_live_query /mdprf_kind_is_live_challenge
-    /mdprf_kind_is_history /mdprf_kind_is_history_capability /=.
-  by smt().
-qed.
+proof. by proc; inline *; auto. qed.
 
 lemma protocol_version_omission_game_probability_one
     &m
@@ -190,15 +156,12 @@ lemma protocol_version_omission_game_probability_one
   ] = 1%r.
 proof.
   byphoare => //.
-  proc.
-  inline ProtocolVersionMutationGame.main_with_evidence.
-  seq 1 : true 1%r 1%r 0%r 0%r.
-  + rnd.
-  + case (hidden_bit).
-    + call protocol_version_omission_fixed_real.
-      auto.
-    + call protocol_version_omission_fixed_random.
-      auto.
+  proc; inline *; auto.
+  rewrite DBool.dbool_ll
+    /version_mutation_secret /version_mutation_reveal_label /version_mutation_challenge_label
+    /version_mutation_document_value /version_mutation_node_value /version_mutation_digest_value
+    /version_omitting_live_material /version_mutation_live_material /version_mutation_outputs_equal /=.
+  by smt().
 qed.
 
 lemma protocol_version_omission_normalized_advantage_half

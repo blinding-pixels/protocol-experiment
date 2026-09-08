@@ -35,15 +35,7 @@ lemma ineligible_prf_fixed_real_loses :
     /\ res.`mpge_live_challenge_count = 0
     /\ res.`mpge_history_query_count = 0
     /\ res.`mpge_history_capability_query_count = 0].
-proof.
-  proc.
-  inline *.
-  auto.
-  rewrite /mdprf_live_query_count /mdprf_live_challenge_count
-    /mdprf_history_query_count
-    /mdprf_history_capability_query_count /=.
-  by done.
-qed.
+proof. by proc; inline *; auto. qed.
 
 lemma ineligible_prf_fixed_random_loses :
   hoare [IneligiblePrfGame.main_with_fixed_bit :
@@ -56,15 +48,7 @@ lemma ineligible_prf_fixed_random_loses :
     /\ res.`mpge_live_challenge_count = 0
     /\ res.`mpge_history_query_count = 0
     /\ res.`mpge_history_capability_query_count = 0].
-proof.
-  proc.
-  inline *.
-  auto.
-  rewrite /mdprf_live_query_count /mdprf_live_challenge_count
-    /mdprf_history_query_count
-    /mdprf_history_capability_query_count /=.
-  by done.
-qed.
+proof. by proc; inline *; auto. qed.
 
 lemma ineligible_prf_main_never_wins
     (initial_state : protocol_state)
@@ -91,11 +75,10 @@ lemma ineligible_prf_game_probability_zero
     ) @ &m : res
   ] = 0%r.
 proof.
-  byphoare
-    (_ : arg = (initial_state, initial_facts, retention_kappa) ==> ! res)
-    => //=.
-  exact (ineligible_prf_main_never_wins
-    initial_state initial_facts retention_kappa).
+  byphoare (_ : arg = (initial_state, initial_facts, retention_kappa)
+                ==> res) => //.
+  hoare.
+  exact (ineligible_prf_main_never_wins initial_state initial_facts retention_kappa).
 qed.
 
 lemma ineligible_prf_evidence_never_eligible
@@ -123,12 +106,10 @@ lemma ineligible_prf_eligibility_probability_zero
     ) @ &m : res.`mpge_eligible
   ] = 0%r.
 proof.
-  byphoare
-    (_ : arg = (initial_state, initial_facts, retention_kappa) ==>
-         ! res.`mpge_eligible)
-    => //=.
-  exact (ineligible_prf_evidence_never_eligible
-    initial_state initial_facts retention_kappa).
+  byphoare (_ : arg = (initial_state, initial_facts, retention_kappa)
+                ==> res.`mpge_eligible) => //.
+  hoare.
+  exact (ineligible_prf_evidence_never_eligible initial_state initial_facts retention_kappa).
 qed.
 
 lemma ineligible_prf_normalized_advantage_zero
