@@ -142,58 +142,11 @@ lemma authoritative_live_history_first_uses_one_exact_challenge :
     /\ size AuthoritativeLiveHistoryFirstState.attempts = 3
     /\ ! AuthoritativeLiveHistoryFirstState.runtime_fault].
 proof.
-  proc.
-  inline *.
-  rcondt ^while; first by auto.
-  rcondf ^while; first by auto.
-  rcondf ^while; first by auto.
-  rcondt ^while; first by auto.
-  rcondf ^while; first by auto.
-  rcondf ^while; first by auto.
-  auto.
-  rewrite /authoritative_adapter_witness_registry
-    /application_user_registry_bind /empty_application_user_registry
-    /authoritative_live_witness_state /authoritative_adapter_witness_document
-    /authoritative_adapter_witness_principal
-    /authoritative_live_witness_digest /authoritative_live_witness_segment
-    /application_group_of_document
-    /application_beekem_users_of_set /application_beekem_users_of_list
-    /LiveBeeKemAuthoritativeTypes.oflist
-    /application_beekem_next_query_id
-    /empty_application_beekem_counter_store
-    /empty_application_beekem_digest_store
-    /empty_application_beekem_delivery_store
-    /empty_application_beekem_address_registry
-    /application_beekem_counter_store_put
-    /application_beekem_digest_store_put
-    /application_beekem_delivery_store_put
-    /application_beekem_address_of_control
-    /application_beekem_address_fresh
-    /application_beekem_address_registry_bind
-    /empty_authoritative_application_root_cache
-    /authoritative_application_root_cache_put
-    /empty_authoritative_application_mark_store
-    /authoritative_application_mark_store_put
-    /application_beekem_output_root
-    /application_beekem_root_bridge_value
-    /application_beekem_root_bridge
-    /application_beekem_root_of_authoritative
-    /authoritative_application_root_code
-    /authoritative_application_root_result_of_beekem
-    /authoritative_application_root_of_beekem
-    /live_label_of /history_label_of /expected_protocol_version
-    /test_live_material /test_history_material
-    /beekem_witness_membership /beekem_witness_initial_member_state
-    /beekem_member_retention_valid /beekem_witness_personal_secret
-    /beekem_witness_after_create /beekem_witness_after_update
-    /beekem_witness_control /beekem_witness_create_operation
-    /beekem_witness_update_operation /beekem_witness_operation
-    /beekem_control_operation_id /beekem_control_operation
-    /beekem_counter_value /beekem_empty_protocol_state
-    /beekem_secret_output_is_undefined /beekem_secret_output_is_value
-    /beekem_secret_output_value /beekem_operation_precedes_or_equals
-    /beekem_operation_precedes /bee_safe_kappa /beekem_all_challenges_safe
-    /beekem_challenge_safe_against /beekem_query_successful
-    /beekem_query_is_challenge /beekem_query_is_compromise.
-  smt(in_fset0 in_fset1 size_rcons size_ge0).
+  proc; inline *.
+  do ! (
+    (rcondt ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta) ||
+    (rcondf ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta) ||
+    (rcondt ^while; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta) ||
+    (rcondf ^while; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta)).
+  by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
 qed.

@@ -93,46 +93,45 @@ lemma authoritative_application_adapter_real_branch_reachable :
     /\ AuthoritativeApplicationAdapterWitnessState.attempt_count = 3
     /\ ! AuthoritativeApplicationAdapterWitnessState.runtime_fault].
 proof.
-  proc.
-  inline *.
-  rcondt ^while; first by auto.
-  rcondf ^while; first by auto.
-  rcondf ^while; first by auto.
-  rcondt ^while; first by auto.
-  rcondf ^while; first by auto.
-  rcondf ^while; first by auto.
-  auto.
-  rewrite /authoritative_adapter_witness_registry
-    /application_user_registry_bind /empty_application_user_registry
-    /authoritative_adapter_witness_document /application_group_of_document
-    /authoritative_adapter_witness_principal
-    /authoritative_application_adapter_digest
-    /application_beekem_users_of_set /application_beekem_users_of_list
-    /LiveBeeKemAuthoritativeTypes.oflist
-    /application_beekem_next_query_id
-    /empty_application_beekem_counter_store
-    /empty_application_beekem_digest_store
-    /empty_application_beekem_delivery_store
-    /empty_application_beekem_address_registry
-    /application_beekem_counter_store_put
-    /application_beekem_digest_store_put
-    /application_beekem_delivery_store_put
-    /application_beekem_address_of_control
-    /application_beekem_address_fresh
-    /application_beekem_address_registry_bind
-    /authoritative_application_root_result_of_beekem
-    /authoritative_application_root_of_beekem
-    /beekem_witness_membership /beekem_witness_initial_member_state
-    /beekem_member_retention_valid /beekem_witness_personal_secret
-    /beekem_witness_after_create /beekem_witness_after_update
-    /beekem_witness_control /beekem_witness_create_operation
-    /beekem_witness_update_operation /beekem_witness_operation
-    /beekem_control_operation_id /beekem_control_operation
-    /beekem_counter_value /beekem_empty_protocol_state
-    /beekem_secret_output_is_undefined /beekem_secret_output_is_value
-    /beekem_secret_output_value /beekem_operation_precedes_or_equals
-    /beekem_operation_precedes /bee_safe_kappa /beekem_all_challenges_safe
-    /beekem_challenge_safe_against /beekem_query_successful
-    /beekem_query_is_challenge /beekem_query_is_compromise.
-  smt(in_fset0 in_fset1 size_rcons size_ge0).
+  proc; inline *.
+  do ! (
+    (rcondt ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta) ||
+    (rcondf ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta) ||
+    (rcondt ^while; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta) ||
+    (rcondf ^while; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta)).
+  auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE; cbv delta.
+  by rewrite elems_fset0.
+qed.
+
+(* Termination and the same authoritative trace observations hold almost surely. *)
+lemma authoritative_application_adapter_real_branch_reachable_probability_one :
+  phoare [AuthoritativeApplicationAdapterWitnessGame.main_with_fixed_bit :
+       users = [beekem_witness_user]
+    /\ group = beekem_witness_group
+    /\ kappa = 1
+    /\ membership = beekem_witness_membership
+    /\ hidden_bit = true
+    ==>
+       res.`bke_hidden_bit
+    /\ res.`bke_adversary_guess
+    /\ res.`bke_safe
+    /\ ! res.`bke_protocol_consistency_failure
+    /\ res.`bke_challenge_count = 1
+    /\ res.`bke_member_addition_count = 0
+    /\ res.`bke_real_branch_count = 1
+    /\ res.`bke_random_branch_count = 0
+    /\ res.`bke_random_sample_count = 0
+    /\ res.`bke_win
+    /\ AuthoritativeApplicationAdapterWitnessState.forwarded_count = 3
+    /\ AuthoritativeApplicationAdapterWitnessState.attempt_count = 3
+    /\ ! AuthoritativeApplicationAdapterWitnessState.runtime_fault] = 1%r.
+proof.
+  proc; inline *.
+  do ! (
+    (rcondt ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta) ||
+    (rcondf ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta) ||
+    (rcondt ^while; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta) ||
+    (rcondf ^while; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta)).
+  auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE; cbv delta.
+  by rewrite elems_fset0.
 qed.
