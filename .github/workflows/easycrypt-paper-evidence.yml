@@ -1,0 +1,42 @@
+name: BeeKEM paper source evidence
+
+on:
+  push:
+    branches:
+      - formal/easycrypt-live-key-reduction
+    paths:
+      - '.github/workflows/easycrypt-paper-evidence.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  paper:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out exact manifest without persisting credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      # Source transport only. No proof, checker, or security assumption is changed.
+      - name: Retrieve and verify the already identified primary source
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/beekem-paper-evidence"
+          mkdir -p "$out"
+          git rev-parse HEAD > "$out/source-commit.txt"
+          url='https://eprint.iacr.org/2026/1434.pdf'
+          expected='129a819400898536455cabe4ba104c02d902384ea802b4900a388e8e9c0e4fb3'
+          printf '%s\n' "$url" > "$out/source-url.txt"
+          curl --fail --location --retry 2 --max-time 90 "$url" -o "$out/BeeKEM-2026-1434.pdf"
+          (cd "$out" && printf '%s  %s\n' "$expected" 'BeeKEM-2026-1434.pdf' | tee SHA256SUMS | sha256sum --check)
+      - name: Upload verified primary-source evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: beekem-paper-evidence-${{ github.run_id }}
+          path: ${{ runner.temp }}/beekem-paper-evidence
+          if-no-files-found: error
+          retention-days: 7
