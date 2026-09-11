@@ -129,31 +129,13 @@ lemma exact_reveal_log_blocks_actual_ki_challenge :
     /\ res.`brme_random_branch_count = 0
     /\ ! res.`brme_win].
 proof.
-  proc.
-  inline *.
-  rcondt ^while; first by auto.
-  rcondf ^while; first by auto.
-  rcondf ^while; first by auto.
-  rcondt ^while; first by auto.
-  rcondf ^while; first by auto.
-  rcondf ^while; first by auto.
-  auto.
-  rewrite /beekem_witness_membership /beekem_witness_initial_member_state
-    /beekem_member_retention_valid /beekem_witness_personal_secret
-    /beekem_witness_after_create /beekem_witness_after_update
-    /beekem_witness_control /beekem_witness_create_operation
-    /beekem_witness_update_operation /beekem_witness_operation
-    /beekem_control_operation_id /beekem_control_operation
-    /beekem_counter_value /beekem_empty_protocol_state
-    /beekem_challenge_mark_map_set
-    /beekem_secret_output_is_undefined /beekem_secret_output_is_value
-    /beekem_secret_output_value /beekem_operation_precedes_or_equals
-    /beekem_operation_precedes /bee_safe_kappa /beekem_all_challenges_safe
-    /beekem_challenge_safe_against /beekem_query_successful
-    /beekem_query_is_reveal /beekem_query_is_challenge
-    /beekem_query_is_compromise /beekem_successful_reveal_for
-    /beekem_successful_challenge_for /beekem_ki_final_win.
-  smt(in_fset0 in_fset1 size_rcons size_ge0).
+  proc; inline *.
+  do ! (
+    (rcondt ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta) ||
+    (rcondf ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta) ||
+    (rcondt ^while; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta) ||
+    (rcondf ^while; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta)).
+  by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
 qed.
 
 lemma mutation_ignore_reveal_log_reaches_actual_ki_challenge :
@@ -172,29 +154,62 @@ lemma mutation_ignore_reveal_log_reaches_actual_ki_challenge :
     /\ res.`brme_random_branch_count = 0
     /\ res.`brme_win].
 proof.
-  proc.
-  inline *.
-  rcondt ^while; first by auto.
-  rcondf ^while; first by auto.
-  rcondf ^while; first by auto.
-  rcondt ^while; first by auto.
-  rcondf ^while; first by auto.
-  rcondf ^while; first by auto.
-  auto.
-  rewrite /beekem_witness_membership /beekem_witness_initial_member_state
-    /beekem_member_retention_valid /beekem_witness_personal_secret
-    /beekem_witness_after_create /beekem_witness_after_update
-    /beekem_witness_control /beekem_witness_create_operation
-    /beekem_witness_update_operation /beekem_witness_operation
-    /beekem_control_operation_id /beekem_control_operation
-    /beekem_counter_value /beekem_empty_protocol_state
-    /beekem_challenge_mark_map_set
-    /beekem_secret_output_is_undefined /beekem_secret_output_is_value
-    /beekem_secret_output_value /beekem_operation_precedes_or_equals
-    /beekem_operation_precedes /bee_safe_kappa /beekem_all_challenges_safe
-    /beekem_challenge_safe_against /beekem_query_successful
-    /beekem_query_is_reveal /beekem_query_is_challenge
-    /beekem_query_is_compromise /beekem_successful_reveal_for
-    /beekem_successful_challenge_for /beekem_ki_final_win.
-  smt(in_fset0 in_fset1 size_rcons size_ge0).
+  proc; inline *.
+  do ! (
+    (rcondt ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta) ||
+    (rcondf ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta) ||
+    (rcondt ^while; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta) ||
+    (rcondf ^while; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta)).
+  by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+qed.
+
+(* Terminating versions of the same executable controls, not extra assumptions. *)
+lemma exact_reveal_log_blocks_actual_ki_challenge_probability_one :
+  phoare [BeeKemRevealAdmissionMutationGame.main_with_fixed_mutation :
+       hidden_bit = true /\ ignore_reveal_log = false
+    ==>
+       res.`brme_hidden_bit
+    /\ ! res.`brme_ignore_reveal_log
+    /\ res.`brme_reveal_logged
+    /\ ! res.`brme_challenge_logged
+    /\ ! res.`brme_guess
+    /\ res.`brme_safe
+    /\ ! res.`brme_protocol_consistency_failure
+    /\ res.`brme_challenge_count = 0
+    /\ res.`brme_real_branch_count = 0
+    /\ res.`brme_random_branch_count = 0
+    /\ ! res.`brme_win] = 1%r.
+proof.
+  proc; inline *.
+  do ! (
+    (rcondt ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta) ||
+    (rcondf ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta) ||
+    (rcondt ^while; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta) ||
+    (rcondf ^while; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta)).
+  by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
+qed.
+
+lemma mutation_ignore_reveal_log_reaches_actual_ki_challenge_probability_one :
+  phoare [BeeKemRevealAdmissionMutationGame.main_with_fixed_mutation :
+       hidden_bit = true /\ ignore_reveal_log = true
+    ==>
+       res.`brme_hidden_bit
+    /\ res.`brme_ignore_reveal_log
+    /\ res.`brme_reveal_logged
+    /\ res.`brme_challenge_logged
+    /\ res.`brme_guess
+    /\ res.`brme_safe
+    /\ ! res.`brme_protocol_consistency_failure
+    /\ res.`brme_challenge_count = 1
+    /\ res.`brme_real_branch_count = 1
+    /\ res.`brme_random_branch_count = 0
+    /\ res.`brme_win] = 1%r.
+proof.
+  proc; inline *.
+  do ! (
+    (rcondt ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta) ||
+    (rcondf ^if; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta) ||
+    (rcondt ^while; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta) ||
+    (rcondf ^while; first by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta)).
+  by auto=> />; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta; rewrite ?inE ?elems_fset0 ?elems_fset1; cbv delta.
 qed.
