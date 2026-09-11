@@ -173,7 +173,7 @@ jobs:
 
           path = Path(sys.argv[1])
           text = path.read_text(encoding="utf-8")
-          needle = "    => exists (BNike <: BEEKEM_HKR_CKS_ADVERSARY),\n"
+          needle = "    => exists (BNike <: BEEKEM_HKR_CKS_ADVERSARY {-BeeKemHkrCksOracles}),\n"
           count = text.count(needle)
           if count != 1:
               raise SystemExit(

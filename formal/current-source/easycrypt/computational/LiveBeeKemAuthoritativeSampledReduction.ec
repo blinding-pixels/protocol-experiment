@@ -92,12 +92,12 @@ module AuthoritativeSampledLiveBeeKemGame(
   ).
 
 section AuthoritativeSampledLiveBeeKemTheorem.
-  declare module A <: AUTHORITATIVE_LIVE_KEY_ADVERSARY.
-  declare module S <: SIGNATURE_SCHEME.
-  declare module Hash <: NODE_HASH.
-  declare module K <: MULTI_DOMAIN_KEY_SCHEDULE.
-  declare module R <: LIVE_KEY_SAMPLER.
-  declare module I <: BEEKEM_PAPER_INSTANCE.
+  declare module A <: AUTHORITATIVE_LIVE_KEY_ADVERSARY {-BeeKemKiOracles, -BeeKemOracleEnvironment}.
+  declare module S <: SIGNATURE_SCHEME {-BeeKemKiOracles, -BeeKemOracleEnvironment}.
+  declare module Hash <: NODE_HASH {-BeeKemKiOracles, -BeeKemOracleEnvironment}.
+  declare module K <: MULTI_DOMAIN_KEY_SCHEDULE {-BeeKemKiOracles, -BeeKemOracleEnvironment}.
+  declare module R <: LIVE_KEY_SAMPLER {-BeeKemKiOracles, -BeeKemOracleEnvironment}.
+  module I = PublishedBeeKemInstance.
 
   module SampledBeeKem =
     AuthoritativeSampledLiveBeeKemGame(A, S, Hash, K, R, I).
@@ -133,8 +133,8 @@ section AuthoritativeSampledLiveBeeKemTheorem.
            res.`bke_challenge_count <= challenge_bound /\
            res.`bke_member_addition_count <= member_bound
        ] = 1%r
-    => exists (BNike <: BEEKEM_HKR_CKS_ADVERSARY),
-       exists (BSe <: BEEKEM_MU_CPA_ADVERSARY),
+    => exists (BNike <: BEEKEM_HKR_CKS_ADVERSARY {-BeeKemHkrCksOracles}),
+       exists (BSe <: BEEKEM_MU_CPA_ADVERSARY {-BeeKemMuCpaOracles}),
          beekem_normalized_ki_advantage
            (Pr[
               SampledBeeKem.main(
@@ -163,7 +163,7 @@ section AuthoritativeSampledLiveBeeKemTheorem.
   proof.
     exact
       (BKI.beekem_theorem1_imported_normalized
-         (BBeeLiveSampledApplication(A, S, Hash, K, R)) I &m
+         (BBeeLiveSampledApplication(A, S, Hash, K, R)) &m
          authoritative_live_initial_users
          authoritative_live_initial_group
          live_auth_retention_kappa

@@ -7,6 +7,9 @@ on:
     paths:
       - '.github/workflows/easycrypt-live-key-vacuity-diagnostics.yml'
       - 'formal/current-source/easycrypt/computational/**'
+      - 'formal/current-source/easycrypt/diagnostics/**'
+      - 'tools/easycrypt/check_imported_boundary.py'
+      - 'tools/easycrypt/beekem_dependency_closure.py'
   workflow_dispatch:
 
 permissions:
@@ -94,7 +97,7 @@ jobs:
           qed = original.index("  qed.\n", proof) + len("  qed.\n")
           statement = original[theorem:proof]
           conclusion = statement.index(
-              "    => exists (BNike <: BEEKEM_HKR_CKS_ADVERSARY),"
+              "    => exists (BNike <: BEEKEM_HKR_CKS_ADVERSARY {-BeeKemHkrCksOracles}),"
           )
           prefix = original[:theorem] + statement[:conclusion]
           suffix = original[qed:]
@@ -138,7 +141,7 @@ jobs:
                   introductions +
                   "    have Hcrypto :=\n"
                   "      authoritative_sampled_authenticated_beekem_prf_bound\n"
-                  "        A S Hash K R I &m\n"
+                  "        A S Hash K R &m\n"
                   "        challenge_bound member_bound logarithmic_height\n"
                   "        Hkappa Hchallenge Hheight Hnike Hse Hsafe Hcounters\n"
                   "        Hconsistent_true Hconsistent_false.\n"
@@ -149,7 +152,7 @@ jobs:
                   introductions +
                   "    have Hcrypto :=\n"
                   "      authoritative_sampled_authenticated_beekem_prf_bound\n"
-                  "        A S Hash K R I &m\n"
+                  "        A S Hash K R &m\n"
                   "        challenge_bound member_bound logarithmic_height\n"
                   "        Hkappa Hchallenge Hheight Hnike Hse Hsafe Hcounters\n"
                   "        Hconsistent_true Hconsistent_false.\n"
@@ -337,5 +340,38 @@ jobs:
         with:
           name: easycrypt-live-key-vacuity-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/easycrypt-live-key-vacuity-evidence
+          if-no-files-found: error
+          retention-days: 14
+
+  audit-imported-boundary:
+    name: Reject inconsistent imported BeeKEM boundary
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      EASYCRYPT_IMAGE: ghcr.io/easycrypt/ec-test-box@sha256:84980006e8b01fe6497bbd0ecd67deeb5e7361d8ad17e27d24924122d368e0fc
+    steps:
+      - name: Check out exact source without persisting credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Pull immutable EasyCrypt image
+        shell: bash
+        run: docker pull "$EASYCRYPT_IMAGE"
+
+      - name: Independently check the counterexample foundation and reject contradiction
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/easycrypt/check_imported_boundary.py \
+            --repository "$GITHUB_WORKSPACE" \
+            --evidence "$RUNNER_TEMP/easycrypt-boundary-evidence"
+
+      - name: Upload imported-boundary diagnostic evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: easycrypt-imported-boundary-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/easycrypt-boundary-evidence
           if-no-files-found: error
           retention-days: 14

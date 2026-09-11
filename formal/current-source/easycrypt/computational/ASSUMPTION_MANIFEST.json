@@ -1,6 +1,6 @@
 {
   "schema": "protocol-experiment.easycrypt-assumption-manifest.v1",
-  "status": "deliverable-a-complete-beekem-foundation-checker-accepted",
+  "status": "oracle-only-import-corrected-supporting-closure-open",
   "scope": "unauthorized-operation acceptance plus the BeeKEM KI-DCGKA foundation required by later live-key and content-key reductions",
   "allowed_axiom_files": [
     "ImportedSecurity.eca",
@@ -15,9 +15,9 @@
       "pdf_sha256": "129a819400898536455cabe4ba104c02d902384ea802b4900a388e8e9c0e4fb3",
       "location": "Section 5, Theorem 1, page 10; proof in Appendix B, pages 17-19",
       "exact_game": "BeeKemKiGame over the executable Figure 8 oracle environment, with bee_safe_kappa computed by the challenger from the complete accepted/rejected query log",
-      "adversary_interface": "BEEKEM_KI_ADVERSARY(BEEKEM_KI_ORACLES)",
-      "quantifier_order": "For every KI adversary A, every single concrete BeeKEM[SE,NIKE] PaperInstance, and every game parameter tuple satisfying the side conditions, there exist BNike and BSe before the reduction bound.",
-      "witness_dependency": "Because BNike and BSe are existentially quantified inside the conclusion after universal A and PaperInstance, they may depend on the challenged adversary, the exact paper instance, and the public game parameters. They are not unrelated universally quantified primitive adversaries.",
+      "adversary_interface": "BEEKEM_KI_ADVERSARY(BEEKEM_KI_ORACLES) {-BeeKemKiOracles, -BeeKemOracleEnvironment}; supplied oracle calls remain allowed.",
+      "quantifier_order": "For the fixed imported PublishedBeeKemInstance and every oracle-only KI adversary A and explicit game parameters satisfying the premises, there exist oracle-only BNike and BSe before the bound.",
+      "witness_dependency": "BNike and BSe may depend on A and public game parameters for the fixed imported construction. BNike excludes BeeKemHkrCksOracles private state; BSe excludes BeeKemMuCpaOracles private state.",
       "primitive_reductions": [
         "BNike is an existential Appendix-B witness run in BeeKemHkrCksGame(BNike, BeeKemNikeOfPaperInstance(PaperInstance), BeeKemNikeSamplerOfPaperInstance(PaperInstance))",
         "BSe is an existential Appendix-B witness run in BeeKemMuCpaGame(BSe, BeeKemSeOfPaperInstance(PaperInstance))"
@@ -30,7 +30,8 @@
         "h satisfies beekem_is_ceil_log2 n h",
         "the exact NIKE adapter is symmetric/correct with probability 1",
         "the exact symmetric-encryption adapter is correct for every message with probability 1",
-        "the executable game-derived challenge and member-addition counts obey c and n"
+        "the executable game-derived challenge and member-addition counts obey c and n",
+        "exact challenger-computed safe event holds with probability one"
       ],
       "correctness_specialization": "The imported boundary uses perfect NIKE symmetry and perfect symmetric-encryption correctness. This is a narrower specialization than the paper's overwhelming-correctness formulation; it does not silently turn correctness failure into zero.",
       "query_log_semantics": "Every state-transition or safety-relevant create, add, remove, update, deliver, reveal, challenge, and compromise attempt is appended with bq_accepted and an optional rejection reason. Figure 8's perpetual read-only access to the control/direct message maps is modeled as a direct read and is not counted as a safety query. Safety, reveal history, compromise history, challenge counts, and member-addition counts use successful game events rather than adversary-supplied admissibility flags.",
@@ -42,10 +43,12 @@
         "adaptive reveal, challenge, and snapshot-compromise queries",
         "finite kappa >= 1 with explicit retained-personal-secret behavior",
         "no arbitrary Byzantine deviation by a genuinely authorized member",
-        "no application authorization, live-key, history-key, or Rust implementation theorem"
+        "no application authorization, live-key, history-key, or Rust implementation theorem",
+        "no direct read/write of challenger-private bit, protocol state, query log or primitive keys; full supplied oracle access retained"
       ],
       "normalization": "Uniform centered bias abs(Pr[guess = bit] - 1/2) is used for KI-DCGKA, HKR-CKS, and MU-CPA. Page 10 prints raw success probability, while Appendix B uses absolute neighboring-game probability differences. Applying the same factor-two convention to every game leaves the stated reduction factors unchanged.",
-      "machine_check_status": "The typed protocol state, Figure 8/9 oracle environment, complete query log, finite-kappa safety predicate, hidden-bit KI game, c/n counters, named primitive games, side-condition games, theorem quantifier shape, and mutation witnesses are EasyCrypt-checked. The Appendix-B reduction proof and the internal algorithms of the existential witnesses BNike/BSe are the sole imported paper evidence."
+      "machine_check_status": "The corrected typed contract and its application bound consumers are checked in focused runs. The sole security axiom remains the paper theorem. Full production supporting-closure acceptance is still open; passing an importer does not establish its dependency bodies.",
+      "construction_binding": "PublishedBeeKemInstance is an opaque distributional interface to the paper construction and its own primitive algorithms. Merely implementing BEEKEM_PAPER_INSTANCE does not allow theorem instantiation. These algorithms and Appendix B are imported, not re-proved; a concrete implementation refinement is not certified here."
     }
   ],
   "imported_assumptions": [
@@ -57,9 +60,9 @@
       "pdf_sha256": "129a819400898536455cabe4ba104c02d902384ea802b4900a388e8e9c0e4fb3",
       "location": "Section 5, Theorem 1, page 10; proof in Appendix B, pages 17-19",
       "exact_game": "BeeKemKiGame over the executable Figure 8 oracle environment, with bee_safe_kappa computed by the challenger from the complete accepted/rejected query log",
-      "adversary_interface": "BEEKEM_KI_ADVERSARY(BEEKEM_KI_ORACLES)",
-      "quantifier_order": "For every KI adversary A, every single concrete BeeKEM[SE,NIKE] PaperInstance, and every game parameter tuple satisfying the side conditions, there exist BNike and BSe before the reduction bound.",
-      "witness_dependency": "Because BNike and BSe are existentially quantified inside the conclusion after universal A and PaperInstance, they may depend on the challenged adversary, the exact paper instance, and the public game parameters. They are not unrelated universally quantified primitive adversaries.",
+      "adversary_interface": "BEEKEM_KI_ADVERSARY(BEEKEM_KI_ORACLES) {-BeeKemKiOracles, -BeeKemOracleEnvironment}; supplied oracle calls remain allowed.",
+      "quantifier_order": "For the fixed imported PublishedBeeKemInstance and every oracle-only KI adversary A and explicit game parameters satisfying the premises, there exist oracle-only BNike and BSe before the bound.",
+      "witness_dependency": "BNike and BSe may depend on A and public game parameters for the fixed imported construction. BNike excludes BeeKemHkrCksOracles private state; BSe excludes BeeKemMuCpaOracles private state.",
       "primitive_reductions": [
         "BNike is an existential Appendix-B witness run in BeeKemHkrCksGame(BNike, BeeKemNikeOfPaperInstance(PaperInstance), BeeKemNikeSamplerOfPaperInstance(PaperInstance))",
         "BSe is an existential Appendix-B witness run in BeeKemMuCpaGame(BSe, BeeKemSeOfPaperInstance(PaperInstance))"
@@ -72,7 +75,8 @@
         "h satisfies beekem_is_ceil_log2 n h",
         "the exact NIKE adapter is symmetric/correct with probability 1",
         "the exact symmetric-encryption adapter is correct for every message with probability 1",
-        "the executable game-derived challenge and member-addition counts obey c and n"
+        "the executable game-derived challenge and member-addition counts obey c and n",
+        "exact challenger-computed safe event holds with probability one"
       ],
       "correctness_specialization": "The imported boundary uses perfect NIKE symmetry and perfect symmetric-encryption correctness. This is a narrower specialization than the paper's overwhelming-correctness formulation; it does not silently turn correctness failure into zero.",
       "query_log_semantics": "Every state-transition or safety-relevant create, add, remove, update, deliver, reveal, challenge, and compromise attempt is appended with bq_accepted and an optional rejection reason. Figure 8's perpetual read-only access to the control/direct message maps is modeled as a direct read and is not counted as a safety query. Safety, reveal history, compromise history, challenge counts, and member-addition counts use successful game events rather than adversary-supplied admissibility flags.",
@@ -84,10 +88,12 @@
         "adaptive reveal, challenge, and snapshot-compromise queries",
         "finite kappa >= 1 with explicit retained-personal-secret behavior",
         "no arbitrary Byzantine deviation by a genuinely authorized member",
-        "no application authorization, live-key, history-key, or Rust implementation theorem"
+        "no application authorization, live-key, history-key, or Rust implementation theorem",
+        "no direct read/write of challenger-private bit, protocol state, query log or primitive keys; full supplied oracle access retained"
       ],
       "normalization": "Uniform centered bias abs(Pr[guess = bit] - 1/2) is used for KI-DCGKA, HKR-CKS, and MU-CPA. Page 10 prints raw success probability, while Appendix B uses absolute neighboring-game probability differences. Applying the same factor-two convention to every game leaves the stated reduction factors unchanged.",
-      "machine_check_status": "The typed protocol state, Figure 8/9 oracle environment, complete query log, finite-kappa safety predicate, hidden-bit KI game, c/n counters, named primitive games, side-condition games, theorem quantifier shape, and mutation witnesses are EasyCrypt-checked. The Appendix-B reduction proof and the internal algorithms of the existential witnesses BNike/BSe are the sole imported paper evidence."
+      "machine_check_status": "The corrected typed contract and its application bound consumers are checked in focused runs. The sole security axiom remains the paper theorem. Full production supporting-closure acceptance is still open; passing an importer does not establish its dependency bodies.",
+      "construction_binding": "PublishedBeeKemInstance is an opaque distributional interface to the paper construction and its own primitive algorithms. Merely implementing BEEKEM_PAPER_INSTANCE does not allow theorem instantiation. These algorithms and Appendix B are imported, not re-proved; a concrete implementation refinement is not certified here."
     }
   ],
   "public_theorem": {
@@ -218,10 +224,15 @@
     "file": "BeeKemKiInterface.eca",
     "name": "beekem_theorem1_imported_normalized",
     "entry_point": "BeeKemInterfaceProof.ec",
-    "quantifier_shape": "forall A, PaperInstance, memory, users, group, kappa, c, n, h, membership; side conditions imply exists BNike, exists BSe, bound",
+    "quantifier_shape": "fixed PublishedBeeKemInstance; forall oracle-only A, memory, users, group, kappa, c, n, h, membership; side conditions imply exists oracle-only BNike and BSe, bound",
     "left_hand_side": "centered bias of the exact executable BeeKemKiGame under challenger-computed bee_safe_kappa",
     "right_hand_side": "c * ceil(log2 n) times the sum of centered named HKR-CKS and MU-CPA advantages for existential Appendix-B reductions",
     "centered_advantage_operator": "beekem_normalized_ki_advantage",
     "centered_corollary_status": "this is the imported theorem convention; no raw-success theorem is assumed"
+  },
+  "oracle_boundary_revision": {
+    "date": "2026-09-10",
+    "source": "Section 5 page 10; Figure 8 page 18",
+    "details": "Private-state exclusions and fixed imported construction; quantitative losses unchanged. Earlier universal PaperInstance declarations described the intended construction but did not enforce it. This revision removes that unsupported universal claim."
   }
 }

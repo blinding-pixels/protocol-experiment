@@ -174,7 +174,8 @@ def audit_beekem_theorem_boundary(
 
     Appendix B states reductions produced for the challenged KI adversary and
     the concrete BeeKEM instance.  The source encodes that dependency with the
-    quantifier order ``forall A, PaperInstance ... exists BNike, BSe``.  A
+    quantifier order ``forall oracle-only A ... exists oracle-only BNike, BSe``
+    for the fixed imported PublishedBeeKemInstance.  A
     section-level ``declare module BNike`` or ``declare module BSe`` would make
     those adversaries unrelated universal parameters and must never pass CI.
     """
@@ -183,12 +184,12 @@ def audit_beekem_theorem_boundary(
 
     required_file_patterns = (
         (
-            r"\bdeclare\s+module\s+A\s*<:\s*BEEKEM_KI_ADVERSARY\s*\.",
-            "BeeKEM theorem boundary must universally quantify the KI adversary A",
+            r"\bdeclare\s+module\s+A\s*<:\s*BEEKEM_KI_ADVERSARY\s*\{\s*-BeeKemKiOracles\s*,\s*-BeeKemOracleEnvironment\s*\}\s*\.",
+            "BeeKEM theorem boundary must quantify A with the paper oracle-only private-state exclusions",
         ),
         (
-            r"\bdeclare\s+module\s+PaperInstance\s*<:\s*BEEKEM_PAPER_INSTANCE\s*\.",
-            "BeeKEM theorem boundary must universally quantify one paper instance",
+            r"\bmodule\s+PaperInstance\s*=\s*PublishedBeeKemInstance\s*\.",
+            "BeeKEM theorem boundary must use the fixed imported construction, not an arbitrary module of the same type",
         ),
         (
             r"\bmodule\s+PaperBeeKem\s*=\s*BeeKemProtocolOfPaperInstance\s*\(\s*PaperInstance\s*\)\s*\.",
@@ -261,11 +262,11 @@ def audit_beekem_theorem_boundary(
             "BeeKEM theorem axiom must bound executed member additions by n",
         ),
         (
-            r"\bexists\s*\(\s*BNike\s*<:\s*BEEKEM_HKR_CKS_ADVERSARY\s*\)\s*,",
+            r"\bexists\s*\(\s*BNike\s*<:\s*BEEKEM_HKR_CKS_ADVERSARY\s*\{\s*-BeeKemHkrCksOracles\s*\}\s*\)\s*,",
             "BeeKEM theorem axiom must existentially produce the HKR-CKS reduction",
         ),
         (
-            r"\bexists\s*\(\s*BSe\s*<:\s*BEEKEM_MU_CPA_ADVERSARY\s*\)\s*,",
+            r"\bexists\s*\(\s*BSe\s*<:\s*BEEKEM_MU_CPA_ADVERSARY\s*\{\s*-BeeKemMuCpaOracles\s*\}\s*\)\s*,",
             "BeeKEM theorem axiom must existentially produce the MU-CPA reduction",
         ),
         (

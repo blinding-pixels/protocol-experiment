@@ -17,12 +17,12 @@ require import LiveBeeKemAuthoritativePrimitiveBound.
    multi-domain PRF fixed-bit game by ordinary absolute-distance triangle
    algebra. *)
 section AuthoritativeLiveBeeKemPrfComposition.
-  declare module A <: AUTHORITATIVE_LIVE_KEY_ADVERSARY.
-  declare module S <: SIGNATURE_SCHEME.
-  declare module Hash <: NODE_HASH.
-  declare module K <: MULTI_DOMAIN_KEY_SCHEDULE.
-  declare module R <: LIVE_KEY_SAMPLER.
-  declare module I <: BEEKEM_PAPER_INSTANCE.
+  declare module A <: AUTHORITATIVE_LIVE_KEY_ADVERSARY {-BeeKemKiOracles, -BeeKemOracleEnvironment}.
+  declare module S <: SIGNATURE_SCHEME {-BeeKemKiOracles, -BeeKemOracleEnvironment}.
+  declare module Hash <: NODE_HASH {-BeeKemKiOracles, -BeeKemOracleEnvironment}.
+  declare module K <: MULTI_DOMAIN_KEY_SCHEDULE {-BeeKemKiOracles, -BeeKemOracleEnvironment}.
+  declare module R <: LIVE_KEY_SAMPLER {-BeeKemKiOracles, -BeeKemOracleEnvironment}.
+  module I = PublishedBeeKemInstance.
 
   module LiveBeeKem =
     AuthoritativeLiveBeeKemGame(A, S, Hash, K, R, I).
@@ -143,8 +143,8 @@ section AuthoritativeLiveBeeKemPrfComposition.
            true
          ) @ &m : ! res.`bke_protocol_consistency_failure
        ] = 1%r
-    => exists (BNike <: BEEKEM_HKR_CKS_ADVERSARY),
-       exists (BSe <: BEEKEM_MU_CPA_ADVERSARY),
+    => exists (BNike <: BEEKEM_HKR_CKS_ADVERSARY {-BeeKemHkrCksOracles}),
+       exists (BSe <: BEEKEM_MU_CPA_ADVERSARY {-BeeKemMuCpaOracles}),
          mdprf_fixed_bit_advantage
            (Pr[
               LiveBeeKem.main_with_fixed_bit(
@@ -207,7 +207,7 @@ section AuthoritativeLiveBeeKemPrfComposition.
     move=> Hkappa Hchallenge Hheight Hnike Hse Hsafe Hcounters Hconsistent.
     have Hprimitive :=
       authoritative_projected_beekem_advantage_bound
-        A S Hash K R I &m
+        A S Hash K R &m
         challenge_bound member_bound logarithmic_height
         Hkappa Hchallenge Hheight Hnike Hse Hsafe Hcounters Hconsistent.
     elim Hprimitive => BNike BSe Hprimitive.

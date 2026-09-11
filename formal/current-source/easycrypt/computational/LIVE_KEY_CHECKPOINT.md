@@ -1,3 +1,20 @@
+## Current interface revision
+
+The historical inconsistency described below is addressed by the oracle-only
+contract and named opaque paper primitive in
+`formal/documents/EASYCRYPT_IMPORTED_CONTRACT_REPAIR.md`. The original
+reproducer and private-state bypasses now reject, but the complete supporting
+proof closure is still unaccepted. Historical checker results below are not
+new verification of the corrected source.
+
+> **Critical status — September 10, 2026:** The current imported BeeKEM boundary
+> admits a checker-accepted contradiction from a permitted hidden-bit-reading
+> adversary. Security acceptance is blocked, independently of the remaining
+> direct-closure failures. See
+> `formal/documents/EASYCRYPT_IMPORTED_BOUNDARY_INCONSISTENCY.md` and the
+> quarantined imported-boundary regression check. Earlier entries below are
+> historical checkpoints, not current security acceptance.
+
 # Deliverable L live-key checkpoint
 
 Exact branch: `formal/easycrypt-live-key-reduction`
